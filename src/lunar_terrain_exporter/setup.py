@@ -33,7 +33,7 @@ setup(
     zip_safe=True,
     entry_points={
         'console_scripts': [
-            'lunar_terrain_exporter = lunar_terrain_exporter.lunar_terrain_exporter:LunarTerrainExporter.from_cli',
+            'lunar_terrain_exporter = lunar_terrain_exporter.cli:main',
         ],
     },
 )

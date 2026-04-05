@@ -4,34 +4,28 @@ Generates Gazebo Harmonic SDF terrain models from NASA PGDA Product 78 south-pol
 
 ## Available Sites
 
-All 27 sites from PGDA Product 78 are available. Run `lunar_terrain_exporter --output-dir ./models` interactively to see the full list.
+All 27 sites from PGDA Product 78 are available. See the full list at <https://pgda.gsfc.nasa.gov/products/78>.
 
 ## Usage
 
-### Interactive mode (recommended)
+### Site mode — full DEM tile
 
 ```bash
-lunar_terrain_exporter --output-dir ./models
+lunar_terrain_exporter site connecting_ridge --output-dir ./models
 ```
 
-Lists all 27 PGDA-78 sites and lets you pick one, then choose full-tile or custom bounding box.
-
-### Site mode
+### Site mode — custom bounding-box crop
 
 ```bash
-# Full tile
-lunar_terrain_exporter --site connecting_ridge --output-dir ./models
-
-# Custom crop
-lunar_terrain_exporter --site connecting_ridge \
+lunar_terrain_exporter site connecting_ridge \
   --lat -86.5 --lon -4.0 --width 5 --height 5 \
   --output-dir ./models
 ```
 
-### Config mode (batch)
+### Batch mode
 
 ```bash
-lunar_terrain_exporter --config config/artemis_sites.yaml --output-dir ./models
+lunar_terrain_exporter batch --config config/artemis_sites.yaml --output-dir ./models
 ```
 
 ## Config File Format
