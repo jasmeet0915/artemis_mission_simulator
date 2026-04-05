@@ -1,96 +1,93 @@
-"""Tests for the CLI argument parsing and interactive mode."""
+"""Tests for the CLI argument parsing and subcommands."""
 
 import pytest
-from unittest.mock import patch
 
-from lunar_terrain_exporter.lunar_terrain_exporter import LunarTerrainExporter
+from lunar_terrain_exporter.cli import build_parser, _load_sites_from_yaml
+from lunar_terrain_exporter.utils.types import BoundingBox, ROI, LunarSite
 
 
-class TestCLISiteMode:
-    def test_site_mode_full_roi(self):
-        parser = LunarTerrainExporter._build_parser()
+class TestSiteSubcommand:
+    def test_site_full_roi(self):
+        parser = build_parser()
         args = parser.parse_args([
-            "--site", "connecting_ridge",
+            "site", "connecting_ridge",
             "--output-dir", "/tmp/out",
         ])
-        assert args.site == "connecting_ridge"
+        assert args.command == "site"
+        assert args.site_name == "connecting_ridge"
         assert args.output_dir == "/tmp/out"
         assert args.lat is None
         assert args.lon is None
 
-    def test_site_mode_with_crop(self):
-        parser = LunarTerrainExporter._build_parser()
+    def test_site_with_crop(self):
+        parser = build_parser()
         args = parser.parse_args([
-            "--site", "shackleton_rim",
+            "site", "shackleton_rim",
             "--lat", "-86.5",
             "--lon", "-4.0",
             "--width", "5.0",
             "--height", "5.0",
             "--output-dir", "/tmp/out",
         ])
-        assert args.site == "shackleton_rim"
+        assert args.site_name == "shackleton_rim"
         assert args.lat == -86.5
         assert args.width == 5.0
 
-    def test_site_mode_explicit_full_roi(self):
-        parser = LunarTerrainExporter._build_parser()
-        args = parser.parse_args([
-            "--site", "peak_near_shackleton",
-            "--use-full-roi",
-            "--output-dir", "/tmp/out",
-        ])
-        assert args.site == "peak_near_shackleton"
-        assert args.use_full_roi is True
+    def test_site_default_output_dir(self):
+        parser = build_parser()
+        args = parser.parse_args(["site", "connecting_ridge"])
+        assert args.output_dir == "."
+
+    def test_site_default_dimensions(self):
+        parser = build_parser()
+        args = parser.parse_args(["site", "connecting_ridge"])
+        assert args.width == 10.0
+        assert args.height == 10.0
 
 
-class TestCLIConfigMode:
-    def test_config_mode(self):
-        parser = LunarTerrainExporter._build_parser()
+class TestBatchSubcommand:
+    def test_batch_mode(self):
+        parser = build_parser()
         args = parser.parse_args([
+            "batch",
             "--config", "sites.yaml",
             "--output-dir", "/tmp/out",
         ])
+        assert args.command == "batch"
         assert args.config == "sites.yaml"
         assert args.output_dir == "/tmp/out"
 
-
-class TestCLIMutualExclusion:
-    def test_config_and_site_together_fails(self):
-        parser = LunarTerrainExporter._build_parser()
+    def test_batch_requires_config(self):
+        parser = build_parser()
         with pytest.raises(SystemExit):
-            parser.parse_args([
-                "--config", "sites.yaml",
-                "--site", "bad",
-                "--output-dir", "/tmp/out",
-            ])
+            parser.parse_args(["batch", "--output-dir", "/tmp/out"])
 
 
-class TestCLIInteractiveMode:
-    def test_no_mode_gives_interactive(self):
-        """When neither --site nor --config given, args.site and args.config are both None."""
-        parser = LunarTerrainExporter._build_parser()
-        args = parser.parse_args(["--output-dir", "/tmp/out"])
-        assert args.site is None
-        assert args.config is None
+class TestNoSubcommand:
+    def test_no_command_gives_none(self):
+        parser = build_parser()
+        args = parser.parse_args([])
+        assert args.command is None
 
-    def test_interactive_list_sites(self):
-        """_interactive_select should list all 27 sites and return a SiteConfig."""
-        inputs = iter(["1", "1"])
-        with patch("builtins.input", side_effect=inputs):
-            config = LunarTerrainExporter._interactive_select()
+
+class TestLunarSiteFromCatalog:
+    def test_creates_config_full_roi(self):
+        config = LunarSite.from_catalog("connecting_ridge")
         assert config.name == "connecting_ridge"
+        assert "Site01" in config.dem_url
         assert config.roi.use_full is True
+        assert config.description != ""
 
-    def test_interactive_select_by_name(self):
-        inputs = iter(["shackleton_rim", "1"])
-        with patch("builtins.input", side_effect=inputs):
-            config = LunarTerrainExporter._interactive_select()
-        assert config.name == "shackleton_rim"
-
-    def test_interactive_custom_bbox(self):
-        inputs = iter(["1", "2", "-86.5", "-4.0", "5.0", "5.0"])
-        with patch("builtins.input", side_effect=inputs):
-            config = LunarTerrainExporter._interactive_select()
+    def test_creates_config_custom_roi(self):
+        roi = ROI(
+            use_full=False,
+            bounding_box=BoundingBox(
+                lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
+        )
+        config = LunarSite.from_catalog("shackleton_rim", roi=roi)
         assert config.roi.use_full is False
         assert config.roi.bounding_box.lat == -86.5
-        assert config.roi.bounding_box.width_km == 5.0
+
+    def test_unknown_site_raises(self):
+        with pytest.raises(KeyError, match="no_such_site"):
+            LunarSite.from_catalog("no_such_site")

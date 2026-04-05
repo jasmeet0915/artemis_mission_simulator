@@ -1,4 +1,4 @@
-"""Integration tests: SiteConfig → LunarTerrainExporter → output files.
+"""Integration tests: LunarSite → LunarTerrainExporter → output files.
 
 Uses mocked downloads and data processing to avoid network access.
 Verifies the full pipeline from YAML config to output model directory structure.
@@ -10,9 +10,10 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pytest
 
-from lunar_terrain_exporter.utils.site_config_parser import (
-    BoundingBox, ROI, SiteConfig, load_sites,
+from lunar_terrain_exporter.utils.types import (
+    BoundingBox, ROI, LunarSite,
 )
+from lunar_terrain_exporter.cli import _load_sites_from_yaml
 from lunar_terrain_exporter.lunar_terrain_exporter import LunarTerrainExporter
 
 
@@ -22,7 +23,7 @@ class TestIntegrationConfigLoad:
     def test_load_all_artemis_sites(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = load_sites(str(config_path))
+        sites = _load_sites_from_yaml(str(config_path))
         assert len(sites) == 4
         names = [s.name for s in sites]
         assert "connecting_ridge" in names
@@ -31,7 +32,7 @@ class TestIntegrationConfigLoad:
     def test_all_sites_use_full_roi(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = load_sites(str(config_path))
+        sites = _load_sites_from_yaml(str(config_path))
         for site in sites:
             site.validate()
             assert site.roi.use_full is True
@@ -40,7 +41,7 @@ class TestIntegrationConfigLoad:
     def test_all_site_names_are_unique(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = load_sites(str(config_path))
+        sites = _load_sites_from_yaml(str(config_path))
         names = [s.name for s in sites]
         assert len(names) == len(set(names))
 
@@ -50,7 +51,7 @@ class TestIntegrationPipeline:
 
     def test_terrain_generator_creates_output_structure(self, tmp_path):
         """Verify LunarTerrainExporter produces model dir with expected files."""
-        config = SiteConfig(
+        config = LunarSite(
             name="test_site",
             dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(
@@ -61,9 +62,7 @@ class TestIntegrationPipeline:
         )
 
         output_dir = tmp_path / "output"
-        cache_dir = tmp_path / "cache"
         output_dir.mkdir()
-        cache_dir.mkdir()
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
@@ -81,9 +80,8 @@ class TestIntegrationPipeline:
             mock_hm.from_dem.return_value = (fake_heightmap, -500.0, 2000.0)
             mock_slope.from_slope_geotiff_cropped.return_value = fake_diffuse
 
-            generator = LunarTerrainExporter(
-                output_dir=output_dir, cache_dir=cache_dir)
-            result = generator.generate(config)
+            generator = LunarTerrainExporter(output_dir=output_dir)
+            result = generator.export_model(config)
 
         # Downloader called for both DEM and slope
         assert mock_dl_instance.download.call_count == 2
@@ -111,16 +109,14 @@ class TestIntegrationFullROIPipeline:
 
     def test_full_roi_pipeline(self, tmp_path):
         """Verify LunarTerrainExporter uses from_dem_full_roi when roi.use_full=True."""
-        config = SiteConfig(
+        config = LunarSite(
             name="test_full_roi",
             dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(use_full=True),
         )
 
         output_dir = tmp_path / "output"
-        cache_dir = tmp_path / "cache"
         output_dir.mkdir()
-        cache_dir.mkdir()
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
@@ -142,9 +138,8 @@ class TestIntegrationFullROIPipeline:
             )
             mock_slope.from_slope_geotiff.return_value = fake_diffuse
 
-            generator = LunarTerrainExporter(
-                output_dir=output_dir, cache_dir=cache_dir)
-            result = generator.generate(config)
+            generator = LunarTerrainExporter(output_dir=output_dir)
+            result = generator.export_model(config)
 
         mock_hm.from_dem_full_roi.assert_called_once()
         mock_hm.from_dem.assert_not_called()
