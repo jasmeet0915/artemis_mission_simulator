@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="pathway_marker">
+    <static>true</static>
+
+    <link name="body">
+      <!-- Bollard body -->
+      <visual name="bollard_visual">
+        <pose>0 0 0.2 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.06</radius>
+            <length>0.4</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.35 0.33 0.31 1</ambient>
+          <diffuse>0.4 0.38 0.36 1</diffuse>
+          <specular>0.15 0.15 0.15 1</specular>
+        </material>
+      </visual>
+
+      <!-- Reflective band -->
+      <visual name="band_visual">
+        <pose>0 0 0.35 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.065</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.6 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+          <specular>0.5 0.5 0.5 1</specular>
+        </material>
+      </visual>
+
+      <collision name="collision">
+        <pose>0 0 0.2 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.07</radius>
+            <length>0.4</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Guide LED (top) -->
+      <visual name="guide_led_visual">
+        <pose>0 0 0.42 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.03</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.15 1</ambient>
+          <diffuse>0.15 0.15 0.15 1</diffuse>
+          <emissive>0.2 0.2 0.2 1</emissive>
+        </material>
+      </visual>
+      <light name="guide_led_light" type="point">
+        <pose>0 0 0.45 0 0 0</pose>
+        <diffuse>1 1 1 1</diffuse>
+        <specular>0 0 0 1</specular>
+        <attenuation>
+          <range>3</range>
+          <constant>1.0</constant>
+          <linear>0.4</linear>
+          <quadratic>0.2</quadratic>
+        </attenuation>
+      </light>
+    </link>
+
+    <plugin name="guide_led" filename="libLedPlugin.so">
+      <led_group_name>marker_light</led_group_name>
+
+      <led name="guide">
+        <visual_name>body/guide_led_visual</visual_name>
+        <light_name>body/guide_led_light</light_name>
+        <default_state>
+          <color>0.15 0.15 0.15 1</color>
+          <intensity>0.0</intensity>
+        </default_state>
+      </led>
+
+      <startup_mode>guide</startup_mode>
+
+      <mode name="guide">
+        <step always_on="true">
+          <color>0.6 0.6 0.55 1</color>
+          <intensity>0.5</intensity>
+        </step>
+      </mode>
+
+      <mode name="active">
+        <step always_on="true">
+          <color>1 1 0.95 1</color>
+          <intensity>1.5</intensity>
+        </step>
+      </mode>
+
+      <mode name="emergency">
+        <step always_on="false">
+          <color>1 0 0 1</color>
+          <intensity>2.0</intensity>
+          <on_time>0.3</on_time>
+        </step>
+        <step always_on="false">
+          <color>0.2 0 0 1</color>
+          <intensity>0.0</intensity>
+          <on_time>0.3</on_time>
+        </step>
+      </mode>
+    </plugin>
+  </model>
+</sdf>

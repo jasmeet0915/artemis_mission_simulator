@@ -1,0 +1,9 @@
+# Artemis III candidate landing sites — PGDA Product 78
+# Each entry uses the site catalog shorthand.
+# Run `generate_lunar_sdf --output-dir ./models` to regenerate.
+
+sites:
+  - site: connecting_ridge
+  - site: de_gerlache_rim
+  - site: peak_near_shackleton
+  - site: shackleton_rim

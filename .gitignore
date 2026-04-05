@@ -1,0 +1,27 @@
+# Colcon
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# Raw satellite data cache
+data/*.tif
+data/*.img
+data/*.lbl
+data/*.jp2
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

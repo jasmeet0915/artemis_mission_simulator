@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="astronaut">
+    <static>true</static>
+    <link name="body">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>meshes/astronaut.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <pose>0 0 0.9 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.5 0.5 1.8</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="shackleton_rim">
+    <static>true</static>
+    <link name="terrain_link">
+      <collision name="terrain_collision">
+        <geometry>
+          <heightmap>
+            <uri>model://shackleton_rim/materials/textures/heightmap.png</uri>
+            <size>5000 5000 500.0</size>
+            <pos>0 0 0.0</pos>
+          </heightmap>
+        </geometry>
+      </collision>
+      <visual name="terrain_visual">
+        <geometry>
+          <heightmap>
+            <uri>model://shackleton_rim/materials/textures/heightmap.png</uri>
+            <size>5000 5000 500.0</size>
+            <pos>0 0 0.0</pos>
+            <texture>
+              <diffuse>model://shackleton_rim/materials/textures/diffuse.png</diffuse>
+              <normal>model://shackleton_rim/materials/textures/normal.png</normal>
+              <size>10</size>
+            </texture>
+          </heightmap>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

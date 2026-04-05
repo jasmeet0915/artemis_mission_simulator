@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="equipment_crate">
+    <static>true</static>
+    <link name="body">
+      <!-- Main crate body -->
+      <visual name="crate_visual">
+        <pose>0 0 0.25 0 0 0</pose>
+        <geometry>
+          <box><size>1.0 0.6 0.5</size></box>
+        </geometry>
+        <material>
+          <ambient>0.45 0.45 0.42 1</ambient>
+          <diffuse>0.45 0.45 0.42 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+        </material>
+      </visual>
+      <!-- Yellow hazard stripe -->
+      <visual name="stripe_visual">
+        <pose>0 0 0.38 0 0 0</pose>
+        <geometry>
+          <box><size>1.01 0.61 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.7 0.6 0.0 1</ambient>
+          <diffuse>0.7 0.6 0.0 1</diffuse>
+        </material>
+      </visual>
+      <collision name="collision">
+        <pose>0 0 0.25 0 0 0</pose>
+        <geometry>
+          <box><size>1.0 0.6 0.5</size></box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

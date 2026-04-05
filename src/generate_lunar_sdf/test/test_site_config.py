@@ -1,0 +1,359 @@
+"""Tests for site configuration parsing and validation."""
+
+import tempfile
+from pathlib import Path
+
+import pytest
+import yaml
+
+from generate_lunar_sdf.utils.site_config_parser import (
+    BoundingBox, ROI, SiteConfig, load_sites, load_site,
+)
+
+
+class TestBoundingBox:
+    def test_create_with_defaults(self):
+        bb = BoundingBox(lat=-86.5, lon=-4.0)
+        assert bb.width_km == 10.0
+        assert bb.height_km == 10.0
+
+    def test_create_with_explicit_dims(self):
+        bb = BoundingBox(lat=-86.5, lon=-4.0, width_km=8.0, height_km=12.0)
+        assert bb.width_km == 8.0
+        assert bb.height_km == 12.0
+
+    def test_validate_rejects_lat_above_minus_80(self):
+        with pytest.raises(ValueError, match="lat"):
+            BoundingBox(lat=-70.0, lon=0.0).validate()
+
+    def test_validate_rejects_non_positive_width(self):
+        with pytest.raises(ValueError, match="width_km"):
+            BoundingBox(lat=-85.0, lon=0.0, width_km=0).validate()
+
+    def test_validate_rejects_non_positive_height(self):
+        with pytest.raises(ValueError, match="height_km"):
+            BoundingBox(lat=-85.0, lon=0.0, height_km=-1).validate()
+
+    def test_validate_accepts_valid(self):
+        BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0).validate()
+
+
+class TestROI:
+    def test_use_full_no_bbox(self):
+        ext = ROI(use_full=True)
+        ext.validate()
+
+    def test_use_full_with_bbox_still_valid(self):
+        ext = ROI(use_full=True, bounding_box=BoundingBox(lat=-85.0, lon=0.0))
+        ext.validate()
+
+    def test_crop_requires_bbox(self):
+        with pytest.raises(ValueError, match="bounding_box"):
+            ROI(use_full=False).validate()
+
+    def test_crop_with_bbox_valid(self):
+        ext = ROI(
+            use_full=False,
+            bounding_box=BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0),
+        )
+        ext.validate()
+
+    def test_crop_propagates_bbox_validation(self):
+        with pytest.raises(ValueError, match="lat"):
+            ROI(
+                use_full=False,
+                bounding_box=BoundingBox(lat=-70.0, lon=0.0),
+            ).validate()
+
+
+class TestSiteConfig:
+    def test_create_with_bbox(self):
+        config = SiteConfig(
+            name="test_site",
+            dem_url="https://example.com/dem.img",
+            roi=ROI(
+                use_full=False,
+                bounding_box=BoundingBox(lat=-86.5, lon=-4.0),
+            ),
+        )
+        assert config.name == "test_site"
+        assert config.roi.bounding_box.lat == -86.5
+        assert config.roi.bounding_box.lon == -4.0
+        assert config.roi.bounding_box.width_km == 10.0
+        assert config.roi.bounding_box.height_km == 10.0
+        assert config.description == ""
+
+    def test_create_with_full_roi(self):
+        config = SiteConfig(
+            name="test_site",
+            dem_url="https://example.com/dem.tif",
+            roi=ROI(use_full=True),
+        )
+        assert config.roi.use_full is True
+        assert config.roi.bounding_box is None
+
+    def test_validate_rejects_empty_name(self):
+        with pytest.raises(ValueError, match="name"):
+            SiteConfig(
+                name="",
+                dem_url="https://example.com/dem.img",
+                roi=ROI(use_full=True),
+            ).validate()
+
+    def test_validate_rejects_invalid_name_chars(self):
+        with pytest.raises(ValueError, match="name"):
+            SiteConfig(
+                name="bad name/here",
+                dem_url="https://example.com/dem.img",
+                roi=ROI(use_full=True),
+            ).validate()
+
+    def test_validate_rejects_empty_dem_url(self):
+        with pytest.raises(ValueError, match="dem_url"):
+            SiteConfig(
+                name="test", dem_url="",
+                roi=ROI(use_full=True),
+            ).validate()
+
+    def test_validate_propagates_roi_validation(self):
+        with pytest.raises(ValueError, match="bounding_box"):
+            SiteConfig(
+                name="test",
+                dem_url="https://example.com/dem.img",
+                roi=ROI(use_full=False),
+            ).validate()
+
+    def test_validate_accepts_full_roi(self):
+        config = SiteConfig(
+            name="test_site",
+            dem_url="https://example.com/dem.tif",
+            roi=ROI(use_full=True),
+        )
+        config.validate()
+
+    def test_validate_accepts_valid_bbox(self):
+        config = SiteConfig(
+            name="haworth",
+            dem_url="https://example.com/dem.img",
+            roi=ROI(
+                use_full=False,
+                bounding_box=BoundingBox(lat=-86.5, lon=-4.0),
+            ),
+        )
+        config.validate()
+
+    def test_default_roi_requires_bbox(self):
+        with pytest.raises(ValueError, match="bounding_box"):
+            SiteConfig(
+                name="test_site",
+                dem_url="https://example.com/dem.tif",
+            ).validate()
+
+
+class TestLoadSites:
+    def _write_yaml(self, data: dict, path: Path) -> Path:
+        config_file = path / "sites.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(data, f)
+        return config_file
+
+    def test_load_single_site(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{
+                    "name": "test_site",
+                    "dem_url": "https://example.com/dem.img",
+                    "roi": {
+                        "use_full": False,
+                        "bounding_box": {"lat": -86.5, "lon": -4.0},
+                    },
+                }]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert len(sites) == 1
+            assert sites[0].name == "test_site"
+            assert sites[0].roi.bounding_box.width_km == 10.0
+
+    def test_load_multiple_sites(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [
+                    {
+                        "name": "a",
+                        "dem_url": "https://example.com/a.img",
+                        "roi": {
+                            "use_full": False,
+                            "bounding_box": {"lat": -86.0, "lon": 0.0},
+                        },
+                    },
+                    {
+                        "name": "b",
+                        "dem_url": "https://example.com/b.img",
+                        "roi": {
+                            "use_full": False,
+                            "bounding_box": {
+                                "lat": -87.0, "lon": 10.0,
+                                "width_km": 5.0, "height_km": 5.0,
+                            },
+                        },
+                    },
+                ]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert len(sites) == 2
+            assert sites[1].roi.bounding_box.width_km == 5.0
+
+    def test_load_site_by_name(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [
+                    {
+                        "name": "a",
+                        "dem_url": "https://example.com/a.img",
+                        "roi": {
+                            "use_full": False,
+                            "bounding_box": {"lat": -86.0, "lon": 0.0},
+                        },
+                    },
+                    {
+                        "name": "b",
+                        "dem_url": "https://example.com/b.img",
+                        "roi": {
+                            "use_full": False,
+                            "bounding_box": {"lat": -87.0, "lon": 10.0},
+                        },
+                    },
+                ]
+            }, Path(tmpdir))
+            site = load_site(config_file, "b")
+            assert site.name == "b"
+            assert site.roi.bounding_box.lat == -87.0
+
+    def test_load_site_not_found_raises(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{
+                    "name": "a",
+                    "dem_url": "https://example.com/a.img",
+                    "roi": {"use_full": True},
+                }]
+            }, Path(tmpdir))
+            with pytest.raises(ValueError, match="no_such_site"):
+                load_site(config_file, "no_such_site")
+
+    def test_missing_required_field_raises(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{"name": "bad"}]
+            }, Path(tmpdir))
+            with pytest.raises((KeyError, TypeError)):
+                load_sites(config_file)
+
+    def test_load_full_roi_site(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{
+                    "name": "full_site",
+                    "dem_url": "https://example.com/dem.tif",
+                    "roi": {"use_full": True},
+                }]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert len(sites) == 1
+            assert sites[0].roi.use_full is True
+            assert sites[0].roi.bounding_box is None
+
+
+class TestFromCatalog:
+    def test_creates_config_from_catalog_name(self):
+        config = SiteConfig.from_catalog("connecting_ridge")
+        assert config.name == "connecting_ridge"
+        assert "Site01" in config.dem_url
+        assert config.roi.use_full is True
+        assert config.description != ""
+
+    def test_custom_roi(self):
+        roi = ROI(
+            use_full=False,
+            bounding_box=BoundingBox(lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
+        )
+        config = SiteConfig.from_catalog("shackleton_rim", roi=roi)
+        assert config.roi.use_full is False
+        assert config.roi.bounding_box.lat == -86.5
+
+    def test_unknown_site_raises(self):
+        with pytest.raises(KeyError, match="no_such_site"):
+            SiteConfig.from_catalog("no_such_site")
+
+
+class TestSlopeUrl:
+    def test_derives_slope_url_from_dem_url(self):
+        config = SiteConfig(
+            name="test",
+            dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
+            roi=ROI(use_full=True),
+        )
+        assert config.slope_url == (
+            "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_slp.tif"
+        )
+
+    def test_from_catalog_slope_url(self):
+        config = SiteConfig.from_catalog("connecting_ridge")
+        assert "_slp.tif" in config.slope_url
+        assert "Site01" in config.slope_url
+
+
+class TestLoadSitesCatalogShorthand:
+    def _write_yaml(self, data: dict, path: Path) -> Path:
+        config_file = path / "sites.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(data, f)
+        return config_file
+
+    def test_catalog_shorthand(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{
+                    "site": "connecting_ridge",
+                    "roi": {"use_full": True},
+                }]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert len(sites) == 1
+            assert sites[0].name == "connecting_ridge"
+            assert "Site01" in sites[0].dem_url
+
+    def test_catalog_shorthand_with_bbox(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [{
+                    "site": "shackleton_rim",
+                    "roi": {
+                        "use_full": False,
+                        "bounding_box": {"lat": -86.5, "lon": -4.0, "width_km": 5.0},
+                    },
+                }]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert sites[0].roi.bounding_box.width_km == 5.0
+            assert "Site04" in sites[0].dem_url
+
+    def test_mixed_catalog_and_explicit(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                "sites": [
+                    {
+                        "site": "connecting_ridge",
+                        "roi": {"use_full": True},
+                    },
+                    {
+                        "name": "custom",
+                        "dem_url": "https://example.com/dem.tif",
+                        "roi": {"use_full": True},
+                    },
+                ]
+            }, Path(tmpdir))
+            sites = load_sites(config_file)
+            assert len(sites) == 2
+            assert sites[0].name == "connecting_ridge"
+            assert sites[1].name == "custom"
