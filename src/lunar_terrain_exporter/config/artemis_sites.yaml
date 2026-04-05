@@ -1,6 +1,6 @@
 # Artemis III candidate landing sites — PGDA Product 78
 # Each entry uses the site catalog shorthand.
-# Run `generate_lunar_sdf --output-dir ./models` to regenerate.
+# Run `lunar_terrain_exporter --output-dir ./models` to regenerate.
 
 sites:
   - site: connecting_ridge

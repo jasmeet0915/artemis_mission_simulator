@@ -11,7 +11,7 @@
 
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
-  <exec_depend>generate_lunar_sdf</exec_depend>
+  <exec_depend>lunar_terrain_exporter</exec_depend>
   <exec_depend>lunar_base_models</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>

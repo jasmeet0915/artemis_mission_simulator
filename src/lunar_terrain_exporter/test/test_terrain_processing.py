@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from generate_lunar_sdf.map_generators.normal_map_generator import NormalMapGenerator
-from generate_lunar_sdf.utils.model_writer import ModelWriter
+from lunar_terrain_exporter.map_generators.normal_map_generator import NormalMapGenerator
+from lunar_terrain_exporter.utils.model_writer import ModelWriter
 
 
 def _make_heightmap(size: int = 65) -> np.ndarray:

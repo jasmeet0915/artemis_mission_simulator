@@ -2,7 +2,7 @@
 
 import pytest
 
-from generate_lunar_sdf.utils.site_catalog import (
+from lunar_terrain_exporter.utils.site_catalog import (
     CatalogSite, SITE_CATALOG, list_sites, get_site,
 )
 
@@ -11,11 +11,13 @@ _BASE_URL = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
 
 class TestCatalogSite:
     def test_dem_url_generation(self):
-        site = CatalogSite("Site01", "connecting_ridge", "Connecting Ridge", "desc")
+        site = CatalogSite("Site01", "connecting_ridge",
+                           "Connecting Ridge", "desc")
         assert site.dem_url == f"{_BASE_URL}/Site01/Site01_final_adj_5mpp_surf.tif"
 
     def test_slope_url_generation(self):
-        site = CatalogSite("Site01", "connecting_ridge", "Connecting Ridge", "desc")
+        site = CatalogSite("Site01", "connecting_ridge",
+                           "Connecting Ridge", "desc")
         assert site.slope_url == f"{_BASE_URL}/Site01/Site01_final_adj_5mpp_slp.tif"
 
     def test_non_numeric_pgda_id(self):
@@ -24,7 +26,8 @@ class TestCatalogSite:
         assert site.dem_url == f"{_BASE_URL}/Haworth/Haworth_final_adj_5mpp_surf.tif"
 
     def test_frozen_dataclass(self):
-        site = CatalogSite("Site01", "connecting_ridge", "Connecting Ridge", "desc")
+        site = CatalogSite("Site01", "connecting_ridge",
+                           "Connecting Ridge", "desc")
         with pytest.raises(AttributeError):
             site.name = "other"
 
@@ -35,7 +38,7 @@ class TestSiteCatalog:
 
     def test_known_sites_present(self):
         for name in ["connecting_ridge", "shackleton_rim", "peak_near_shackleton",
-                      "de_gerlache_rim", "haworth", "shoemaker", "amundsen_rim"]:
+                     "de_gerlache_rim", "haworth", "shoemaker", "amundsen_rim"]:
             assert name in SITE_CATALOG
 
     def test_all_names_are_snake_case(self):

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from generate_lunar_sdf.map_generators.slope_texture_generator import SlopeTextureGenerator
+from lunar_terrain_exporter.map_generators.slope_texture_generator import SlopeTextureGenerator
 
 
 class TestSlopeToGrayscale:
@@ -62,7 +62,8 @@ class TestFromSlopeGeotiff:
 
         slope_path = tmp_path / "test_slope.tif"
         transform = from_bounds(-500, -500, 500, 500, size, size)
-        data = np.linspace(0.0, 30.0, size * size, dtype=np.float32).reshape(size, size)
+        data = np.linspace(0.0, 30.0, size * size,
+                           dtype=np.float32).reshape(size, size)
 
         with rasterio.open(
             slope_path, "w", driver="GTiff", height=size, width=size,

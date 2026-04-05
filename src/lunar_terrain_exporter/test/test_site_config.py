@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from generate_lunar_sdf.utils.site_config_parser import (
+from lunar_terrain_exporter.utils.site_config_parser import (
     BoundingBox, ROI, SiteConfig, load_sites, load_site,
 )
 
@@ -35,7 +35,8 @@ class TestBoundingBox:
             BoundingBox(lat=-85.0, lon=0.0, height_km=-1).validate()
 
     def test_validate_accepts_valid(self):
-        BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0).validate()
+        BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0,
+                    height_km=8.0).validate()
 
 
 class TestROI:
@@ -54,7 +55,8 @@ class TestROI:
     def test_crop_with_bbox_valid(self):
         ext = ROI(
             use_full=False,
-            bounding_box=BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0),
+            bounding_box=BoundingBox(
+                lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0),
         )
         ext.validate()
 
@@ -275,7 +277,8 @@ class TestFromCatalog:
     def test_custom_roi(self):
         roi = ROI(
             use_full=False,
-            bounding_box=BoundingBox(lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
+            bounding_box=BoundingBox(
+                lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
         )
         config = SiteConfig.from_catalog("shackleton_rim", roi=roi)
         assert config.roi.use_full is False

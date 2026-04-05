@@ -1,4 +1,4 @@
-"""Integration tests: SiteConfig → GenerateLunarSDF → output files.
+"""Integration tests: SiteConfig → LunarTerrainExporter → output files.
 
 Uses mocked downloads and data processing to avoid network access.
 Verifies the full pipeline from YAML config to output model directory structure.
@@ -10,17 +10,18 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 import pytest
 
-from generate_lunar_sdf.utils.site_config_parser import (
+from lunar_terrain_exporter.utils.site_config_parser import (
     BoundingBox, ROI, SiteConfig, load_sites,
 )
-from generate_lunar_sdf.generate_lunar_sdf import GenerateLunarSDF
+from lunar_terrain_exporter.lunar_terrain_exporter import LunarTerrainExporter
 
 
 class TestIntegrationConfigLoad:
     """Verify the preset Artemis sites config loads correctly."""
 
     def test_load_all_artemis_sites(self):
-        config_path = Path(__file__).parent.parent / "config" / "artemis_sites.yaml"
+        config_path = Path(__file__).parent.parent / \
+            "config" / "artemis_sites.yaml"
         sites = load_sites(str(config_path))
         assert len(sites) == 4
         names = [s.name for s in sites]
@@ -28,7 +29,8 @@ class TestIntegrationConfigLoad:
         assert "de_gerlache_rim" in names
 
     def test_all_sites_use_full_roi(self):
-        config_path = Path(__file__).parent.parent / "config" / "artemis_sites.yaml"
+        config_path = Path(__file__).parent.parent / \
+            "config" / "artemis_sites.yaml"
         sites = load_sites(str(config_path))
         for site in sites:
             site.validate()
@@ -36,7 +38,8 @@ class TestIntegrationConfigLoad:
             assert site.dem_url.startswith("https://")
 
     def test_all_site_names_are_unique(self):
-        config_path = Path(__file__).parent.parent / "config" / "artemis_sites.yaml"
+        config_path = Path(__file__).parent.parent / \
+            "config" / "artemis_sites.yaml"
         sites = load_sites(str(config_path))
         names = [s.name for s in sites]
         assert len(names) == len(set(names))
@@ -46,13 +49,14 @@ class TestIntegrationPipeline:
     """End-to-end pipeline with mocked external dependencies."""
 
     def test_terrain_generator_creates_output_structure(self, tmp_path):
-        """Verify GenerateLunarSDF produces model dir with expected files."""
+        """Verify LunarTerrainExporter produces model dir with expected files."""
         config = SiteConfig(
             name="test_site",
             dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(
                 use_full=False,
-                bounding_box=BoundingBox(lat=-86.5, lon=-4.0, width_km=2.0, height_km=2.0),
+                bounding_box=BoundingBox(
+                    lat=-86.5, lon=-4.0, width_km=2.0, height_km=2.0),
             ),
         )
 
@@ -63,11 +67,12 @@ class TestIntegrationPipeline:
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
-        fake_diffuse = np.random.randint(60, 190, (size, size, 3), dtype=np.uint8)
+        fake_diffuse = np.random.randint(
+            60, 190, (size, size, 3), dtype=np.uint8)
 
-        with patch("generate_lunar_sdf.generate_lunar_sdf.FileDownloader") as mock_dl_cls, \
-             patch("generate_lunar_sdf.generate_lunar_sdf.HeightmapGenerator") as mock_hm, \
-             patch("generate_lunar_sdf.generate_lunar_sdf.SlopeTextureGenerator") as mock_slope:
+        with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm, \
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.SlopeTextureGenerator") as mock_slope:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
@@ -76,7 +81,8 @@ class TestIntegrationPipeline:
             mock_hm.from_dem.return_value = (fake_heightmap, -500.0, 2000.0)
             mock_slope.from_slope_geotiff_cropped.return_value = fake_diffuse
 
-            generator = GenerateLunarSDF(output_dir=output_dir, cache_dir=cache_dir)
+            generator = LunarTerrainExporter(
+                output_dir=output_dir, cache_dir=cache_dir)
             result = generator.generate(config)
 
         # Downloader called for both DEM and slope
@@ -104,7 +110,7 @@ class TestIntegrationFullROIPipeline:
     """Pipeline test with use_full ROI."""
 
     def test_full_roi_pipeline(self, tmp_path):
-        """Verify GenerateLunarSDF uses from_dem_full_roi when roi.use_full=True."""
+        """Verify LunarTerrainExporter uses from_dem_full_roi when roi.use_full=True."""
         config = SiteConfig(
             name="test_full_roi",
             dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
@@ -118,12 +124,14 @@ class TestIntegrationFullROIPipeline:
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
-        fake_diffuse = np.random.randint(60, 190, (size, size, 3), dtype=np.uint8)
-        bounds = {"center_lat": -89.5, "center_lon": -130.0, "width_km": 20.0, "height_km": 15.0}
+        fake_diffuse = np.random.randint(
+            60, 190, (size, size, 3), dtype=np.uint8)
+        bounds = {"center_lat": -89.5, "center_lon": -
+                  130.0, "width_km": 20.0, "height_km": 15.0}
 
-        with patch("generate_lunar_sdf.generate_lunar_sdf.FileDownloader") as mock_dl_cls, \
-             patch("generate_lunar_sdf.generate_lunar_sdf.HeightmapGenerator") as mock_hm, \
-             patch("generate_lunar_sdf.generate_lunar_sdf.SlopeTextureGenerator") as mock_slope:
+        with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm, \
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.SlopeTextureGenerator") as mock_slope:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
@@ -134,7 +142,8 @@ class TestIntegrationFullROIPipeline:
             )
             mock_slope.from_slope_geotiff.return_value = fake_diffuse
 
-            generator = GenerateLunarSDF(output_dir=output_dir, cache_dir=cache_dir)
+            generator = LunarTerrainExporter(
+                output_dir=output_dir, cache_dir=cache_dir)
             result = generator.generate(config)
 
         mock_hm.from_dem_full_roi.assert_called_once()

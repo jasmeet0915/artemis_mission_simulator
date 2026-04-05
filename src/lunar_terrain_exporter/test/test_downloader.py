@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from generate_lunar_sdf.utils.file_downloader import FileDownloader
+from lunar_terrain_exporter.utils.file_downloader import FileDownloader
 
 
 class TestFileDownloader:
@@ -34,7 +34,7 @@ class TestFileDownloader:
             cache_path = dl._cache_path(url)
             cache_path.write_bytes(b"cached data")
 
-            with patch("generate_lunar_sdf.utils.file_downloader.requests") as mock_req:
+            with patch("lunar_terrain_exporter.utils.file_downloader.requests") as mock_req:
                 result = dl.download(url)
                 mock_req.get.assert_not_called()
             assert result == cache_path
@@ -49,9 +49,11 @@ class TestFileDownloader:
             mock_resp.iter_content.return_value = [b"chunk1", b"chunk2"]
             mock_resp.raise_for_status = MagicMock()
 
-            with patch("generate_lunar_sdf.utils.file_downloader.requests") as mock_req:
-                mock_req.get.return_value.__enter__ = MagicMock(return_value=mock_resp)
-                mock_req.get.return_value.__exit__ = MagicMock(return_value=False)
+            with patch("lunar_terrain_exporter.utils.file_downloader.requests") as mock_req:
+                mock_req.get.return_value.__enter__ = MagicMock(
+                    return_value=mock_resp)
+                mock_req.get.return_value.__exit__ = MagicMock(
+                    return_value=False)
                 result = dl.download(url)
 
             assert result.exists()

@@ -1,17 +1,17 @@
-# generate_lunar_sdf
+# lunar_terrain_exporter
 
 Generates Gazebo Harmonic SDF terrain models from NASA PGDA Product 78 south-polar LOLA DEMs (5 m/pixel).
 
 ## Available Sites
 
-All 27 sites from PGDA Product 78 are available. Run `generate_lunar_sdf --output-dir ./models` interactively to see the full list.
+All 27 sites from PGDA Product 78 are available. Run `lunar_terrain_exporter --output-dir ./models` interactively to see the full list.
 
 ## Usage
 
 ### Interactive mode (recommended)
 
 ```bash
-generate_lunar_sdf --output-dir ./models
+lunar_terrain_exporter --output-dir ./models
 ```
 
 Lists all 27 PGDA-78 sites and lets you pick one, then choose full-tile or custom bounding box.
@@ -20,10 +20,10 @@ Lists all 27 PGDA-78 sites and lets you pick one, then choose full-tile or custo
 
 ```bash
 # Full tile
-generate_lunar_sdf --site connecting_ridge --output-dir ./models
+lunar_terrain_exporter --site connecting_ridge --output-dir ./models
 
 # Custom crop
-generate_lunar_sdf --site connecting_ridge \
+lunar_terrain_exporter --site connecting_ridge \
   --lat -86.5 --lon -4.0 --width 5 --height 5 \
   --output-dir ./models
 ```
@@ -31,7 +31,7 @@ generate_lunar_sdf --site connecting_ridge \
 ### Config mode (batch)
 
 ```bash
-generate_lunar_sdf --config config/artemis_sites.yaml --output-dir ./models
+lunar_terrain_exporter --config config/artemis_sites.yaml --output-dir ./models
 ```
 
 ## Config File Format

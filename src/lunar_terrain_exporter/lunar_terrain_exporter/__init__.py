@@ -2,7 +2,7 @@
 
 from .utils.site_config_parser import BoundingBox, ROI, SiteConfig, load_sites, load_site
 from .utils.site_catalog import list_sites, get_site
-from .generate_lunar_sdf import GenerateLunarSDF
+from .lunar_terrain_exporter import LunarTerrainExporter
 
 __all__ = [
     "BoundingBox",
@@ -12,5 +12,5 @@ __all__ = [
     "load_site",
     "list_sites",
     "get_site",
-    "GenerateLunarSDF",
+    "LunarTerrainExporter",
 ]

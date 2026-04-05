@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-package_name = 'generate_lunar_sdf'
+package_name = 'lunar_terrain_exporter'
 
 
 def collect_data_files(source_dir, install_prefix):
@@ -33,7 +33,7 @@ setup(
     zip_safe=True,
     entry_points={
         'console_scripts': [
-            'generate_lunar_sdf = generate_lunar_sdf.generate_lunar_sdf:GenerateLunarSDF.from_cli',
+            'lunar_terrain_exporter = lunar_terrain_exporter.lunar_terrain_exporter:LunarTerrainExporter.from_cli',
         ],
     },
 )

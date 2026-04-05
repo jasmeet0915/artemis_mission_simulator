@@ -18,8 +18,9 @@ from launch_ros.substitutions import FindPackageShare
 
 def launch_setup(context, *args, **kwargs):
     site = LaunchConfiguration("site").perform(context)
-    launcher_share = FindPackageShare("artemis_mission_launcher").perform(context)
-    terrain_share = FindPackageShare("generate_lunar_sdf").perform(context)
+    launcher_share = FindPackageShare(
+        "artemis_mission_launcher").perform(context)
+    terrain_share = FindPackageShare("lunar_terrain_exporter").perform(context)
 
     world_file = os.path.join(launcher_share, "worlds", "lunar_surface.world")
     model_path = os.path.join(terrain_share, "models")
@@ -44,12 +45,14 @@ def launch_setup(context, *args, **kwargs):
         f'      <pose>0 0 0 0 0 0</pose>\n'
         f'    </include>\n'
     )
-    modified_world = world_content.replace("</world>", include_sdf + "  </world>")
+    modified_world = world_content.replace(
+        "</world>", include_sdf + "  </world>")
 
     tmp_path = os.path.join(tempfile.gettempdir(), f"lunar_{site}.world")
     with open(tmp_path, "w") as f:
         f.write(modified_world)
-    atexit.register(lambda p=tmp_path: os.remove(p) if os.path.exists(p) else None)
+    atexit.register(lambda p=tmp_path: os.remove(p)
+                    if os.path.exists(p) else None)
 
     gz_sim = ExecuteProcess(
         cmd=["gz", "sim", "-r", tmp_path],

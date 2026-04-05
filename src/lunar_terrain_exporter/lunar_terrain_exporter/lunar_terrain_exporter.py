@@ -15,7 +15,7 @@ from .map_generators.normal_map_generator import NormalMapGenerator
 from .map_generators.slope_texture_generator import SlopeTextureGenerator
 
 
-class GenerateLunarSDF:
+class LunarTerrainExporter:
     """Generates Gazebo SDF terrain models from PGDA Product 78 LOLA DEMs.
 
     Handles both CLI parsing and the full terrain generation pipeline.
@@ -85,62 +85,6 @@ class GenerateLunarSDF:
         return model_dir
 
     @classmethod
-    def _build_parser(cls) -> argparse.ArgumentParser:
-        parser = argparse.ArgumentParser(
-            description="Generate Gazebo SDF terrain models from PGDA Product 78 LOLA DEMs.",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=(
-                "Site mode (single site from catalog):\n"
-                "  generate_lunar_sdf --site connecting_ridge --output-dir ./models\n"
-                "  generate_lunar_sdf --site shackleton_rim --lat -86.5 --lon -4.0 "
-                "--width 5 --height 5 --output-dir ./models\n"
-                "\n"
-                "Config mode (batch from YAML):\n"
-                "  generate_lunar_sdf --config sites.yaml --output-dir ./models\n"
-                "\n"
-                "Interactive mode (no --site or --config):\n"
-                "  generate_lunar_sdf --output-dir ./models\n"
-            ),
-        )
-
-        mode = parser.add_mutually_exclusive_group()
-        mode.add_argument(
-            "--config", type=str, metavar="FILE",
-            help="Path to YAML site configuration file (batch mode)",
-        )
-        mode.add_argument(
-            "--site", type=str,
-            help="Site name from PGDA-78 catalog (e.g., connecting_ridge)",
-        )
-
-        parser.add_argument(
-            "--output-dir", type=str, required=True,
-            help="Output directory for generated models",
-        )
-        parser.add_argument(
-            "--cache-dir", type=str, default=None,
-            help="Cache directory for downloaded data (default: <repo>/data/)",
-        )
-
-        # ROI options for --site mode
-        parser.add_argument("--lat", type=float, help="Center latitude for crop")
-        parser.add_argument("--lon", type=float, help="Center longitude for crop")
-        parser.add_argument(
-            "--width", type=float, default=10.0,
-            help="Region width in km (default: 10)",
-        )
-        parser.add_argument(
-            "--height", type=float, default=10.0,
-            help="Region height in km (default: 10)",
-        )
-        parser.add_argument(
-            "--use-full-roi", action="store_true", default=False,
-            help="Use the entire DEM tile (default when --lat/--lon not given)",
-        )
-
-        return parser
-
-    @classmethod
     def _default_cache_dir(cls) -> Path:
         """Default cache: data/ directory at repository root."""
         return Path(__file__).resolve().parents[3] / "data"
@@ -152,7 +96,8 @@ class GenerateLunarSDF:
         args = parser.parse_args(argv)
 
         output_dir = Path(args.output_dir)
-        cache_dir = Path(args.cache_dir) if args.cache_dir else cls._default_cache_dir()
+        cache_dir = Path(
+            args.cache_dir) if args.cache_dir else cls._default_cache_dir()
 
         generator = cls(output_dir=output_dir, cache_dir=cache_dir)
 

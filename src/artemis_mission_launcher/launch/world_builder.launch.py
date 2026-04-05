@@ -15,8 +15,9 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def launch_setup(context, *args, **kwargs):
-    launcher_share = FindPackageShare("artemis_mission_launcher").perform(context)
-    terrain_share = FindPackageShare("generate_lunar_sdf").perform(context)
+    launcher_share = FindPackageShare(
+        "artemis_mission_launcher").perform(context)
+    terrain_share = FindPackageShare("lunar_terrain_exporter").perform(context)
 
     world_file = os.path.join(launcher_share, "worlds", "lunar_surface.world")
     gui_config = os.path.join(launcher_share, "config", "gui.config")
