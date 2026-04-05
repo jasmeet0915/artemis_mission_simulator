@@ -41,6 +41,7 @@ exec docker run --rm -it \
     --network host \
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
+    -e WORKSPACE_DIR="/workspace" \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$REPO_ROOT":/workspace \
     "${GPU_FLAGS[@]}" \
