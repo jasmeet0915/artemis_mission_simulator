@@ -18,7 +18,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 IMAGE_NAME="artemis-mission-simulator:latest"
 CONTAINER_NAME="artemis-sim"
 
-if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+if [[ -z "$(docker images -q "$IMAGE_NAME" 2>/dev/null)" ]]; then
     echo "❌ Image $IMAGE_NAME not found. Run ./docker/build.sh first."
     exit 1
 fi
@@ -44,5 +44,5 @@ exec docker run --rm -it \
     -e WORKSPACE_DIR="/workspace" \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$REPO_ROOT":/workspace \
-    "${GPU_FLAGS[@]}" \
+    ${GPU_FLAGS[@]+"${GPU_FLAGS[@]}"} \
     "$IMAGE_NAME"
