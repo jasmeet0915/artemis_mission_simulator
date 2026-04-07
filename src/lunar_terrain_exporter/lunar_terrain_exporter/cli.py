@@ -16,6 +16,7 @@ import yaml
 
 from .lunar_terrain_exporter import LunarTerrainExporter
 from .utils.types import BoundingBox, ROI, LunarSite
+from .utils.site_catalog import get_site
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -45,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     site_parser.add_argument(
         "site_name", type=str,
-        help="Site name from the PGDA-78 catalog (e.g. connecting_ridge)",
+        help="Site name or site code from the PGDA-78 catalog (e.g. connecting_ridge or Site01)",
     )
     site_parser.add_argument(
         "--lat", type=float, default=None,
@@ -98,15 +99,22 @@ def _load_sites_from_yaml(config_path: Path) -> list[LunarSite]:
 
     sites: list[LunarSite] = []
     for entry in data["sites"]:
-        roi = _parse_roi(entry.get("roi", {}),
-                         default_use_full="site" in entry)
+        roi = parse_roi(entry.get("roi", {}),
+                        default_use_full="site" in entry)
 
         if "site" in entry:
-            config = LunarSite.from_catalog(entry["site"], roi=roi)
+            # Catalog lookup by name or code
+            catalog_entry = get_site(entry["site"])
+            config = LunarSite(
+                site_code=catalog_entry["site_code"],
+                name=catalog_entry["site_name"],
+                description=catalog_entry["description"],
+                roi=roi,
+            )
         else:
             config = LunarSite(
+                site_code=entry["site_code"],
                 name=entry["name"],
-                dem_url=entry["dem_url"],
                 roi=roi,
                 description=entry.get("description", ""),
             )
@@ -117,7 +125,7 @@ def _load_sites_from_yaml(config_path: Path) -> list[LunarSite]:
     return sites
 
 
-def _parse_roi(roi_raw: dict, *, default_use_full: bool = True) -> ROI:
+def parse_roi(roi_raw: dict, *, default_use_full: bool = True) -> ROI:
     """Build an ROI from a raw dict (from YAML or defaults)."""
     use_full = bool(roi_raw.get("use_full", default_use_full))
 
@@ -146,6 +154,13 @@ def main(argv: list[str] | None = None) -> None:
     sites: list[LunarSite] = []
 
     if args.command == "site":
+        # Validate site exists in catalog (accepts name or code)
+        try:
+            catalog_entry = get_site(args.site_name)
+        except KeyError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+
         if args.lat is not None and args.lon is not None:
             roi = ROI(
                 use_full=False,
@@ -159,7 +174,12 @@ def main(argv: list[str] | None = None) -> None:
         else:
             roi = ROI(use_full=True)
 
-        site = LunarSite.from_catalog(args.site_name, roi=roi)
+        site = LunarSite(
+            site_code=catalog_entry["site_code"],
+            name=catalog_entry["site_name"],
+            description=catalog_entry["description"],
+            roi=roi,
+        )
         site.validate()
         sites.append(site)
 

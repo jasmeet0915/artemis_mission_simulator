@@ -19,6 +19,12 @@ class TestSiteSubcommand:
         assert args.lat is None
         assert args.lon is None
 
+    def test_site_with_code(self):
+        """CLI should accept a site code as well as a name."""
+        parser = build_parser()
+        args = parser.parse_args(["site", "Site01"])
+        assert args.site_name == "Site01"
+
     def test_site_with_crop(self):
         parser = build_parser()
         args = parser.parse_args([
@@ -74,9 +80,15 @@ class TestLunarSiteFromCatalog:
     def test_creates_config_full_roi(self):
         config = LunarSite.from_catalog("connecting_ridge")
         assert config.name == "connecting_ridge"
+        assert config.site_code == "Site01"
         assert "Site01" in config.dem_url
         assert config.roi.use_full is True
         assert config.description != ""
+
+    def test_creates_config_by_code(self):
+        config = LunarSite.from_catalog("Site01")
+        assert config.name == "connecting_ridge"
+        assert config.site_code == "Site01"
 
     def test_creates_config_custom_roi(self):
         roi = ROI(
