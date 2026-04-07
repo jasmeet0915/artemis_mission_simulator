@@ -64,12 +64,14 @@ class LunarSite:
         """Build a LunarSite by looking up *identifier* (name or code) in the PGDA-78 catalog."""
         from .site_catalog import get_site
         entry = get_site(identifier)
-        return cls(
+        site = cls(
             site_code=entry["site_code"],
             name=entry["site_name"],
             description=entry["description"],
             roi=roi or ROI(use_full=True),
         )
+        site.validate()
+        return site
 
     @property
     def dem_url(self) -> str:

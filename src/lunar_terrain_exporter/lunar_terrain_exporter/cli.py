@@ -16,7 +16,6 @@ import yaml
 
 from .lunar_terrain_exporter import LunarTerrainExporter
 from .utils.types import BoundingBox, ROI, LunarSite
-from .utils.site_catalog import get_site
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -142,13 +141,6 @@ def main(argv: list[str] | None = None) -> None:
     sites: list[LunarSite] = []
 
     if args.command == "site":
-        # Validate site exists in catalog (accepts name or code)
-        try:
-            catalog_entry = get_site(args.site_name)
-        except KeyError as exc:
-            print(f"Error: {exc}", file=sys.stderr)
-            sys.exit(1)
-
         if args.lat is not None and args.lon is not None:
             roi = ROI(
                 use_full=False,
@@ -162,13 +154,12 @@ def main(argv: list[str] | None = None) -> None:
         else:
             roi = ROI(use_full=True)
 
-        site = LunarSite(
-            site_code=catalog_entry["site_code"],
-            name=catalog_entry["site_name"],
-            description=catalog_entry["description"],
-            roi=roi,
-        )
-        site.validate()
+        try:
+            site = LunarSite.from_catalog(args.site_name, roi=roi)
+        except (KeyError, ValueError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            sys.exit(1)
+
         sites.append(site)
 
     elif args.command == "batch":

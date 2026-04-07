@@ -13,7 +13,7 @@ import pytest
 from lunar_terrain_exporter.utils.types import (
     BoundingBox, ROI, LunarSite,
 )
-from lunar_terrain_exporter.cli import _load_sites_from_yaml
+from lunar_terrain_exporter.cli import load_sites_from_yaml
 from lunar_terrain_exporter.lunar_terrain_exporter import LunarTerrainExporter
 
 
@@ -23,7 +23,7 @@ class TestIntegrationConfigLoad:
     def test_load_all_artemis_sites(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = _load_sites_from_yaml(str(config_path))
+        sites = load_sites_from_yaml(str(config_path))
         assert len(sites) == 4
         names = [s.name for s in sites]
         assert "connecting_ridge" in names
@@ -32,7 +32,7 @@ class TestIntegrationConfigLoad:
     def test_all_sites_use_full_roi(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = _load_sites_from_yaml(str(config_path))
+        sites = load_sites_from_yaml(str(config_path))
         for site in sites:
             site.validate()
             assert site.roi.use_full is True
@@ -41,7 +41,7 @@ class TestIntegrationConfigLoad:
     def test_all_site_names_are_unique(self):
         config_path = Path(__file__).parent.parent / \
             "config" / "artemis_sites.yaml"
-        sites = _load_sites_from_yaml(str(config_path))
+        sites = load_sites_from_yaml(str(config_path))
         names = [s.name for s in sites]
         assert len(names) == len(set(names))
 

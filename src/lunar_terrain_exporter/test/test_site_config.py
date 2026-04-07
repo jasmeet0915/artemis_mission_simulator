@@ -9,7 +9,7 @@ import yaml
 from lunar_terrain_exporter.utils.types import (
     BoundingBox, ROI, LunarSite,
 )
-from lunar_terrain_exporter.cli import _load_sites_from_yaml
+from lunar_terrain_exporter.cli import load_sites_from_yaml
 
 
 class TestBoundingBox:
@@ -196,7 +196,7 @@ class TestLoadSites:
                     },
                 }]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert len(sites) == 1
             assert sites[0].name == "test_site"
             assert sites[0].site_code == "Site01"
@@ -227,7 +227,7 @@ class TestLoadSites:
                     },
                 ]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert len(sites) == 2
             assert sites[1].roi.bounding_box.width_km == 5.0
 
@@ -237,7 +237,7 @@ class TestLoadSites:
                 "sites": [{"name": "bad"}]
             }, Path(tmpdir))
             with pytest.raises((KeyError, TypeError)):
-                _load_sites_from_yaml(config_file)
+                load_sites_from_yaml(config_file)
 
     def test_load_full_roi_site(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -248,7 +248,7 @@ class TestLoadSites:
                     "roi": {"use_full": True},
                 }]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert len(sites) == 1
             assert sites[0].roi.use_full is True
             assert sites[0].roi.bounding_box is None
@@ -309,7 +309,7 @@ class TestLoadSitesCatalogShorthand:
                     "roi": {"use_full": True},
                 }]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert len(sites) == 1
             assert sites[0].name == "connecting_ridge"
             assert "Site01" in sites[0].dem_url
@@ -325,7 +325,7 @@ class TestLoadSitesCatalogShorthand:
                     },
                 }]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert sites[0].roi.bounding_box.width_km == 5.0
             assert "Site04" in sites[0].dem_url
 
@@ -344,7 +344,7 @@ class TestLoadSitesCatalogShorthand:
                     },
                 ]
             }, Path(tmpdir))
-            sites = _load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
             assert len(sites) == 2
             assert sites[0].name == "connecting_ridge"
             assert sites[1].name == "custom"
