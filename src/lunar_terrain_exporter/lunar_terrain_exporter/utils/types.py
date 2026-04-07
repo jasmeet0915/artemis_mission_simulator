@@ -1,7 +1,5 @@
 """Data types for terrain generation configuration."""
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass, field
 
@@ -51,7 +49,7 @@ class ROI:
 class LunarSite:
     """A single lunar terrain site with its DEM source and region of interest.
 
-    The DEM and slope URLs are derived automatically from *site_code*.
+    The DEM URL is derived automatically from *site_code*.
     """
 
     site_code: str
@@ -60,7 +58,7 @@ class LunarSite:
     roi: ROI = field(default_factory=ROI)
 
     @classmethod
-    def from_catalog(cls, identifier: str, roi: ROI | None = None) -> LunarSite:
+    def from_catalog(cls, identifier: str, roi: ROI | None = None) -> "LunarSite":
         """Build a LunarSite by looking up *identifier* (name or code) in the PGDA-78 catalog."""
         from .site_catalog import get_site
         entry = get_site(identifier)
@@ -77,11 +75,6 @@ class LunarSite:
     def dem_url(self) -> str:
         """DEM (surface elevation) GeoTIFF URL."""
         return f"{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_surf.tif"
-
-    @property
-    def slope_url(self) -> str:
-        """Slope map GeoTIFF URL."""
-        return f"{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_slp.tif"
 
     def validate(self) -> None:
         """Validate configuration values. Raises ValueError on invalid data."""

@@ -1,7 +1,5 @@
 """Heightmap generation from PGDA Product 78 polar stereographic GeoTIFF DEMs."""
 
-from __future__ import annotations
-
 import math
 from pathlib import Path
 
@@ -47,7 +45,7 @@ class HeightmapGenerator:
             return -90.0, 0.0
         colat = 2.0 * math.atan(r / (2.0 * _LUNAR_RADIUS_M))
         # For south pole stereographic, points away from pole have negative colat
-        colat = -colat  
+        colat = -colat
         lat = math.degrees(-colat - math.pi / 2)
         # Account for negative r flipping coordinates by 180°
         lon = math.degrees(math.atan2(x, y)) + 180.0
@@ -77,7 +75,8 @@ class HeightmapGenerator:
     @staticmethod
     def normalize(data: np.ndarray) -> np.ndarray:
         """Normalize elevation data to [0, 1] range. NaN becomes 0."""
-        data = np.nan_to_num(data, nan=np.nanmin(data) if not np.all(np.isnan(data)) else 0.0)
+        data = np.nan_to_num(data, nan=np.nanmin(
+            data) if not np.all(np.isnan(data)) else 0.0)
         vmin = float(np.min(data))
         vmax = float(np.max(data))
         if vmax > vmin:
@@ -145,7 +144,8 @@ class HeightmapGenerator:
             scale = src.scales[0] if src.scales else 1.0
             offset = src.offsets[0] if src.offsets else 0.0
 
-        elevations = HeightmapGenerator._read_elevations(raw, nodata, scale, offset)
+        elevations = HeightmapGenerator._read_elevations(
+            raw, nodata, scale, offset)
 
         elev_min = float(np.nanmin(elevations))
         elev_max = float(np.nanmax(elevations))
@@ -187,7 +187,8 @@ class HeightmapGenerator:
             x_min, y_min = raster_bounds.left, raster_bounds.bottom
             x_max, y_max = raster_bounds.right, raster_bounds.top
 
-        elevations = HeightmapGenerator._read_elevations(raw, nodata, scale, offset)
+        elevations = HeightmapGenerator._read_elevations(
+            raw, nodata, scale, offset)
 
         elev_min = float(np.nanmin(elevations))
         elev_max = float(np.nanmax(elevations))
@@ -195,7 +196,8 @@ class HeightmapGenerator:
 
         x_center = (x_min + x_max) / 2.0
         y_center = (y_min + y_max) / 2.0
-        center_lat, center_lon = HeightmapGenerator.stereo_to_latlon(x_center, y_center)
+        center_lat, center_lon = HeightmapGenerator.stereo_to_latlon(
+            x_center, y_center)
 
         bounds = {
             "center_lat": center_lat,

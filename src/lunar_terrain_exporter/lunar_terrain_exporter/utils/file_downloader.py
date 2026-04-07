@@ -1,7 +1,5 @@
 """File download utility with URL-hash-based local caching."""
 
-from __future__ import annotations
-
 import hashlib
 from pathlib import Path
 from urllib.parse import urlparse

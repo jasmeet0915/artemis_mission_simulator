@@ -16,12 +16,6 @@ def _make_heightmap(size: int = 65) -> np.ndarray:
     return rng.random((size, size))
 
 
-def _make_diffuse(size: int = 65) -> np.ndarray:
-    """Create a simple test diffuse map (uint8 RGB)."""
-    rng = np.random.default_rng(42)
-    return rng.integers(60, 190, (size, size, 3), dtype=np.uint8)
-
-
 # ---------------------------------------------------------------------------
 # NormalMapGenerator
 # ---------------------------------------------------------------------------
@@ -59,7 +53,6 @@ class TestNormalMap:
 class TestModelWriter:
     def test_writes_all_files(self):
         hm = _make_heightmap()
-        diffuse = _make_diffuse()
         nm = NormalMapGenerator.from_heightmap(hm)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "test_site")
@@ -68,7 +61,6 @@ class TestModelWriter:
                 display_name="Test Site",
                 description="A test site",
                 heightmap=hm,
-                diffuse_map=diffuse,
                 normal_map=nm,
                 size_x_m=5000,
                 size_y_m=4000,
@@ -83,12 +75,10 @@ class TestModelWriter:
             assert (out / "model.config").exists()
             assert (out / "metadata.yaml").exists()
             assert (out / "materials" / "textures" / "heightmap.png").exists()
-            assert (out / "materials" / "textures" / "diffuse.png").exists()
             assert (out / "materials" / "textures" / "normal.png").exists()
 
     def test_sdf_contains_site_id_and_sizes(self):
         hm = _make_heightmap()
-        diffuse = _make_diffuse()
         nm = NormalMapGenerator.from_heightmap(hm)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "my_site")
@@ -97,7 +87,6 @@ class TestModelWriter:
                 display_name="My Site",
                 description="Desc",
                 heightmap=hm,
-                diffuse_map=diffuse,
                 normal_map=nm,
                 size_x_m=3000,
                 size_y_m=2000,
@@ -111,11 +100,9 @@ class TestModelWriter:
             assert 'name="my_site"' in sdf
             assert "3000" in sdf
             assert "2000" in sdf
-            assert "diffuse.png" in sdf
 
     def test_metadata_yaml_valid(self):
         hm = _make_heightmap()
-        diffuse = _make_diffuse()
         nm = NormalMapGenerator.from_heightmap(hm)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "meta_test")
@@ -124,7 +111,6 @@ class TestModelWriter:
                 display_name="Meta Test",
                 description="Testing metadata",
                 heightmap=hm,
-                diffuse_map=diffuse,
                 normal_map=nm,
                 size_x_m=5000,
                 size_y_m=4000,

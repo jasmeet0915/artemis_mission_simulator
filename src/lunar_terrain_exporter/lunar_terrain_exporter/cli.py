@@ -6,8 +6,6 @@ site   Export a single site (full DEM or custom bounding-box crop).
 batch  Export multiple sites listed in a YAML config file.
 """
 
-from __future__ import annotations
-
 import argparse
 import sys
 from pathlib import Path
@@ -172,6 +170,6 @@ def main(argv: list[str] | None = None) -> None:
     exporter = LunarTerrainExporter(output_dir)
     for site in sites:
         print(f"\nExporting '{site.name}' ({site.site_code}) → {output_dir}/")
-        # exporter.export_model(site)
+        exporter.export_model(site)
 
     print("\nDone!")

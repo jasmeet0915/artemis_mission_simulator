@@ -1,7 +1,5 @@
 """Terrain generation pipeline."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from .utils.types import LunarSite
@@ -9,7 +7,6 @@ from .utils.file_downloader import FileDownloader
 from .utils.model_writer import ModelWriter
 from .map_generators.heightmap_generator import HeightmapGenerator
 from .map_generators.normal_map_generator import NormalMapGenerator
-from .map_generators.slope_texture_generator import SlopeTextureGenerator
 
 
 class LunarTerrainExporter:
@@ -25,14 +22,10 @@ class LunarTerrainExporter:
         print(f"\n=== Generating: {site.name} ===")
 
         dem_file = self._downloader.download(site.dem_url)
-        slope_file = self._downloader.download(site.slope_url)
 
         if site.roi.use_full:
             heightmap, elev_min, elev_max, bounds = (
                 HeightmapGenerator.from_dem_full_roi(dem_file)
-            )
-            diffuse = SlopeTextureGenerator.from_slope_geotiff(
-                slope_file, heightmap.shape[0], heightmap.shape[1]
             )
             lat = bounds["center_lat"]
             lon = bounds["center_lon"]
@@ -44,10 +37,6 @@ class LunarTerrainExporter:
             bb = site.roi.bounding_box
             heightmap, elev_min, elev_max = HeightmapGenerator.from_dem(
                 dem_file, bb.lat, bb.lon, bb.width_km, bb.height_km
-            )
-            diffuse = SlopeTextureGenerator.from_slope_geotiff_cropped(
-                slope_file, bb.lat, bb.lon, bb.width_km, bb.height_km,
-                heightmap.shape[0], heightmap.shape[1]
             )
             lat = bb.lat
             lon = bb.lon
@@ -67,7 +56,6 @@ class LunarTerrainExporter:
             display_name=site.name.replace("_", " ").title(),
             description=site.description or f"Lunar terrain at ({lat}, {lon})",
             heightmap=heightmap,
-            diffuse_map=diffuse,
             normal_map=normal_map,
             size_x_m=size_x_m,
             size_y_m=size_y_m,

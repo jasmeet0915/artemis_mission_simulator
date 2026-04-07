@@ -1,7 +1,5 @@
 """Normal map generation from heightmap data using Sobel gradients."""
 
-from __future__ import annotations
-
 import numpy as np
 from scipy.ndimage import sobel
 
@@ -31,5 +29,6 @@ class NormalMapGenerator:
         norms = np.linalg.norm(normals, axis=-1, keepdims=True)
         normals /= np.where(norms > 0, norms, 1.0)
 
-        normal_map = ((normals + 1.0) * 0.5 * 255.0).clip(0, 255).astype(np.uint8)
+        normal_map = ((normals + 1.0) * 0.5 *
+                      255.0).clip(0, 255).astype(np.uint8)
         return normal_map

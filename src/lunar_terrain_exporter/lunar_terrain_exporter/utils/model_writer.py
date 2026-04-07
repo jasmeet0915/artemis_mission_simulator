@@ -1,7 +1,5 @@
 """Gazebo SDF model file writer (SDF, config, metadata, textures)."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from string import Template
 
@@ -31,7 +29,6 @@ _MODEL_SDF_TEMPLATE = Template("""\
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
             <texture>
-              <diffuse>model://${site_id}/materials/textures/diffuse.png</diffuse>
               <normal>model://${site_id}/materials/textures/normal.png</normal>
               <size>10</size>
             </texture>
@@ -69,7 +66,6 @@ class ModelWriter:
         display_name: str,
         description: str,
         heightmap: np.ndarray,
-        diffuse_map: np.ndarray,
         normal_map: np.ndarray,
         size_x_m: int,
         size_y_m: int,
@@ -85,13 +81,12 @@ class ModelWriter:
 
         # 16-bit grayscale heightmap PNG
         hm_16bit = (heightmap * 65535).clip(0, 65535).astype(np.uint16)
-        Image.fromarray(hm_16bit, mode="I;16").save(textures_dir / "heightmap.png")
+        Image.fromarray(hm_16bit, mode="I;16").save(
+            textures_dir / "heightmap.png")
 
         # RGB normal map PNG
-        Image.fromarray(normal_map, mode="RGB").save(textures_dir / "normal.png")
-
-        # RGB diffuse texture PNG
-        Image.fromarray(diffuse_map, mode="RGB").save(textures_dir / "diffuse.png")
+        Image.fromarray(normal_map, mode="RGB").save(
+            textures_dir / "normal.png")
 
         elevation_range = max(elevation_max - elevation_min, 1.0)
 

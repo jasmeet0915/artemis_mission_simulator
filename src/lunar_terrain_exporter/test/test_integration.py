@@ -66,25 +66,21 @@ class TestIntegrationPipeline:
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
-        fake_diffuse = np.random.randint(
-            60, 190, (size, size, 3), dtype=np.uint8)
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.SlopeTextureGenerator") as mock_slope:
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
             mock_dl_cls.return_value = mock_dl_instance
 
             mock_hm.from_dem.return_value = (fake_heightmap, -500.0, 2000.0)
-            mock_slope.from_slope_geotiff_cropped.return_value = fake_diffuse
 
             generator = LunarTerrainExporter(output_dir=output_dir)
             result = generator.export_model(config)
 
-        # Downloader called for both DEM and slope
-        assert mock_dl_instance.download.call_count == 2
+        # Downloader called for DEM only
+        assert mock_dl_instance.download.call_count == 1
 
         model_dir = output_dir / "test_site"
         assert model_dir.exists()
@@ -96,12 +92,10 @@ class TestIntegrationPipeline:
         textures_dir = model_dir / "materials" / "textures"
         assert textures_dir.exists()
         assert (textures_dir / "heightmap.png").exists()
-        assert (textures_dir / "diffuse.png").exists()
         assert (textures_dir / "normal.png").exists()
 
         sdf_content = (model_dir / "model.sdf").read_text()
         assert "test_site" in sdf_content
-        assert "diffuse.png" in sdf_content
 
 
 class TestIntegrationFullROIPipeline:
@@ -120,14 +114,11 @@ class TestIntegrationFullROIPipeline:
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
-        fake_diffuse = np.random.randint(
-            60, 190, (size, size, 3), dtype=np.uint8)
         bounds = {"center_lat": -89.5, "center_lon": -
                   130.0, "width_km": 20.0, "height_km": 15.0}
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.SlopeTextureGenerator") as mock_slope:
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
@@ -136,16 +127,14 @@ class TestIntegrationFullROIPipeline:
             mock_hm.from_dem_full_roi.return_value = (
                 fake_heightmap, -500.0, 2000.0, bounds
             )
-            mock_slope.from_slope_geotiff.return_value = fake_diffuse
 
             generator = LunarTerrainExporter(output_dir=output_dir)
             result = generator.export_model(config)
 
         mock_hm.from_dem_full_roi.assert_called_once()
         mock_hm.from_dem.assert_not_called()
-        mock_slope.from_slope_geotiff.assert_called_once()
 
-        assert mock_dl_instance.download.call_count == 2
+        assert mock_dl_instance.download.call_count == 1
 
         model_dir = output_dir / "test_full_roi"
         assert model_dir.exists()

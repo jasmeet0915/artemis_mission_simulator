@@ -107,17 +107,6 @@ class TestLunarSite:
             "Site01_final_adj_5mpp_surf.tif"
         )
 
-    def test_slope_url_generated_from_site_code(self):
-        config = LunarSite(
-            site_code="Site01",
-            name="test_site",
-            roi=ROI(use_full=True),
-        )
-        assert config.slope_url == (
-            "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/"
-            "Site01_final_adj_5mpp_slp.tif"
-        )
-
     def test_validate_rejects_empty_name(self):
         with pytest.raises(ValueError, match="name"):
             LunarSite(
@@ -188,8 +177,7 @@ class TestLoadSites:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [{
-                    "site_code": "Site01",
-                    "name": "test_site",
+                    "site": "connecting_ridge",
                     "roi": {
                         "use_full": False,
                         "bounding_box": {"lat": -86.5, "lon": -4.0},
@@ -198,7 +186,7 @@ class TestLoadSites:
             }, Path(tmpdir))
             sites = load_sites_from_yaml(config_file)
             assert len(sites) == 1
-            assert sites[0].name == "test_site"
+            assert sites[0].name == "connecting_ridge"
             assert sites[0].site_code == "Site01"
             assert sites[0].roi.bounding_box.width_km == 10.0
 
@@ -207,16 +195,14 @@ class TestLoadSites:
             config_file = self._write_yaml({
                 "sites": [
                     {
-                        "site_code": "Site01",
-                        "name": "a",
+                        "site": "connecting_ridge",
                         "roi": {
                             "use_full": False,
                             "bounding_box": {"lat": -86.0, "lon": 0.0},
                         },
                     },
                     {
-                        "site_code": "Site04",
-                        "name": "b",
+                        "site": "shackleton_rim",
                         "roi": {
                             "use_full": False,
                             "bounding_box": {
@@ -232,19 +218,19 @@ class TestLoadSites:
             assert sites[1].roi.bounding_box.width_km == 5.0
 
     def test_missing_required_field_raises(self):
+        """An entry without a 'site' key is skipped (warning printed)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [{"name": "bad"}]
             }, Path(tmpdir))
-            with pytest.raises((KeyError, TypeError)):
-                load_sites_from_yaml(config_file)
+            sites = load_sites_from_yaml(config_file)
+            assert len(sites) == 0
 
     def test_load_full_roi_site(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [{
-                    "site_code": "Site01",
-                    "name": "full_site",
+                    "site": "connecting_ridge",
                     "roi": {"use_full": True},
                 }]
             }, Path(tmpdir))
@@ -275,23 +261,6 @@ class TestFromCatalog:
     def test_unknown_site_raises(self):
         with pytest.raises(KeyError, match="no_such_site"):
             LunarSite.from_catalog("no_such_site")
-
-
-class TestSlopeUrl:
-    def test_derives_slope_url_from_site_code(self):
-        config = LunarSite(
-            site_code="Site01",
-            name="test",
-            roi=ROI(use_full=True),
-        )
-        assert config.slope_url == (
-            "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_slp.tif"
-        )
-
-    def test_from_catalog_slope_url(self):
-        config = LunarSite.from_catalog("connecting_ridge")
-        assert "_slp.tif" in config.slope_url
-        assert "Site01" in config.slope_url
 
 
 class TestLoadSitesCatalogShorthand:
@@ -330,6 +299,7 @@ class TestLoadSitesCatalogShorthand:
             assert "Site04" in sites[0].dem_url
 
     def test_mixed_catalog_and_explicit(self):
+        """Two catalog entries in a batch."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [
@@ -338,8 +308,7 @@ class TestLoadSitesCatalogShorthand:
                         "roi": {"use_full": True},
                     },
                     {
-                        "site_code": "Site04",
-                        "name": "custom",
+                        "site": "shackleton_rim",
                         "roi": {"use_full": True},
                     },
                 ]
@@ -347,4 +316,4 @@ class TestLoadSitesCatalogShorthand:
             sites = load_sites_from_yaml(config_file)
             assert len(sites) == 2
             assert sites[0].name == "connecting_ridge"
-            assert sites[1].name == "custom"
+            assert sites[1].name == "shackleton_rim"

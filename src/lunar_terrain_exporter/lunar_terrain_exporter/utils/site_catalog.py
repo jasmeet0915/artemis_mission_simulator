@@ -4,8 +4,6 @@ Each entry stores only the site code, site name and description.
 URL construction is handled by :class:`~.types.LunarSite`.
 """
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 

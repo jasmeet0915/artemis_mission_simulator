@@ -30,7 +30,6 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_cli test/test_cli.py)
   ament_add_pytest_test(test_integration test/test_integration.py)
   ament_add_pytest_test(test_heightmap test/test_heightmap.py)
-  ament_add_pytest_test(test_slope_texture test/test_slope_texture.py)
   ament_add_pytest_test(test_terrain_processing test/test_terrain_processing.py)
 endif()
 
