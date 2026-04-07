@@ -1,106 +1,102 @@
 """PGDA Product 78 site catalog — all 27 south pole landing sites.
 
-URL patterns are deterministic from the PGDA ID:
-  DEM:   https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/{id}/{id}_final_adj_5mpp_surf.tif
-  Slope: https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/{id}/{id}_final_adj_5mpp_slp.tif
+Each entry stores only the site code, site name and description.
+URL construction is handled by :class:`~.types.LunarSite`.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-_BASE_URL = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
+from typing import TypedDict
 
 
-@dataclass(frozen=True)
-class CatalogSite:
+class CatalogEntry(TypedDict):
     """Metadata for a single PGDA-78 south pole site."""
 
-    pgda_id: str
-    name: str
-    display_name: str
+    site_code: str
+    site_name: str
     description: str
 
-    @property
-    def dem_url(self) -> str:
-        """DEM (surface elevation) GeoTIFF URL."""
-        return f"{_BASE_URL}/{self.pgda_id}/{self.pgda_id}_final_adj_5mpp_surf.tif"
 
-    @property
-    def slope_url(self) -> str:
-        """Slope map GeoTIFF URL."""
-        return f"{_BASE_URL}/{self.pgda_id}/{self.pgda_id}_final_adj_5mpp_slp.tif"
+_CATALOG: list[CatalogEntry] = [
+    {"site_code": "Site01", "site_name": "connecting_ridge",
+        "description": "Site 01 \u2013 Connecting ridge between Shackleton and de Gerlache craters"},
+    {"site_code": "Site04", "site_name": "shackleton_rim",
+        "description": "Site 04 \u2013 Rim of Shackleton crater"},
+    {"site_code": "Site06", "site_name": "nobile_rim_1",
+        "description": "Site 06 \u2013 Nobile rim 1"},
+    {"site_code": "Site07", "site_name": "peak_near_shackleton",
+        "description": "Site 07 \u2013 Isolated peak near Shackleton crater"},
+    {"site_code": "Site11", "site_name": "de_gerlache_rim",
+        "description": "Site 11 \u2013 Rim of de Gerlache crater"},
+    {"site_code": "Site20", "site_name": "leibnitz_beta",
+        "description": "Site 20 \u2013 Leibnitz beta plateau"},
+    {"site_code": "Site20v2", "site_name": "leibnitz_beta_v2",
+        "description": "Site 20v2 \u2013 Leibnitz beta plateau, extended boundaries"},
+    {"site_code": "Site23", "site_name": "malapert_massif",
+        "description": "Site 23 \u2013 Malapert massif"},
+    {"site_code": "Site42", "site_name": "de_gerlache_kocher",
+        "description": "Site 42 \u2013 de Gerlache-Kocher massif"},
+    {"site_code": "Haworth", "site_name": "haworth",
+        "description": "Haworth crater"},
+    {"site_code": "Shoemaker", "site_name": "shoemaker",
+        "description": "Shoemaker crater"},
+    {"site_code": "DM1", "site_name": "amundsen_rim",
+        "description": "DM1 \u2013 Amundsen rim"},
+    {"site_code": "DM2", "site_name": "nobile_rim_2",
+        "description": "DM2 \u2013 Nobile rim 2"},
+    {"site_code": "SL2", "site_name": "de_gerlache_rim_2",
+        "description": "SL2 \u2013 de Gerlache rim"},
+    {"site_code": "SL3", "site_name": "connecting_ridge_ext",
+        "description": "SL3 \u2013 Connecting ridge extension"},
+    {"site_code": "NPA", "site_name": "cabeus_wall",
+        "description": "NPA \u2013 Cabeus exterior wall 1"},
+    {"site_code": "NPB", "site_name": "amundsen_1",
+        "description": "NPB \u2013 Amundsen 1"},
+    {"site_code": "NPC", "site_name": "idelson_l",
+        "description": "NPC \u2013 Idel\u2019son L crater 1"},
+    {"site_code": "NPD", "site_name": "malapert_crater",
+        "description": "NPD \u2013 Malapert crater 1"},
+    {"site_code": "LM1", "site_name": "shackleton_rim_b",
+        "description": "LM1 \u2013 Shackleton Rim B"},
+    {"site_code": "LM2", "site_name": "shoemaker_rim_a",
+        "description": "LM2 \u2013 Shoemaker Rim A"},
+    {"site_code": "LM3", "site_name": "shoemaker_rim_b",
+        "description": "LM3 \u2013 Shoemaker Rim B"},
+    {"site_code": "LM4", "site_name": "shoemaker_rim_c",
+        "description": "LM4 \u2013 Shoemaker Rim C"},
+    {"site_code": "LM5", "site_name": "shoemaker_rim_d",
+        "description": "LM5 \u2013 Shoemaker Rim D"},
+    {"site_code": "LM6", "site_name": "shoemaker_rim_e",
+        "description": "LM6 \u2013 Shoemaker Rim E"},
+    {"site_code": "LM7", "site_name": "faustini_rim_a",
+        "description": "LM7 \u2013 Faustini Rim A"},
+    {"site_code": "LM8", "site_name": "shoemaker_rim_f",
+        "description": "LM8 \u2013 Shoemaker Rim F"},
+]
 
-
-SITE_CATALOG: dict[str, CatalogSite] = {s.name: s for s in [
-    CatalogSite("Site01", "connecting_ridge", "Connecting Ridge",
-                "Site 01 – Connecting ridge between Shackleton and de Gerlache craters"),
-    CatalogSite("Site04", "shackleton_rim", "Shackleton Rim",
-                "Site 04 – Rim of Shackleton crater"),
-    CatalogSite("Site06", "nobile_rim_1", "Nobile Rim 1",
-                "Site 06 – Nobile rim 1"),
-    CatalogSite("Site07", "peak_near_shackleton", "Peak Near Shackleton",
-                "Site 07 – Isolated peak near Shackleton crater"),
-    CatalogSite("Site11", "de_gerlache_rim", "de Gerlache Rim",
-                "Site 11 – Rim of de Gerlache crater"),
-    CatalogSite("Site20", "leibnitz_beta", "Leibnitz Beta Plateau",
-                "Site 20 – Leibnitz beta plateau"),
-    CatalogSite("Site20v2", "leibnitz_beta_v2", "Leibnitz Beta Plateau (Extended)",
-                "Site 20v2 – Leibnitz beta plateau, extended boundaries"),
-    CatalogSite("Site23", "malapert_massif", "Malapert Massif",
-                "Site 23 – Malapert massif"),
-    CatalogSite("Site42", "de_gerlache_kocher", "de Gerlache-Kocher Massif",
-                "Site 42 – de Gerlache-Kocher massif"),
-    CatalogSite("Haworth", "haworth", "Haworth",
-                "Haworth crater"),
-    CatalogSite("Shoemaker", "shoemaker", "Shoemaker",
-                "Shoemaker crater"),
-    CatalogSite("DM1", "amundsen_rim", "Amundsen Rim",
-                "DM1 – Amundsen rim"),
-    CatalogSite("DM2", "nobile_rim_2", "Nobile Rim 2",
-                "DM2 – Nobile rim 2"),
-    CatalogSite("SL2", "de_gerlache_rim_2", "de Gerlache Rim (SL2)",
-                "SL2 – de Gerlache rim"),
-    CatalogSite("SL3", "connecting_ridge_ext", "Connecting Ridge Extension",
-                "SL3 – Connecting ridge extension"),
-    CatalogSite("NPA", "cabeus_wall", "Cabeus Exterior Wall 1",
-                "NPA – Cabeus exterior wall 1"),
-    CatalogSite("NPB", "amundsen_1", "Amundsen 1",
-                "NPB – Amundsen 1"),
-    CatalogSite("NPC", "idelson_l", "Idel'son L Crater 1",
-                "NPC – Idel'son L crater 1"),
-    CatalogSite("NPD", "malapert_crater", "Malapert Crater 1",
-                "NPD – Malapert crater 1"),
-    CatalogSite("LM1", "shackleton_rim_b", "Shackleton Rim B",
-                "LM1 – Shackleton Rim B"),
-    CatalogSite("LM2", "shoemaker_rim_a", "Shoemaker Rim A",
-                "LM2 – Shoemaker Rim A"),
-    CatalogSite("LM3", "shoemaker_rim_b", "Shoemaker Rim B",
-                "LM3 – Shoemaker Rim B"),
-    CatalogSite("LM4", "shoemaker_rim_c", "Shoemaker Rim C",
-                "LM4 – Shoemaker Rim C"),
-    CatalogSite("LM5", "shoemaker_rim_d", "Shoemaker Rim D",
-                "LM5 – Shoemaker Rim D"),
-    CatalogSite("LM6", "shoemaker_rim_e", "Shoemaker Rim E",
-                "LM6 – Shoemaker Rim E"),
-    CatalogSite("LM7", "faustini_rim_a", "Faustini Rim A",
-                "LM7 – Faustini Rim A"),
-    CatalogSite("LM8", "shoemaker_rim_f", "Shoemaker Rim F",
-                "LM8 – Shoemaker Rim F"),
-]}
+# Build lookup indices
+_BY_NAME: dict[str, CatalogEntry] = {e["site_name"]: e for e in _CATALOG}
+_BY_CODE: dict[str, CatalogEntry] = {e["site_code"]: e for e in _CATALOG}
 
 
-def list_sites() -> list[CatalogSite]:
-    """Return all catalog sites in insertion order."""
-    return list(SITE_CATALOG.values())
+def list_sites() -> list[CatalogEntry]:
+    """Return all catalog entries in insertion order."""
+    return list(_CATALOG)
 
 
-def get_site(name: str) -> CatalogSite:
-    """Get a catalog site by name. Raises KeyError if not found."""
-    try:
-        return SITE_CATALOG[name]
-    except KeyError:
-        available = sorted(SITE_CATALOG.keys())
-        raise KeyError(
-            f"Site {name!r} not in catalog. Available: {available}"
-        ) from None
+def get_site(identifier: str) -> CatalogEntry:
+    """Look up a site by name **or** site code.
+
+    Raises :exc:`KeyError` if no matching entry is found.
+    """
+    if identifier in _BY_NAME:
+        return _BY_NAME[identifier]
+    if identifier in _BY_CODE:
+        return _BY_CODE[identifier]
+    available_names = sorted(_BY_NAME.keys())
+    available_codes = sorted(_BY_CODE.keys())
+    raise KeyError(
+        f"Site {identifier!r} not found in catalog. "
+        f"Available names: {available_names}  "
+        f"Available codes: {available_codes}"
+    )

@@ -72,14 +72,15 @@ class TestROI:
 class TestLunarSite:
     def test_create_with_bbox(self):
         config = LunarSite(
+            site_code="Site01",
             name="test_site",
-            dem_url="https://example.com/dem.img",
             roi=ROI(
                 use_full=False,
                 bounding_box=BoundingBox(lat=-86.5, lon=-4.0),
             ),
         )
         assert config.name == "test_site"
+        assert config.site_code == "Site01"
         assert config.roi.bounding_box.lat == -86.5
         assert config.roi.bounding_box.lon == -4.0
         assert config.roi.bounding_box.width_km == 10.0
@@ -88,56 +89,79 @@ class TestLunarSite:
 
     def test_create_with_full_roi(self):
         config = LunarSite(
+            site_code="Site01",
             name="test_site",
-            dem_url="https://example.com/dem.tif",
             roi=ROI(use_full=True),
         )
         assert config.roi.use_full is True
         assert config.roi.bounding_box is None
 
+    def test_dem_url_generated_from_site_code(self):
+        config = LunarSite(
+            site_code="Site01",
+            name="test_site",
+            roi=ROI(use_full=True),
+        )
+        assert config.dem_url == (
+            "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/"
+            "Site01_final_adj_5mpp_surf.tif"
+        )
+
+    def test_slope_url_generated_from_site_code(self):
+        config = LunarSite(
+            site_code="Site01",
+            name="test_site",
+            roi=ROI(use_full=True),
+        )
+        assert config.slope_url == (
+            "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/"
+            "Site01_final_adj_5mpp_slp.tif"
+        )
+
     def test_validate_rejects_empty_name(self):
         with pytest.raises(ValueError, match="name"):
             LunarSite(
+                site_code="Site01",
                 name="",
-                dem_url="https://example.com/dem.img",
                 roi=ROI(use_full=True),
             ).validate()
 
     def test_validate_rejects_invalid_name_chars(self):
         with pytest.raises(ValueError, match="name"):
             LunarSite(
+                site_code="Site01",
                 name="bad name/here",
-                dem_url="https://example.com/dem.img",
                 roi=ROI(use_full=True),
             ).validate()
 
-    def test_validate_rejects_empty_dem_url(self):
-        with pytest.raises(ValueError, match="dem_url"):
+    def test_validate_rejects_empty_site_code(self):
+        with pytest.raises(ValueError, match="site_code"):
             LunarSite(
-                name="test", dem_url="",
+                site_code="",
+                name="test",
                 roi=ROI(use_full=True),
             ).validate()
 
     def test_validate_propagates_roi_validation(self):
         with pytest.raises(ValueError, match="bounding_box"):
             LunarSite(
+                site_code="Site01",
                 name="test",
-                dem_url="https://example.com/dem.img",
                 roi=ROI(use_full=False),
             ).validate()
 
     def test_validate_accepts_full_roi(self):
         config = LunarSite(
+            site_code="Site01",
             name="test_site",
-            dem_url="https://example.com/dem.tif",
             roi=ROI(use_full=True),
         )
         config.validate()
 
     def test_validate_accepts_valid_bbox(self):
         config = LunarSite(
+            site_code="Haworth",
             name="haworth",
-            dem_url="https://example.com/dem.img",
             roi=ROI(
                 use_full=False,
                 bounding_box=BoundingBox(lat=-86.5, lon=-4.0),
@@ -148,8 +172,8 @@ class TestLunarSite:
     def test_default_roi_requires_bbox(self):
         with pytest.raises(ValueError, match="bounding_box"):
             LunarSite(
+                site_code="Site01",
                 name="test_site",
-                dem_url="https://example.com/dem.tif",
             ).validate()
 
 
@@ -164,8 +188,8 @@ class TestLoadSites:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [{
+                    "site_code": "Site01",
                     "name": "test_site",
-                    "dem_url": "https://example.com/dem.img",
                     "roi": {
                         "use_full": False,
                         "bounding_box": {"lat": -86.5, "lon": -4.0},
@@ -175,6 +199,7 @@ class TestLoadSites:
             sites = _load_sites_from_yaml(config_file)
             assert len(sites) == 1
             assert sites[0].name == "test_site"
+            assert sites[0].site_code == "Site01"
             assert sites[0].roi.bounding_box.width_km == 10.0
 
     def test_load_multiple_sites(self):
@@ -182,16 +207,16 @@ class TestLoadSites:
             config_file = self._write_yaml({
                 "sites": [
                     {
+                        "site_code": "Site01",
                         "name": "a",
-                        "dem_url": "https://example.com/a.img",
                         "roi": {
                             "use_full": False,
                             "bounding_box": {"lat": -86.0, "lon": 0.0},
                         },
                     },
                     {
+                        "site_code": "Site04",
                         "name": "b",
-                        "dem_url": "https://example.com/b.img",
                         "roi": {
                             "use_full": False,
                             "bounding_box": {
@@ -218,8 +243,8 @@ class TestLoadSites:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = self._write_yaml({
                 "sites": [{
+                    "site_code": "Site01",
                     "name": "full_site",
-                    "dem_url": "https://example.com/dem.tif",
                     "roi": {"use_full": True},
                 }]
             }, Path(tmpdir))
@@ -253,10 +278,10 @@ class TestFromCatalog:
 
 
 class TestSlopeUrl:
-    def test_derives_slope_url_from_dem_url(self):
+    def test_derives_slope_url_from_site_code(self):
         config = LunarSite(
+            site_code="Site01",
             name="test",
-            dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(use_full=True),
         )
         assert config.slope_url == (
@@ -313,8 +338,8 @@ class TestLoadSitesCatalogShorthand:
                         "roi": {"use_full": True},
                     },
                     {
+                        "site_code": "Site04",
                         "name": "custom",
-                        "dem_url": "https://example.com/dem.tif",
                         "roi": {"use_full": True},
                     },
                 ]

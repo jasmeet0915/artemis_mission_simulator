@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass, field
 
 _VALID_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
+_BASE_URL = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
 
 
 @dataclass
@@ -48,29 +49,37 @@ class ROI:
 
 @dataclass
 class LunarSite:
-    """A single lunar terrain site with its DEM source and region of interest."""
+    """A single lunar terrain site with its DEM source and region of interest.
 
+    The DEM and slope URLs are derived automatically from *site_code*.
+    """
+
+    site_code: str
     name: str
-    dem_url: str
-    roi: ROI = field(default_factory=ROI)
     description: str = ""
+    roi: ROI = field(default_factory=ROI)
 
     @classmethod
-    def from_catalog(cls, site_name: str, roi: ROI | None = None) -> LunarSite:
-        """Build a LunarSite by looking up *site_name* in the PGDA-78 catalog."""
+    def from_catalog(cls, identifier: str, roi: ROI | None = None) -> LunarSite:
+        """Build a LunarSite by looking up *identifier* (name or code) in the PGDA-78 catalog."""
         from .site_catalog import get_site
-        cat = get_site(site_name)
+        entry = get_site(identifier)
         return cls(
-            name=cat.name,
-            dem_url=cat.dem_url,
+            site_code=entry["site_code"],
+            name=entry["site_name"],
+            description=entry["description"],
             roi=roi or ROI(use_full=True),
-            description=cat.description,
         )
 
     @property
+    def dem_url(self) -> str:
+        """DEM (surface elevation) GeoTIFF URL."""
+        return f"{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_surf.tif"
+
+    @property
     def slope_url(self) -> str:
-        """Derive slope GeoTIFF URL from DEM URL."""
-        return self.dem_url.replace("_surf.tif", "_slp.tif")
+        """Slope map GeoTIFF URL."""
+        return f"{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_slp.tif"
 
     def validate(self) -> None:
         """Validate configuration values. Raises ValueError on invalid data."""
@@ -79,6 +88,6 @@ class LunarSite:
                 f"name must be non-empty and contain only alphanumeric, "
                 f"hyphens, or underscores (got: {self.name!r})"
             )
-        if not self.dem_url:
-            raise ValueError("dem_url must be a non-empty string")
+        if not self.site_code:
+            raise ValueError("site_code must be a non-empty string")
         self.roi.validate()

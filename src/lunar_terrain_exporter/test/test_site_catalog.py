@@ -3,52 +3,45 @@
 import pytest
 
 from lunar_terrain_exporter.utils.site_catalog import (
-    CatalogSite, SITE_CATALOG, list_sites, get_site,
+    CatalogEntry, list_sites, get_site,
 )
 
 _BASE_URL = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
 
 
-class TestCatalogSite:
-    def test_dem_url_generation(self):
-        site = CatalogSite("Site01", "connecting_ridge",
-                           "Connecting Ridge", "desc")
-        assert site.dem_url == f"{_BASE_URL}/Site01/Site01_final_adj_5mpp_surf.tif"
+class TestCatalogEntry:
+    def test_entry_has_required_keys(self):
+        entry = get_site("connecting_ridge")
+        assert "site_code" in entry
+        assert "site_name" in entry
+        assert "description" in entry
 
-    def test_slope_url_generation(self):
-        site = CatalogSite("Site01", "connecting_ridge",
-                           "Connecting Ridge", "desc")
-        assert site.slope_url == f"{_BASE_URL}/Site01/Site01_final_adj_5mpp_slp.tif"
-
-    def test_non_numeric_pgda_id(self):
-        """Sites like Haworth, DM1, LM2 have non-SiteNN pgda_ids."""
-        site = CatalogSite("Haworth", "haworth", "Haworth", "desc")
-        assert site.dem_url == f"{_BASE_URL}/Haworth/Haworth_final_adj_5mpp_surf.tif"
-
-    def test_frozen_dataclass(self):
-        site = CatalogSite("Site01", "connecting_ridge",
-                           "Connecting Ridge", "desc")
-        with pytest.raises(AttributeError):
-            site.name = "other"
+    def test_entry_values(self):
+        entry = get_site("connecting_ridge")
+        assert entry["site_code"] == "Site01"
+        assert entry["site_name"] == "connecting_ridge"
+        assert entry["description"] != ""
 
 
 class TestSiteCatalog:
     def test_catalog_has_27_sites(self):
-        assert len(SITE_CATALOG) == 27
+        assert len(list_sites()) == 27
 
     def test_known_sites_present(self):
+        names = {e["site_name"] for e in list_sites()}
         for name in ["connecting_ridge", "shackleton_rim", "peak_near_shackleton",
                      "de_gerlache_rim", "haworth", "shoemaker", "amundsen_rim"]:
-            assert name in SITE_CATALOG
+            assert name in names
 
     def test_all_names_are_snake_case(self):
-        for name in SITE_CATALOG:
+        for entry in list_sites():
+            name = entry["site_name"]
             assert name == name.lower()
             assert " " not in name
 
-    def test_all_pgda_ids_unique(self):
-        ids = [s.pgda_id for s in SITE_CATALOG.values()]
-        assert len(ids) == len(set(ids))
+    def test_all_site_codes_unique(self):
+        codes = [e["site_code"] for e in list_sites()]
+        assert len(codes) == len(set(codes))
 
 
 class TestListSites:
@@ -56,16 +49,19 @@ class TestListSites:
         sites = list_sites()
         assert len(sites) == 27
 
-    def test_returns_catalog_site_objects(self):
+    def test_returns_catalog_entry_dicts(self):
         sites = list_sites()
-        assert all(isinstance(s, CatalogSite) for s in sites)
+        assert all(isinstance(s, dict) for s in sites)
 
 
 class TestGetSite:
-    def test_known_site(self):
-        site = get_site("connecting_ridge")
-        assert site.pgda_id == "Site01"
-        assert site.display_name == "Connecting Ridge"
+    def test_lookup_by_name(self):
+        entry = get_site("connecting_ridge")
+        assert entry["site_code"] == "Site01"
+
+    def test_lookup_by_code(self):
+        entry = get_site("Site01")
+        assert entry["site_name"] == "connecting_ridge"
 
     def test_unknown_site_raises(self):
         with pytest.raises(KeyError, match="no_such_site"):

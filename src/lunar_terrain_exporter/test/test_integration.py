@@ -52,8 +52,8 @@ class TestIntegrationPipeline:
     def test_terrain_generator_creates_output_structure(self, tmp_path):
         """Verify LunarTerrainExporter produces model dir with expected files."""
         config = LunarSite(
+            site_code="Site01",
             name="test_site",
-            dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(
                 use_full=False,
                 bounding_box=BoundingBox(
@@ -110,8 +110,8 @@ class TestIntegrationFullROIPipeline:
     def test_full_roi_pipeline(self, tmp_path):
         """Verify LunarTerrainExporter uses from_dem_full_roi when roi.use_full=True."""
         config = LunarSite(
+            site_code="Site01",
             name="test_full_roi",
-            dem_url="https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif",
             roi=ROI(use_full=True),
         )
 
