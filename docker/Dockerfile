@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pil \
     gdal-bin \
     python3-gdal \
+    python3-tqdm \
     && rm -rf /var/lib/apt/lists/*
 
 # Install additional Python deps for terrain tool

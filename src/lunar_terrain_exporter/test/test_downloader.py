@@ -1,4 +1,4 @@
-"""Tests for the file downloader with URL-hash caching."""
+"""Tests for the file downloader with local caching."""
 
 import tempfile
 from pathlib import Path
@@ -8,30 +8,24 @@ from lunar_terrain_exporter.utils.file_downloader import FileDownloader
 
 
 class TestFileDownloader:
-    def test_cache_key_includes_url_hash(self):
-        """Two different URLs with same filename get different cache paths."""
+    def test_cache_uses_url_filename(self):
+        """Cache path is simply cache_dir / filename from URL."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dl = FileDownloader(Path(tmpdir))
-            key_a = dl._cache_path("https://server-a.com/data/dem.img")
-            key_b = dl._cache_path("https://server-b.com/data/dem.img")
-            assert key_a != key_b
-            assert key_a.name.endswith("_dem.img")
-            assert key_b.name.endswith("_dem.img")
-
-    def test_same_url_gives_same_cache_path(self):
-        """Same URL always maps to the same cache path."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            dl = FileDownloader(Path(tmpdir))
-            key_a = dl._cache_path("https://example.com/dem.img")
-            key_b = dl._cache_path("https://example.com/dem.img")
-            assert key_a == key_b
+            url = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif"
+            # Pre-create the file so download() returns the cached path
+            expected = Path(tmpdir) / "Site01_final_adj_5mpp_surf.tif"
+            expected.write_bytes(b"data")
+            result = dl.download(url)
+            assert result == expected
+            assert result.name == "Site01_final_adj_5mpp_surf.tif"
 
     def test_returns_cached_file_without_download(self):
         """If file exists in cache, return it without downloading."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dl = FileDownloader(Path(tmpdir))
             url = "https://example.com/test.img"
-            cache_path = dl._cache_path(url)
+            cache_path = Path(tmpdir) / "test.img"
             cache_path.write_bytes(b"cached data")
 
             with patch("lunar_terrain_exporter.utils.file_downloader.requests") as mock_req:

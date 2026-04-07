@@ -14,7 +14,8 @@ class LunarTerrainExporter:
 
     def __init__(self, output_dir: Path) -> None:
         self._output_dir = output_dir
-        self._default_cache_dir = Path(__file__).resolve().parents[3] / "data"
+        self._default_cache_dir = Path(
+            __file__).resolve().parents[3] / ".dem_cache"
         self._downloader = FileDownloader(self._default_cache_dir)
 
     def export_model(self, site: LunarSite) -> Path:

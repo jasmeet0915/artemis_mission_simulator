@@ -11,10 +11,7 @@ __pycache__/
 venv/
 
 # Raw satellite data cache
-data/*.tif
-data/*.img
-data/*.lbl
-data/*.jp2
+.dem_cache/
 
 # IDE
 .vscode/
