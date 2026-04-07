@@ -21,10 +21,12 @@ from .utils.types import BoundingBox, ROI, LunarSite
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lunar_terrain_exporter",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Export terrain models (only SDF models supported for now) from NASA"
-            "PGDA (Planetary Geodesy Data Archive) Product 78: High resolution "
-            "DEMs for Lunar South Pole Sites (main target for the Artemis Missions)."
+            "Export terrain models (only SDF models supported for now) from NASA's "
+            "PGDA (Planetary Geodesy Data Archive) Product 78:\nHigh resolution "
+            "DEMs for Lunar South Pole Sites: "
+            "https://pgda.gsfc.nasa.gov/products/78"
         ),
     )
     subparsers = parser.add_subparsers(dest="command")
@@ -170,6 +172,6 @@ def main(argv: list[str] | None = None) -> None:
     exporter = LunarTerrainExporter(output_dir)
     for site in sites:
         print(f"\nExporting '{site.name}' ({site.site_code}) → {output_dir}/")
-        exporter.export_model(site)
+        # exporter.export_model(site)
 
     print("\nDone!")

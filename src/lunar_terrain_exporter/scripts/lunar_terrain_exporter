@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+"""Entry point for the lunar_terrain_exporter CLI."""
+from lunar_terrain_exporter.cli import main
+
+main()
