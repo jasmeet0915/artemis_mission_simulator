@@ -2,7 +2,7 @@
 
 import pytest
 
-from lunar_terrain_exporter.cli import build_parser, _load_sites_from_yaml
+from lunar_terrain_exporter.cli import build_parser, load_sites_from_yaml
 from lunar_terrain_exporter.utils.types import BoundingBox, ROI, LunarSite
 
 
