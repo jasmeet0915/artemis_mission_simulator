@@ -163,10 +163,13 @@ def main(argv: list[str] | None = None) -> None:
         sites.append(site)
 
     elif args.command == "batch":
+        print(f"Loading sites from {args.config}...")
         sites = load_sites_from_yaml(Path(args.config))
+        print(f"Found {len(sites)} site(s) to export.")
 
     exporter = LunarTerrainExporter(output_dir)
     for site in sites:
+        print(f"\nExporting '{site.name}' ({site.site_code}) → {output_dir}/")
         exporter.export_model(site)
 
     print("\nDone!")
