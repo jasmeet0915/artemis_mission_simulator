@@ -7,8 +7,7 @@ import numpy as np
 import yaml
 from rasterio.transform import from_bounds
 
-from lunar_terrain_exporter.map_generators.heightmap_generator import HeightmapGenerator
-from lunar_terrain_exporter.map_generators.normal_map_generator import NormalMapGenerator
+from lunar_terrain_exporter.raster_processors.normal_map_generator import NormalMapGenerator
 from lunar_terrain_exporter.utils.model_writer import ModelWriter
 
 
@@ -32,13 +31,11 @@ def _make_dem_profile(size: int = 65) -> dict:
 
 class TestNormalMap:
     def test_shape_rgb(self):
-        hm = HeightmapGenerator.normalize(_make_elevations(129))
-        nm = NormalMapGenerator.from_heightmap(hm)
+        nm = NormalMapGenerator.from_heightmap(_make_elevations(129))
         assert nm.shape == (129, 129, 3)
 
     def test_dtype_uint8(self):
-        hm = HeightmapGenerator.normalize(_make_elevations(129))
-        nm = NormalMapGenerator.from_heightmap(hm)
+        nm = NormalMapGenerator.from_heightmap(_make_elevations(129))
         assert nm.dtype == np.uint8
 
     def test_flat_surface_points_up(self):
@@ -50,9 +47,8 @@ class TestNormalMap:
         assert 120 < nm[:, :, 1].mean() < 136
 
     def test_strength_affects_output(self):
-        hm = HeightmapGenerator.normalize(_make_elevations(65))
-        nm_weak = NormalMapGenerator.from_heightmap(hm, strength=0.5)
-        nm_strong = NormalMapGenerator.from_heightmap(hm, strength=5.0)
+        nm_weak = NormalMapGenerator.from_heightmap(_make_elevations(65), strength=0.5)
+        nm_strong = NormalMapGenerator.from_heightmap(_make_elevations(65), strength=5.0)
         assert nm_strong[:, :, 0].std() > nm_weak[:, :, 0].std()
 
 
@@ -63,8 +59,7 @@ class TestNormalMap:
 class TestModelWriter:
     def test_writes_all_files(self):
         elev = _make_elevations()
-        hm = HeightmapGenerator.normalize(elev)
-        nm = NormalMapGenerator.from_heightmap(hm)
+        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "test_site")
             writer.write(
@@ -91,8 +86,7 @@ class TestModelWriter:
 
     def test_sdf_contains_site_id_and_sizes(self):
         elev = _make_elevations()
-        hm = HeightmapGenerator.normalize(elev)
-        nm = NormalMapGenerator.from_heightmap(hm)
+        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "my_site")
             writer.write(
@@ -117,8 +111,7 @@ class TestModelWriter:
 
     def test_metadata_yaml_valid(self):
         elev = _make_elevations()
-        hm = HeightmapGenerator.normalize(elev)
-        nm = NormalMapGenerator.from_heightmap(hm)
+        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = ModelWriter(Path(tmpdir) / "meta_test")
             writer.write(

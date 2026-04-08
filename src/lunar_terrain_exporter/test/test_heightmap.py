@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from lunar_terrain_exporter.map_generators.heightmap_generator import HeightmapGenerator
+from lunar_terrain_exporter.raster_processors.dem_processor import DEMProcessor
+from lunar_terrain_exporter.utils.raster_utils import normalize_array
 from lunar_terrain_exporter.utils.types import BoundingBox, ROI
 
 
@@ -14,7 +15,7 @@ class TestReadElevations:
     def test_float_data_no_scaling(self):
         """Float GeoTIFF data should be used as-is."""
         raw = np.array([[100.5, 200.3], [150.7, -9999.0]], dtype=np.float32)
-        elevations = HeightmapGenerator._read_elevations(
+        elevations = DEMProcessor._read_elevations(
             raw, nodata=-9999.0, scale=1.0, offset=0.0)
         assert elevations[0, 0] == pytest.approx(100.5, abs=0.1)
         assert elevations[1, 0] == pytest.approx(150.7, abs=0.1)
@@ -23,7 +24,7 @@ class TestReadElevations:
     def test_int16_with_scale(self):
         """int16 data with scale=0.5."""
         raw = np.array([[100, 200], [300, -32768]], dtype=np.int16)
-        elevations = HeightmapGenerator._read_elevations(
+        elevations = DEMProcessor._read_elevations(
             raw, nodata=-32768, scale=0.5, offset=0.0)
         assert elevations[0, 0] == pytest.approx(50.0)
         assert elevations[0, 1] == pytest.approx(100.0)
@@ -32,7 +33,7 @@ class TestReadElevations:
     def test_scale_and_offset(self):
         """Scale and offset should both be applied: elevation = raw * scale + offset."""
         raw = np.array([[10, 20]], dtype=np.int16)
-        elevations = HeightmapGenerator._read_elevations(
+        elevations = DEMProcessor._read_elevations(
             raw, nodata=None, scale=2.0, offset=100.0)
         assert elevations[0, 0] == pytest.approx(120.0)
         assert elevations[0, 1] == pytest.approx(140.0)
@@ -40,28 +41,28 @@ class TestReadElevations:
     def test_no_nodata(self):
         """When nodata is None, no pixels should become NaN."""
         raw = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float64)
-        elevations = HeightmapGenerator._read_elevations(
+        elevations = DEMProcessor._read_elevations(
             raw, nodata=None, scale=1.0, offset=0.0)
         assert not np.any(np.isnan(elevations))
 
 
-class TestHeightmapNormalization:
+class TestNormalizeArray:
     """Test normalization to 0-1 range."""
 
     def test_normalize_range(self):
         data = np.array([[100.0, 200.0], [150.0, 300.0]])
-        normalized = HeightmapGenerator.normalize(data)
+        normalized = normalize_array(data)
         assert normalized.min() == pytest.approx(0.0)
         assert normalized.max() == pytest.approx(1.0)
 
     def test_normalize_flat_surface(self):
         data = np.full((10, 10), 42.0)
-        normalized = HeightmapGenerator.normalize(data)
+        normalized = normalize_array(data)
         assert np.all(normalized == 0.0)
 
 
 class TestFromDem:
-    """Test reading a DEM tile via the unified from_dem() interface."""
+    """Test reading a DEM tile via the unified extract_from_raw() interface."""
 
     @staticmethod
     def _make_test_geotiff(tmp_path: Path, size: int = 64) -> Path:
@@ -85,11 +86,11 @@ class TestFromDem:
         return dem_path
 
     def test_full_roi_returns_elevations_and_bounds(self, tmp_path):
-        """from_dem with use_full=True should return elevations, range, bounds, and profile."""
+        """extract_from_raw with use_full=True should return elevations, range, bounds, and profile."""
         dem_path = self._make_test_geotiff(tmp_path)
         roi = ROI(use_full=True)
         elevations, elev_min, elev_max, bounds, dem_profile = (
-            HeightmapGenerator.from_dem(dem_path, roi)
+            DEMProcessor.extract_from_raw(dem_path, roi)
         )
 
         assert elevations.ndim == 2
@@ -110,7 +111,7 @@ class TestFromDem:
         assert "transform" in dem_profile
 
     def test_bounding_box_roi_returns_elevations(self, tmp_path):
-        """from_dem with a bounding box ROI should crop and return elevations."""
+        """extract_from_raw with a bounding box ROI should crop and return elevations."""
         dem_path = self._make_test_geotiff(tmp_path, size=128)
         roi = ROI(
             use_full=False,
@@ -118,7 +119,7 @@ class TestFromDem:
                                      width_km=0.5, height_km=0.5),
         )
         elevations, elev_min, elev_max, bounds, dem_profile = (
-            HeightmapGenerator.from_dem(dem_path, roi)
+            DEMProcessor.extract_from_raw(dem_path, roi)
         )
 
         assert elevations.ndim == 2

@@ -72,13 +72,13 @@ class TestIntegrationPipeline:
                         "transform": None}
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.DEMProcessor") as mock_hm:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
             mock_dl_cls.return_value = mock_dl_instance
 
-            mock_hm.from_dem.return_value = (
+            mock_hm.extract_from_raw.return_value = (
                 fake_heightmap, -500.0, 2000.0, fake_bounds, fake_profile)
 
             generator = LunarTerrainExporter(output_dir=output_dir)
@@ -107,7 +107,7 @@ class TestIntegrationFullROIPipeline:
     """Pipeline test with use_full ROI."""
 
     def test_full_roi_pipeline(self, tmp_path):
-        """Verify LunarTerrainExporter calls from_dem with use_full ROI."""
+        """Verify LunarTerrainExporter calls extract_from_raw with use_full ROI."""
         config = LunarSite(
             site_code="Site01",
             name="test_full_roi",
@@ -125,20 +125,20 @@ class TestIntegrationFullROIPipeline:
                         "transform": None}
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
-                patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
+                patch("lunar_terrain_exporter.lunar_terrain_exporter.DEMProcessor") as mock_hm:
 
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
             mock_dl_cls.return_value = mock_dl_instance
 
-            mock_hm.from_dem.return_value = (
+            mock_hm.extract_from_raw.return_value = (
                 fake_heightmap, -500.0, 2000.0, bounds, fake_profile
             )
 
             generator = LunarTerrainExporter(output_dir=output_dir)
             result = generator.export_model(config)
 
-        mock_hm.from_dem.assert_called_once()
+        mock_hm.extract_from_raw.assert_called_once()
 
         assert mock_dl_instance.download.call_count == 1
 

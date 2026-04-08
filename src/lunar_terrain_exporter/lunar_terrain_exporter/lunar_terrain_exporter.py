@@ -5,8 +5,8 @@ from pathlib import Path
 from .utils.types import LunarSite
 from .utils.file_downloader import FileDownloader
 from .utils.model_writer import ModelWriter
-from .map_generators.heightmap_generator import HeightmapGenerator
-from .map_generators.normal_map_generator import NormalMapGenerator
+from .raster_processors.dem_processor import DEMProcessor
+from .raster_processors.normal_map_generator import NormalMapGenerator
 
 
 class LunarTerrainExporter:
@@ -25,7 +25,7 @@ class LunarTerrainExporter:
         dem_file = self._downloader.download(site.dem_url)
 
         elevations, elev_min, elev_max, bounds, dem_profile = (
-            HeightmapGenerator.from_dem(dem_file, site.roi)
+            DEMProcessor.extract_from_raw(dem_file, site.roi)
         )
         lat = bounds["center_lat"]
         lon = bounds["center_lon"]
@@ -34,8 +34,7 @@ class LunarTerrainExporter:
         print(f"    ROI: center=({lat:.4f}, {lon:.4f}), "
               f"{width_km:.1f}x{height_km:.1f}km")
 
-        normalized = HeightmapGenerator.normalize(elevations)
-        normal_map = NormalMapGenerator.from_heightmap(normalized)
+        normal_map = NormalMapGenerator.from_heightmap(elevations)
 
         size_x_m = int(width_km * 1000)
         size_y_m = int(height_km * 1000)

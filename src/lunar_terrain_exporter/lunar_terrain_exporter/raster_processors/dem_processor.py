@@ -38,7 +38,7 @@ class DEMProcessor:
         return result
 
     @staticmethod
-    def from_dem(
+    def extract_from_raw(
         dem_path: Path,
         roi: ROI,
     ) -> tuple[np.ndarray, float, float, dict, dict]:
