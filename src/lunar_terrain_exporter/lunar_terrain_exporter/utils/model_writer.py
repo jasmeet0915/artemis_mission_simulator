@@ -4,6 +4,7 @@ from pathlib import Path
 from string import Template
 
 import numpy as np
+import rasterio
 import yaml
 from PIL import Image
 
@@ -16,7 +17,7 @@ _MODEL_SDF_TEMPLATE = Template("""\
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://${site_id}/materials/textures/heightmap.png</uri>
+            <uri>model://${site_id}/materials/textures/heightmap.tif</uri>
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
           </heightmap>
@@ -25,7 +26,7 @@ _MODEL_SDF_TEMPLATE = Template("""\
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://${site_id}/materials/textures/heightmap.png</uri>
+            <uri>model://${site_id}/materials/textures/heightmap.tif</uri>
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
             <texture>
@@ -65,7 +66,8 @@ class ModelWriter:
         site_id: str,
         display_name: str,
         description: str,
-        heightmap: np.ndarray,
+        elevations: np.ndarray,
+        dem_profile: dict,
         normal_map: np.ndarray,
         size_x_m: int,
         size_y_m: int,
@@ -79,10 +81,18 @@ class ModelWriter:
         textures_dir = self._output_dir / "materials" / "textures"
         textures_dir.mkdir(parents=True, exist_ok=True)
 
-        # 16-bit grayscale heightmap PNG
-        hm_16bit = (heightmap * 65535).clip(0, 65535).astype(np.uint16)
-        Image.fromarray(hm_16bit, mode="I;16").save(
-            textures_dir / "heightmap.png")
+        # GeoTIFF DEM heightmap (preserves CRS and resolution)
+        height, width = elevations.shape
+        profile = {
+            "driver": "GTiff",
+            "height": height,
+            "width": width,
+            "count": 1,
+            "dtype": "float32",
+            **dem_profile,
+        }
+        with rasterio.open(textures_dir / "heightmap.tif", "w", **profile) as dst:
+            dst.write(elevations.astype(np.float32), 1)
 
         # RGB normal map PNG
         Image.fromarray(normal_map, mode="RGB").save(
@@ -112,8 +122,8 @@ class ModelWriter:
             "coordinates": {"lat": float(lat), "lon": float(lon)},
             "size_x_m": size_x_m,
             "size_y_m": size_y_m,
-            "resolution_x": int(heightmap.shape[1]),
-            "resolution_y": int(heightmap.shape[0]),
+            "resolution_x": int(elevations.shape[1]),
+            "resolution_y": int(elevations.shape[0]),
             "elevation_min_m": round(elevation_min, 2),
             "elevation_max_m": round(elevation_max, 2),
             "elevation_range_m": round(elevation_range, 2),

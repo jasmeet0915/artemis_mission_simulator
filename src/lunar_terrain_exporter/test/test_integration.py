@@ -66,6 +66,10 @@ class TestIntegrationPipeline:
 
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
+        fake_bounds = {"center_lat": -86.5, "center_lon": -4.0,
+                       "width_km": 2.0, "height_km": 2.0}
+        fake_profile = {"crs": "EPSG:3031",
+                        "transform": None}
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
                 patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
@@ -74,7 +78,8 @@ class TestIntegrationPipeline:
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
             mock_dl_cls.return_value = mock_dl_instance
 
-            mock_hm.from_dem.return_value = (fake_heightmap, -500.0, 2000.0)
+            mock_hm.from_dem.return_value = (
+                fake_heightmap, -500.0, 2000.0, fake_bounds, fake_profile)
 
             generator = LunarTerrainExporter(output_dir=output_dir)
             result = generator.export_model(config)
@@ -91,7 +96,7 @@ class TestIntegrationPipeline:
 
         textures_dir = model_dir / "materials" / "textures"
         assert textures_dir.exists()
-        assert (textures_dir / "heightmap.png").exists()
+        assert (textures_dir / "heightmap.tif").exists()
         assert (textures_dir / "normal.png").exists()
 
         sdf_content = (model_dir / "model.sdf").read_text()
@@ -102,7 +107,7 @@ class TestIntegrationFullROIPipeline:
     """Pipeline test with use_full ROI."""
 
     def test_full_roi_pipeline(self, tmp_path):
-        """Verify LunarTerrainExporter uses from_dem_full_roi when roi.use_full=True."""
+        """Verify LunarTerrainExporter calls from_dem with use_full ROI."""
         config = LunarSite(
             site_code="Site01",
             name="test_full_roi",
@@ -116,6 +121,8 @@ class TestIntegrationFullROIPipeline:
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
         bounds = {"center_lat": -89.5, "center_lon": -
                   130.0, "width_km": 20.0, "height_km": 15.0}
+        fake_profile = {"crs": "EPSG:3031",
+                        "transform": None}
 
         with patch("lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader") as mock_dl_cls, \
                 patch("lunar_terrain_exporter.lunar_terrain_exporter.HeightmapGenerator") as mock_hm:
@@ -124,15 +131,14 @@ class TestIntegrationFullROIPipeline:
             mock_dl_instance.download.return_value = tmp_path / "fake.tif"
             mock_dl_cls.return_value = mock_dl_instance
 
-            mock_hm.from_dem_full_roi.return_value = (
-                fake_heightmap, -500.0, 2000.0, bounds
+            mock_hm.from_dem.return_value = (
+                fake_heightmap, -500.0, 2000.0, bounds, fake_profile
             )
 
             generator = LunarTerrainExporter(output_dir=output_dir)
             result = generator.export_model(config)
 
-        mock_hm.from_dem_full_roi.assert_called_once()
-        mock_hm.from_dem.assert_not_called()
+        mock_hm.from_dem.assert_called_once()
 
         assert mock_dl_instance.download.call_count == 1
 

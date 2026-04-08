@@ -24,29 +24,18 @@ class LunarTerrainExporter:
 
         dem_file = self._downloader.download(site.dem_url)
 
-        if site.roi.use_full:
-            heightmap, elev_min, elev_max, bounds = (
-                HeightmapGenerator.from_dem_full_roi(dem_file)
-            )
-            lat = bounds["center_lat"]
-            lon = bounds["center_lon"]
-            width_km = bounds["width_km"]
-            height_km = bounds["height_km"]
-            print(f"    Full ROI: center=({lat:.4f}, {lon:.4f}), "
-                  f"{width_km:.1f}x{height_km:.1f}km")
-        else:
-            bb = site.roi.bounding_box
-            heightmap, elev_min, elev_max = HeightmapGenerator.from_dem(
-                dem_file, bb.lat, bb.lon, bb.width_km, bb.height_km
-            )
-            lat = bb.lat
-            lon = bb.lon
-            width_km = bb.width_km
-            height_km = bb.height_km
-            print(f"    Lat: {lat}, Lon: {lon}, "
-                  f"Region: {width_km}x{height_km}km")
+        elevations, elev_min, elev_max, bounds, dem_profile = (
+            HeightmapGenerator.from_dem(dem_file, site.roi)
+        )
+        lat = bounds["center_lat"]
+        lon = bounds["center_lon"]
+        width_km = bounds["width_km"]
+        height_km = bounds["height_km"]
+        print(f"    ROI: center=({lat:.4f}, {lon:.4f}), "
+              f"{width_km:.1f}x{height_km:.1f}km")
 
-        normal_map = NormalMapGenerator.from_heightmap(heightmap)
+        normalized = HeightmapGenerator.normalize(elevations)
+        normal_map = NormalMapGenerator.from_heightmap(normalized)
 
         size_x_m = int(width_km * 1000)
         size_y_m = int(height_km * 1000)
@@ -56,7 +45,8 @@ class LunarTerrainExporter:
             site_id=site.name,
             display_name=site.name.replace("_", " ").title(),
             description=site.description or f"Lunar terrain at ({lat}, {lon})",
-            heightmap=heightmap,
+            elevations=elevations,
+            dem_profile=dem_profile,
             normal_map=normal_map,
             size_x_m=size_x_m,
             size_y_m=size_y_m,

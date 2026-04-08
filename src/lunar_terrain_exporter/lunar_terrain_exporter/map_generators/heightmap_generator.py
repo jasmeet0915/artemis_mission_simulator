@@ -1,58 +1,23 @@
 """Heightmap generation from PGDA Product 78 polar stereographic GeoTIFF DEMs."""
 
-import math
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
+import rasterio
+from pyproj import CRS, Transformer
+from rasterio.windows import from_bounds
 
-# Lunar radius in meters (IAU mean)
-_LUNAR_RADIUS_M = 1_737_400.0
+from ..utils.types import ROI
 
 
 class HeightmapGenerator:
-    """Generates normalized heightmap arrays from PGDA Product 78 polar DEM GeoTIFFs.
+    """Extracts elevation data from PGDA Product 78 polar DEM GeoTIFFs.
 
     Handles the south pole polar stereographic projection used by
     Barker et al. (2021) 5 m/pix LOLA DEMs.
     """
-
-    @staticmethod
-    def latlon_to_stereo(lat: float, lon: float) -> tuple[float, float]:
-        """Convert geographic lat/lon to lunar south pole stereographic (x, y).
-
-        Projection: polar stereographic centered on south pole (-90, 0).
-        Sphere radius: 1,737,400 m (IAU lunar mean).
-
-        Returns (x, y) in meters.
-        """
-        lat_rad = math.radians(lat)
-        lon_rad = math.radians(lon)
-        # Colatitude from south pole
-        colat = -(math.pi / 2 + lat_rad)
-        r = 2.0 * _LUNAR_RADIUS_M * math.tan(colat / 2.0)
-        x = r * math.sin(lon_rad)
-        y = r * math.cos(lon_rad)
-        return x, y
-
-    @staticmethod
-    def stereo_to_latlon(x: float, y: float) -> tuple[float, float]:
-        """Convert lunar south pole stereographic (x, y) to geographic lat/lon.
-
-        Inverse of latlon_to_stereo(). Returns (lat, lon) in degrees.
-        """
-        r = math.sqrt(x**2 + y**2)
-        if r < 1e-10:
-            return -90.0, 0.0
-        colat = 2.0 * math.atan(r / (2.0 * _LUNAR_RADIUS_M))
-        # For south pole stereographic, points away from pole have negative colat
-        colat = -colat
-        lat = math.degrees(-colat - math.pi / 2)
-        # Account for negative r flipping coordinates by 180°
-        lon = math.degrees(math.atan2(x, y)) + 180.0
-        # Normalize to [-180, 180]
-        if lon > 180.0:
-            lon -= 360.0
-        return lat, lon
 
     @staticmethod
     def _read_elevations(
@@ -74,7 +39,11 @@ class HeightmapGenerator:
 
     @staticmethod
     def normalize(data: np.ndarray) -> np.ndarray:
-        """Normalize elevation data to [0, 1] range. NaN becomes 0."""
+        """Normalize elevation data to [0, 1] range. NaN becomes 0.
+
+        Useful for derived products (e.g. normal-map generation) that
+        expect input in a uniform [0, 1] range.
+        """
         data = np.nan_to_num(data, nan=np.nanmin(
             data) if not np.all(np.isnan(data)) else 0.0)
         vmin = float(np.min(data))
@@ -84,120 +53,81 @@ class HeightmapGenerator:
         return np.zeros_like(data, dtype=np.float64)
 
     @staticmethod
-    def nearest_gazebo_size(n: int) -> int:
-        """Return the smallest 2^k + 1 >= n (Gazebo heightmap requirement)."""
-        if n <= 3:
-            return 3
-        k = math.ceil(math.log2(n - 1))
-        return (1 << k) + 1
-
-    @staticmethod
     def from_dem(
         dem_path: Path,
-        lat: float,
-        lon: float,
-        width_km: float,
-        height_km: float,
-    ) -> tuple[np.ndarray, float, float]:
-        """Crop a rectangular region from a polar DEM and return a heightmap.
+        roi: ROI,
+    ) -> tuple[np.ndarray, float, float, dict, dict]:
+        """Extract elevation data from a DEM, full-tile or bounding-box crop.
 
-        Reads nodata, scale, and offset from the GeoTIFF metadata via rasterio.
+        Uses the CRS embedded in the GeoTIFF and *pyproj* for all
+        coordinate transformations.
 
         Args:
-            dem_path: Local path to the DEM file.
-            lat: Center latitude in degrees (negative for south).
-            lon: Center longitude in degrees.
-            width_km: Width of the region in km (east-west).
-            height_km: Height of the region in km (north-south).
+            dem_path: Local path to the DEM GeoTIFF.
+            roi: Region of interest.  When ``roi.use_full`` is True the
+                 entire raster is read; otherwise the area is cropped to
+                 ``roi.bounding_box``.
 
         Returns:
-            (heightmap_float64_01, elevation_min_m, elevation_max_m)
-            Heightmap is resized to the nearest 2^n+1 dimension per axis.
+            (elevations, elev_min, elev_max, bounds, dem_profile)
+
+            *elevations*: float64 array of elevation values in meters.
+            *bounds*: dict with ``center_lat``, ``center_lon``,
+            ``width_km``, ``height_km``.
+            *dem_profile*: dict with ``crs`` and ``transform`` suitable
+            for writing a GeoTIFF of the output array.
         """
-        import rasterio
-        from rasterio.windows import from_bounds
-        from rasterio.enums import Resampling
-
-        x_center, y_center = HeightmapGenerator.latlon_to_stereo(lat, lon)
-        half_w = width_km * 1000.0 / 2.0
-        half_h = height_km * 1000.0 / 2.0
-        x_min = x_center - half_w
-        x_max = x_center + half_w
-        y_min = y_center - half_h
-        y_max = y_center + half_h
-
         with rasterio.open(dem_path) as src:
-            window = from_bounds(x_min, y_min, x_max, y_max, src.transform)
-            raw_width = max(int(window.width), 1)
-            raw_height = max(int(window.height), 1)
-            target_w = HeightmapGenerator.nearest_gazebo_size(raw_width)
-            target_h = HeightmapGenerator.nearest_gazebo_size(raw_height)
-
-            raw = src.read(
-                1,
-                window=window,
-                out_shape=(target_h, target_w),
-                resampling=Resampling.bilinear,
+            geographic_crs = CRS(src.crs).geodetic_crs
+            to_projected = Transformer.from_crs(
+                geographic_crs, src.crs, always_xy=True,
             )
+            to_geographic = Transformer.from_crs(
+                src.crs, geographic_crs, always_xy=True,
+            )
+
+            if roi.use_full:
+                # ---- read entire raster --------------------------------
+                raw = src.read(1)
+                out_transform = src.transform
+
+                rb = src.bounds
+                x_min, y_min = rb.left, rb.bottom
+                x_max, y_max = rb.right, rb.top
+            else:
+                # ---- crop to bounding box ------------------------------
+                bb = roi.bounding_box
+                # lon first because always_xy=True
+                x_center, y_center = to_projected.transform(bb.lon, bb.lat)
+                half_w = bb.width_km * 1000.0 / 2.0
+                half_h = bb.height_km * 1000.0 / 2.0
+                x_min = x_center - half_w
+                x_max = x_center + half_w
+                y_min = y_center - half_h
+                y_max = y_center + half_h
+
+                window = from_bounds(
+                    x_min, y_min, x_max, y_max, src.transform,
+                )
+                raw = src.read(1, window=window)
+                out_transform = src.window_transform(window)
 
             nodata = src.nodata
             scale = src.scales[0] if src.scales else 1.0
             offset = src.offsets[0] if src.offsets else 0.0
+            crs = src.crs
 
+        # ---- raw → elevation in meters ---------------------------------
         elevations = HeightmapGenerator._read_elevations(
-            raw, nodata, scale, offset)
-
+            raw, nodata, scale, offset,
+        )
         elev_min = float(np.nanmin(elevations))
         elev_max = float(np.nanmax(elevations))
-        heightmap = HeightmapGenerator.normalize(elevations)
 
-        return heightmap, elev_min, elev_max
-
-    @staticmethod
-    def from_dem_full_roi(
-        dem_path: Path,
-    ) -> tuple[np.ndarray, float, float, dict]:
-        """Read an entire DEM file and return a heightmap with geographic bounds.
-
-        For use with pre-cropped per-site DEM tiles where lat/lon cropping
-        is not needed.
-
-        Returns:
-            (heightmap_float64_01, elevation_min_m, elevation_max_m, bounds)
-            bounds is a dict with keys: center_lat, center_lon, width_km, height_km
-        """
-        import rasterio
-        from rasterio.enums import Resampling
-
-        with rasterio.open(dem_path) as src:
-            target_w = HeightmapGenerator.nearest_gazebo_size(src.width)
-            target_h = HeightmapGenerator.nearest_gazebo_size(src.height)
-
-            raw = src.read(
-                1,
-                out_shape=(target_h, target_w),
-                resampling=Resampling.bilinear,
-            )
-
-            nodata = src.nodata
-            scale = src.scales[0] if src.scales else 1.0
-            offset = src.offsets[0] if src.offsets else 0.0
-
-            raster_bounds = src.bounds
-            x_min, y_min = raster_bounds.left, raster_bounds.bottom
-            x_max, y_max = raster_bounds.right, raster_bounds.top
-
-        elevations = HeightmapGenerator._read_elevations(
-            raw, nodata, scale, offset)
-
-        elev_min = float(np.nanmin(elevations))
-        elev_max = float(np.nanmax(elevations))
-        heightmap = HeightmapGenerator.normalize(elevations)
-
+        # ---- geographic bounds -----------------------------------------
         x_center = (x_min + x_max) / 2.0
         y_center = (y_min + y_max) / 2.0
-        center_lat, center_lon = HeightmapGenerator.stereo_to_latlon(
-            x_center, y_center)
+        center_lon, center_lat = to_geographic.transform(x_center, y_center)
 
         bounds = {
             "center_lat": center_lat,
@@ -206,4 +136,9 @@ class HeightmapGenerator:
             "height_km": (y_max - y_min) / 1000.0,
         }
 
-        return heightmap, elev_min, elev_max, bounds
+        dem_profile = {
+            "crs": crs,
+            "transform": out_transform,
+        }
+
+        return elevations, elev_min, elev_max, bounds, dem_profile
