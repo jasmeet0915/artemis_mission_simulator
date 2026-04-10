@@ -1,12 +1,14 @@
 site_id: de_gerlache_rim
 display_name: De Gerlache Rim
-description: "Site 11 – Rim of de Gerlache crater"
+description: "Site 11 \u2013 Rim of de Gerlache crater"
 coordinates:
-  lat: -88.5
-  lon: -87.0
-size_m: 5000
-resolution: 513
-elevation_min_m: 0.0
-elevation_max_m: 500.0
-elevation_range_m: 500.0
-source: synthetic
+  lat: -88.68341815077613
+  lon: -67.93210043758978
+size_x_m: 16000
+size_y_m: 16000
+resolution_x: 3200
+resolution_y: 3200
+elevation_min_m: -805.16
+elevation_max_m: 1815.99
+elevation_range_m: 2621.15
+source: nasa_pgda_78

@@ -1,12 +1,14 @@
 site_id: peak_near_shackleton
 display_name: Peak Near Shackleton
-description: "Site 07 – Isolated peak near Shackleton crater"
+description: "Site 07 \u2013 Isolated peak near Shackleton crater"
 coordinates:
-  lat: -88.5
-  lon: -10.0
-size_m: 5000
-resolution: 513
-elevation_min_m: 0.0
-elevation_max_m: 500.0
-elevation_range_m: 500.0
-source: synthetic
+  lat: -88.81100807350457
+  lon: 123.69006752597979
+size_x_m: 16000
+size_y_m: 16000
+resolution_x: 3200
+resolution_y: 3200
+elevation_min_m: -418.92
+elevation_max_m: 1648.68
+elevation_range_m: 2067.6
+source: nasa_pgda_78

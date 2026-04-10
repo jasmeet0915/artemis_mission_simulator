@@ -1,25 +1,24 @@
 <?xml version="1.0"?>
-<sdf version="1.9">
+<sdf version="1.11">
   <model name="connecting_ridge">
     <static>true</static>
     <link name="terrain_link">
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://connecting_ridge/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://connecting_ridge/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2482.7</size>
+            <pos>0 0 -523.2</pos>
           </heightmap>
         </geometry>
       </collision>
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://connecting_ridge/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://connecting_ridge/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2482.7</size>
+            <pos>0 0 -523.2</pos>
             <texture>
-              <diffuse>model://connecting_ridge/materials/textures/diffuse.png</diffuse>
               <normal>model://connecting_ridge/materials/textures/normal.png</normal>
               <size>10</size>
             </texture>

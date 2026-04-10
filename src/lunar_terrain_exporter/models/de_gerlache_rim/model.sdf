@@ -1,25 +1,24 @@
 <?xml version="1.0"?>
-<sdf version="1.9">
+<sdf version="1.11">
   <model name="de_gerlache_rim">
     <static>true</static>
     <link name="terrain_link">
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://de_gerlache_rim/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://de_gerlache_rim/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2621.2</size>
+            <pos>0 0 -805.2</pos>
           </heightmap>
         </geometry>
       </collision>
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://de_gerlache_rim/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://de_gerlache_rim/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2621.2</size>
+            <pos>0 0 -805.2</pos>
             <texture>
-              <diffuse>model://de_gerlache_rim/materials/textures/diffuse.png</diffuse>
               <normal>model://de_gerlache_rim/materials/textures/normal.png</normal>
               <size>10</size>
             </texture>

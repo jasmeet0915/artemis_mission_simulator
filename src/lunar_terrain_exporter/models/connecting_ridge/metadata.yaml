@@ -1,12 +1,14 @@
 site_id: connecting_ridge
 display_name: Connecting Ridge
-description: Ridge between Shackleton and de Gerlache craters
+description: "Site 01 \u2013 Connecting ridge between Shackleton and de Gerlache craters"
 coordinates:
-  lat: -88.5
-  lon: -10.0
-size_m: 5000
-resolution: 513
-elevation_min_m: 0.0
-elevation_max_m: 500.0
-elevation_range_m: 500.0
-source: synthetic
+  lat: -89.46316283403668
+  lon: -137.48955292199918
+size_x_m: 16000
+size_y_m: 16000
+resolution_x: 3200
+resolution_y: 3200
+elevation_min_m: -523.18
+elevation_max_m: 1959.5
+elevation_range_m: 2482.68
+source: nasa_pgda_78

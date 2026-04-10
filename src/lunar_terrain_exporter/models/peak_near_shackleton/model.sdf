@@ -1,25 +1,24 @@
 <?xml version="1.0"?>
-<sdf version="1.9">
+<sdf version="1.11">
   <model name="peak_near_shackleton">
     <static>true</static>
     <link name="terrain_link">
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://peak_near_shackleton/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://peak_near_shackleton/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2067.6</size>
+            <pos>0 0 -418.9</pos>
           </heightmap>
         </geometry>
       </collision>
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://peak_near_shackleton/materials/textures/heightmap.png</uri>
-            <size>5000 5000 500.0</size>
-            <pos>0 0 0.0</pos>
+            <uri>model://peak_near_shackleton/materials/textures/heightmap.tif</uri>
+            <size>16000 16000 2067.6</size>
+            <pos>0 0 -418.9</pos>
             <texture>
-              <diffuse>model://peak_near_shackleton/materials/textures/diffuse.png</diffuse>
               <normal>model://peak_near_shackleton/materials/textures/normal.png</normal>
               <size>10</size>
             </texture>

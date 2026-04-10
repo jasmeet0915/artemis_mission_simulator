@@ -1,12 +1,14 @@
 site_id: shackleton_rim
 display_name: Shackleton Rim
-description: "Site 04 – Rim of Shackleton crater"
+description: "Site 04 \u2013 Rim of Shackleton crater"
 coordinates:
-  lat: -89.7
-  lon: 0.0
-size_m: 5000
-resolution: 513
-elevation_min_m: 0.0
-elevation_max_m: 500.0
-elevation_range_m: 500.0
-source: synthetic
+  lat: -89.76681145214992
+  lon: -171.86989764584402
+size_x_m: 16000
+size_y_m: 16000
+resolution_x: 3200
+resolution_y: 3200
+elevation_min_m: -2847.88
+elevation_max_m: 1805.07
+elevation_range_m: 4652.95
+source: nasa_pgda_78
