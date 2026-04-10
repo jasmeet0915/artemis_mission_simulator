@@ -15,6 +15,8 @@
   <exec_depend>python3-pyproj</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-rasterio</exec_depend>
+  <exec_depend>python3-requests</exec_depend>
   <exec_depend>python3-tqdm</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
