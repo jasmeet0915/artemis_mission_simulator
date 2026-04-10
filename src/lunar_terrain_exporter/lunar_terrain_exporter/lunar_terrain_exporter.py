@@ -17,6 +17,7 @@ class LunarTerrainExporter:
         self._default_cache_dir = Path(
             __file__).resolve().parents[3] / ".dem_cache"
         self._downloader = FileDownloader(self._default_cache_dir)
+        self._model_writer = SDFModelWriter(self._output_dir)
 
     def export_model(self, site: LunarSite) -> Path:
         """Export a complete Gazebo terrain model for a site."""
@@ -38,9 +39,7 @@ class LunarTerrainExporter:
 
         size_x_m = int(width_km * 1000)
         size_y_m = int(height_km * 1000)
-        model_dir = self._output_dir / site.name
-        writer = SDFModelWriter(model_dir)
-        writer.write(
+        self._model_writer.write(
             site_id=site.name,
             display_name=site.name.replace("_", " ").title(),
             description=site.description or f"Lunar terrain at ({lat}, {lon})",
@@ -55,4 +54,4 @@ class LunarTerrainExporter:
             lon=lon,
             source="nasa_pgda_78",
         )
-        return model_dir
+        return self._output_dir / site.name
