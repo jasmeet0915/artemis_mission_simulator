@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .utils.types import LunarSite
 from .utils.file_downloader import FileDownloader
-from .utils.model_writer import ModelWriter
+from .model_writers.sdf_model_writer import SDFModelWriter
 from .raster_processors.dem_processor import DEMProcessor
 from .raster_processors.normal_map_generator import NormalMapGenerator
 
@@ -39,7 +39,7 @@ class LunarTerrainExporter:
         size_x_m = int(width_km * 1000)
         size_y_m = int(height_km * 1000)
         model_dir = self._output_dir / site.name
-        writer = ModelWriter(model_dir)
+        writer = SDFModelWriter(model_dir)
         writer.write(
             site_id=site.name,
             display_name=site.name.replace("_", " ").title(),

@@ -8,7 +8,7 @@ import yaml
 from rasterio.transform import from_bounds
 
 from lunar_terrain_exporter.raster_processors.normal_map_generator import NormalMapGenerator
-from lunar_terrain_exporter.utils.model_writer import ModelWriter
+from lunar_terrain_exporter.model_writers.sdf_model_writer import SDFModelWriter
 
 
 def _make_elevations(size: int = 65) -> np.ndarray:
@@ -53,15 +53,15 @@ class TestNormalMap:
 
 
 # ---------------------------------------------------------------------------
-# ModelWriter
+# SDFModelWriter
 # ---------------------------------------------------------------------------
 
-class TestModelWriter:
+class TestSDFModelWriter:
     def test_writes_all_files(self):
         elev = _make_elevations()
         nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = ModelWriter(Path(tmpdir) / "test_site")
+            writer = SDFModelWriter(Path(tmpdir) / "test_site")
             writer.write(
                 site_id="test_site",
                 display_name="Test Site",
@@ -88,7 +88,7 @@ class TestModelWriter:
         elev = _make_elevations()
         nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = ModelWriter(Path(tmpdir) / "my_site")
+            writer = SDFModelWriter(Path(tmpdir) / "my_site")
             writer.write(
                 site_id="my_site",
                 display_name="My Site",
@@ -113,7 +113,7 @@ class TestModelWriter:
         elev = _make_elevations()
         nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = ModelWriter(Path(tmpdir) / "meta_test")
+            writer = SDFModelWriter(Path(tmpdir) / "meta_test")
             writer.write(
                 site_id="meta_test",
                 display_name="Meta Test",

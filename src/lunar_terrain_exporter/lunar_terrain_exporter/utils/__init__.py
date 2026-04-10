@@ -2,7 +2,7 @@
 
 from .types import BoundingBox, ROI, LunarSite
 from .file_downloader import FileDownloader
-from .model_writer import ModelWriter
+from .model_writer import ModelWriter  # backward compat alias
 from .site_catalog import CatalogEntry, list_sites as list_catalog_sites, get_site as get_catalog_site
 
 __all__ = [
