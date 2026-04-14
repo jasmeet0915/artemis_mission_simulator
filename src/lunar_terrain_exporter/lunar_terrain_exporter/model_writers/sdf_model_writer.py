@@ -17,7 +17,7 @@ _MODEL_SDF_TEMPLATE = Template("""\
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://${site_id}/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
           </heightmap>
@@ -26,11 +26,11 @@ _MODEL_SDF_TEMPLATE = Template("""\
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://${site_id}/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
             <texture>
-              <normal>model://${site_id}/materials/textures/normal.png</normal>
+              <normal>materials/textures/normal.png</normal>
               <size>10</size>
             </texture>
           </heightmap>
@@ -46,7 +46,7 @@ _MODEL_CONFIG_TEMPLATE = Template("""\
 <model>
   <name>${display_name}</name>
   <version>1.0</version>
-  <sdf version="1.9">model.sdf</sdf>
+  <sdf version="1.11">model.sdf</sdf>
   <author>
     <name>Artemis Mission Simulator</name>
   </author>
