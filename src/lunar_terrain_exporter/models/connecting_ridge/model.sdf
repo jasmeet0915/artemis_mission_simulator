@@ -6,7 +6,7 @@
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://connecting_ridge/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 2482.7</size>
             <pos>0 0 -523.2</pos>
           </heightmap>
@@ -15,11 +15,11 @@
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://connecting_ridge/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 2482.7</size>
             <pos>0 0 -523.2</pos>
             <texture>
-              <normal>model://connecting_ridge/materials/textures/normal.png</normal>
+              <normal>materials/textures/normal.png</normal>
               <size>10</size>
             </texture>
           </heightmap>

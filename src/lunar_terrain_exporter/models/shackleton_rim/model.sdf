@@ -6,7 +6,7 @@
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
-            <uri>model://shackleton_rim/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 4652.9</size>
             <pos>0 0 -2847.9</pos>
           </heightmap>
@@ -15,11 +15,11 @@
       <visual name="terrain_visual">
         <geometry>
           <heightmap>
-            <uri>model://shackleton_rim/materials/textures/heightmap.tif</uri>
+            <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 4652.9</size>
             <pos>0 0 -2847.9</pos>
             <texture>
-              <normal>model://shackleton_rim/materials/textures/normal.png</normal>
+              <normal>materials/textures/normal.png</normal>
               <size>10</size>
             </texture>
           </heightmap>
