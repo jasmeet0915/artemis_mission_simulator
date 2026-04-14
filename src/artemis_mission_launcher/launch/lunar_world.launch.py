@@ -17,6 +17,9 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     artemis_mission_launcher_pkg = get_package_share_directory("artemis_mission_launcher")
     pkg_worlds_dir = os.path.join(artemis_mission_launcher_pkg, "worlds")
+    gui_config = os.path.join(
+        artemis_mission_launcher_pkg, "config", "gz", "gui.config",
+    )
 
     declare_world_name_arg = DeclareLaunchArgument(
         "world",
@@ -35,7 +38,9 @@ def generate_launch_description():
                 "gz_sim.launch.py",
             ])
         ),
-        launch_arguments={"gz_args": ["-v 4 -r ", world_file]}.items(),
+        launch_arguments={
+            "gz_args": ["-v 4 -r --gui-config ", gui_config, " ", world_file],
+        }.items(),
     )
 
     return LaunchDescription([
