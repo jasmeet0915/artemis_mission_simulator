@@ -4,12 +4,13 @@
   <name>artemis_mission_launcher</name>
   <version>0.1.0</version>
   <description>Launch files and Gazebo worlds for the Artemis Mission Simulator</description>
-  <maintainer email="todo@example.com">Artemis Simulator Contributors</maintainer>
+  <maintainer email="jasmeet0915@gmail.com">Jasmeet Singh</maintainer>
+  <author email="jasmeet0915@gmail.com">Jasmeet Singh</author>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>lunar_terrain_exporter</exec_depend>
   <exec_depend>lunar_base_models</exec_depend>

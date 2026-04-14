@@ -4,7 +4,8 @@
   <name>lunar_base_models</name>
   <version>0.1.0</version>
   <description>SDF models for Artemis lunar base simulation including habitats, equipment, and LED-integrated infrastructure</description>
-  <maintainer email="todo@example.com">Artemis Simulator Contributors</maintainer>
+  <maintainer email="jasmeet0915@gmail.com">Jasmeet Singh</maintainer>
+  <author email="jasmeet0915@gmail.com">Jasmeet Singh</author>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
