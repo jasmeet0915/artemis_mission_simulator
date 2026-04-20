@@ -6,7 +6,6 @@ from string import Template
 import numpy as np
 import rasterio
 import yaml
-from PIL import Image
 
 _MODEL_SDF_TEMPLATE = Template("""\
 <?xml version="1.0"?>
@@ -30,8 +29,9 @@ _MODEL_SDF_TEMPLATE = Template("""\
             <size>${size_x} ${size_y} ${size_z}</size>
             <pos>0 0 ${z_offset}</pos>
             <texture>
-              <normal>materials/textures/normal.png</normal>
-              <size>10</size>
+              <diffuse>model://materials/moon_diffuse.png</diffuse>
+              <normal>model://materials/moon_normal.png</normal>
+              <size>20</size>
             </texture>
           </heightmap>
         </geometry>
@@ -48,7 +48,7 @@ _MODEL_CONFIG_TEMPLATE = Template("""\
   <version>1.0</version>
   <sdf version="1.11">model.sdf</sdf>
   <author>
-    <name>Artemis Mission Simulator</name>
+    <name>lunar_terrain_exporter(auto generated)</name>
   </author>
   <description>${description}</description>
 </model>
@@ -68,7 +68,6 @@ class SDFModelWriter:
         description: str,
         elevations: np.ndarray,
         dem_profile: dict,
-        normal_map: np.ndarray,
         size_x_m: int,
         size_y_m: int,
         elevation_min: float,
@@ -94,10 +93,6 @@ class SDFModelWriter:
         }
         with rasterio.open(textures_dir / "heightmap.tif", "w", **profile) as dst:
             dst.write(elevations.astype(np.float32), 1)
-
-        # RGB normal map PNG
-        Image.fromarray(normal_map, mode="RGB").save(
-            textures_dir / "normal.png")
 
         elevation_range = max(elevation_max - elevation_min, 1.0)
 

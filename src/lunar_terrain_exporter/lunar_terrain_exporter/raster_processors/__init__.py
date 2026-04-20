@@ -1,6 +1,5 @@
-"""Raster processing modules: DEM processing and normal map generation."""
+"""Raster processing modules: DEM processing."""
 
 from .dem_processor import DEMProcessor
-from .normal_map_generator import NormalMapGenerator
 
-__all__ = ["DEMProcessor", "NormalMapGenerator"]
+__all__ = ["DEMProcessor"]

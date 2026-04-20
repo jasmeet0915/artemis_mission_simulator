@@ -7,7 +7,6 @@ import numpy as np
 import yaml
 from rasterio.transform import from_bounds
 
-from lunar_terrain_exporter.raster_processors.normal_map_generator import NormalMapGenerator
 from lunar_terrain_exporter.model_writers.sdf_model_writer import SDFModelWriter
 
 
@@ -26,40 +25,12 @@ def _make_dem_profile(size: int = 65) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# NormalMapGenerator
-# ---------------------------------------------------------------------------
-
-class TestNormalMap:
-    def test_shape_rgb(self):
-        nm = NormalMapGenerator.from_heightmap(_make_elevations(129))
-        assert nm.shape == (129, 129, 3)
-
-    def test_dtype_uint8(self):
-        nm = NormalMapGenerator.from_heightmap(_make_elevations(129))
-        assert nm.dtype == np.uint8
-
-    def test_flat_surface_points_up(self):
-        flat = np.full((65, 65), 0.5, dtype=np.float64)
-        nm = NormalMapGenerator.from_heightmap(flat, strength=1.0)
-        # Z channel (blue) should be high (~255), X/Y (red/green) near 128
-        assert nm[:, :, 2].mean() > 200
-        assert 120 < nm[:, :, 0].mean() < 136
-        assert 120 < nm[:, :, 1].mean() < 136
-
-    def test_strength_affects_output(self):
-        nm_weak = NormalMapGenerator.from_heightmap(_make_elevations(65), strength=0.5)
-        nm_strong = NormalMapGenerator.from_heightmap(_make_elevations(65), strength=5.0)
-        assert nm_strong[:, :, 0].std() > nm_weak[:, :, 0].std()
-
-
-# ---------------------------------------------------------------------------
 # SDFModelWriter
 # ---------------------------------------------------------------------------
 
 class TestSDFModelWriter:
     def test_writes_all_files(self):
         elev = _make_elevations()
-        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = SDFModelWriter(Path(tmpdir) / "test_site")
             writer.write(
@@ -68,7 +39,6 @@ class TestSDFModelWriter:
                 description="A test site",
                 elevations=elev,
                 dem_profile=_make_dem_profile(),
-                normal_map=nm,
                 size_x_m=5000,
                 size_y_m=4000,
                 elevation_min=0.0,
@@ -86,7 +56,6 @@ class TestSDFModelWriter:
 
     def test_sdf_contains_site_id_and_sizes(self):
         elev = _make_elevations()
-        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = SDFModelWriter(Path(tmpdir) / "my_site")
             writer.write(
@@ -95,7 +64,6 @@ class TestSDFModelWriter:
                 description="Desc",
                 elevations=elev,
                 dem_profile=_make_dem_profile(),
-                normal_map=nm,
                 size_x_m=3000,
                 size_y_m=2000,
                 elevation_min=-100.0,
@@ -111,7 +79,6 @@ class TestSDFModelWriter:
 
     def test_metadata_yaml_valid(self):
         elev = _make_elevations()
-        nm = NormalMapGenerator.from_heightmap(elev)
         with tempfile.TemporaryDirectory() as tmpdir:
             writer = SDFModelWriter(Path(tmpdir) / "meta_test")
             writer.write(
@@ -120,7 +87,6 @@ class TestSDFModelWriter:
                 description="Testing metadata",
                 elevations=elev,
                 dem_profile=_make_dem_profile(),
-                normal_map=nm,
                 size_x_m=5000,
                 size_y_m=4000,
                 elevation_min=0.0,

@@ -6,7 +6,6 @@ from .utils.types import LunarSite
 from .utils.file_downloader import FileDownloader
 from .model_writers.sdf_model_writer import SDFModelWriter
 from .raster_processors.dem_processor import DEMProcessor
-from .raster_processors.normal_map_generator import NormalMapGenerator
 
 
 class LunarTerrainExporter:
@@ -35,8 +34,6 @@ class LunarTerrainExporter:
         print(f"    ROI: center=({lat:.4f}, {lon:.4f}), "
               f"{width_km:.1f}x{height_km:.1f}km")
 
-        normal_map = NormalMapGenerator.from_heightmap(elevations)
-
         size_x_m = int(width_km * 1000)
         size_y_m = int(height_km * 1000)
         self._model_writer.write(
@@ -45,7 +42,6 @@ class LunarTerrainExporter:
             description=site.description or f"Lunar terrain at ({lat}, {lon})",
             elevations=elevations,
             dem_profile=dem_profile,
-            normal_map=normal_map,
             size_x_m=size_x_m,
             size_y_m=size_y_m,
             elevation_min=elev_min,
