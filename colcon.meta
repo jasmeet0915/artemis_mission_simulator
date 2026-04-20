@@ -1,7 +1,0 @@
-{
-  "names": {
-    "artemis_mission_launcher": {
-      "cmake-args": ["-DCMAKE_BUILD_TYPE=Release"]
-    }
-  }
-}
