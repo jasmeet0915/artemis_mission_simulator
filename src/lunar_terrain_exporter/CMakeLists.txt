@@ -9,7 +9,7 @@ ament_python_install_package(${PROJECT_NAME})
 
 # Install the console-script entry point
 install(PROGRAMS
-  scripts/lunar_terrain_exporter
+  bin/lunar_terrain_exporter
   DESTINATION bin
 )
 
