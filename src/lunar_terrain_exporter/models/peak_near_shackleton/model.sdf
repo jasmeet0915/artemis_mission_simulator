@@ -19,8 +19,9 @@
             <size>16000 16000 2067.6</size>
             <pos>0 0 -418.9</pos>
             <texture>
-              <normal>materials/textures/normal.png</normal>
-              <size>10</size>
+              <diffuse>model://materials/moon_diffuse.png</diffuse>
+              <normal>model://materials/moon_normal.png</normal>
+              <size>20</size>
             </texture>
           </heightmap>
         </geometry>
