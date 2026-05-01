@@ -2,7 +2,7 @@
 
 A CLI tool and Python pipeline for generating simulation ready terrain models from NASA's lunar south-pole DEMs. Currently only SDF models export is supported
 
-![Lunar Terrain Exporter CLI](../../media/lunar_terrain_exporter_cli.gif)
+![Lunar Terrain Exporter CLI](../media/lunar_terrain_exporter_cli.gif)
 <p align="center"><em>A GIF showing the lunar_terrain_exporter cli batch mode in action</em></p>
 
 ## Overview
@@ -19,7 +19,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Description: Ridge between Shackleton and de Gerlache craters*
 
-![Connecting Ridge](../../media/connecting_ridge_terrain.png)
+![Connecting Ridge](../media/connecting_ridge_terrain.png)
 
 **De Gerlache Rim**
 
@@ -27,7 +27,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Rim of de Gerlache crater*
 
-![De Gerlache Rim](../../media/de_gerlache_rim_terrain.png)
+![De Gerlache Rim](../media/de_gerlache_rim_terrain.png)
 
 **Peak Near Shackleton**
 
@@ -35,7 +35,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Isolated peak near Shackleton crater*
 
-![Peak Near Shackleton](../../media/peak_near_shackleton_terrain.png)
+![Peak Near Shackleton](../media/peak_near_shackleton_terrain.png)
 
 **Shackleton Rim**
 
@@ -43,7 +43,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Rim of Shackleton crater*
 
-![Shackleton Rim](../../media/shackleton_rim_terrain.png)
+![Shackleton Rim](../media/shackleton_rim_terrain.png)
 
 These sites were selected as the best landing site candidates for the Artemis Missions due to their favorable illumination conditions as reported in [this](https://www.sciencedirect.com/science/article/abs/pii/S0032063320303329) paper.
 
