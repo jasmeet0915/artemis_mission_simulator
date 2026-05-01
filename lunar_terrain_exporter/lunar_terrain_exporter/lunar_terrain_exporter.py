@@ -15,6 +15,7 @@
 
 """Terrain generation pipeline."""
 
+import os
 from pathlib import Path
 
 from .utils.types import LunarSite
@@ -28,8 +29,8 @@ class LunarTerrainExporter:
 
     def __init__(self, output_dir: Path) -> None:
         self._output_dir = output_dir
-        self._default_cache_dir = Path(
-            __file__).resolve().parents[3] / ".dem_cache"
+        workspace_dir = os.getenv("WORKSPACE_DIR", "/workspace/src")
+        self._default_cache_dir = Path(workspace_dir) / ".dem_cache"
         self._downloader = FileDownloader(self._default_cache_dir)
         self._model_writer = SDFModelWriter(self._output_dir)
 
