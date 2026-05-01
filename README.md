@@ -48,6 +48,10 @@ ros2 launch artemis_mission_launcher lunar_surface.launch.py world:=lunar_empty_
 
 More packages upcoming!
 
+## Contributing
+
+Checkout [Contributing.md](CONTRIBUTING.md).
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
