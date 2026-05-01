@@ -43,8 +43,8 @@ ros2 launch artemis_mission_launcher lunar_surface.launch.py world:=lunar_empty_
 
 | Package | Description |
 |---------|-------------|
-| [`lunar_terrain_exporter`](src/lunar_terrain_exporter/) | CLI tool and pipeline for generating Gazebo terrain models from NASA PGDA-78 south-pole DEMs |
-| [`artemis_mission_launcher`](src/artemis_mission_launcher/) | ROS 2 launch files and Gazebo world definitions |
+| [`lunar_terrain_exporter`](lunar_terrain_exporter/) | CLI tool and pipeline for generating Gazebo terrain models from NASA PGDA-78 south-pole DEMs |
+| [`artemis_mission_launcher`](artemis_mission_launcher/) | ROS 2 launch files and Gazebo world definitions |
 
 More packages upcoming!
 
