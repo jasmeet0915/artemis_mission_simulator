@@ -15,21 +15,43 @@ An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NAS
 
 - Docker
 - X11 display server (Linux) or XQuartz (macOS)
-- (Optional) NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
 ### Build & Run
 
+Two supported workflows — pick whichever fits your tooling. Both use the same `docker/Dockerfile`.
+
+Both workflows build a non-root user named `commander_${USER}` (e.g. `commander_alice`) with your host UID/GID, so files created inside the container are owned by your host user on disk. The container hostname is `artemis` — your shell prompt will look like `commander_alice@artemis:/workspace$`.
+
+#### Option A: Docker scripts (no IDE required)
+
 ```bash
-# Build the Docker image
+# Build the Docker image (uses your host UID/GID and username)
 ./docker/build.sh
 
 # Start the container (auto-detects NVIDIA GPU, mounts workspace)
 ./docker/run.sh
 
 # Inside the container
-colcon build --symlink-install
+cd /workspace && colcon build --symlink-install
 source install/setup.bash
 ```
+
+#### Option B: VS Code Devcontainer
+
+Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+
+1. Open the repo in VS Code.
+2. Run **Dev Containers: Reopen in Container** from the command palette.
+3. VS Code builds the image from `docker/Dockerfile` and drops you into a shell as `commander_${USER}@artemis`.
+
+The repo is mounted at `/workspace/src`, so `colcon build` runs from `/workspace`:
+
+```bash
+cd /workspace && colcon build --symlink-install
+```
+
+NVIDIA GPU passthrough is opt-in for the devcontainer — uncomment the `--gpus=all` lines in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) if you have `nvidia-container-toolkit` installed.
 
 ## Launch
 
