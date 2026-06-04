@@ -2,16 +2,11 @@ FROM ros:jazzy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG HOST_USERNAME=commander
-ARG HOST_UID=1000
-ARG HOST_GID=1000
-ENV USERNAME=commander_${HOST_USERNAME}
+ENV USERNAME=commander
 
-# By default, the ros image already has a default non-root user named "ubuntu"
-# Here, we modify that user to match the host's UID and GID to avoid permission issues when mounting volumes.
-# We also change the username to something more thematic :p
-RUN groupmod -n ${USERNAME} -g ${HOST_GID} ubuntu && \
-    usermod -l ${USERNAME} -u ${HOST_UID} -g ${HOST_GID} -d /home/${USERNAME} -m ubuntu && \
+# Rename the existing ubuntu user inside the container to commander to match the project theme
+RUN groupmod -n ${USERNAME} ubuntu && \
+    usermod -l ${USERNAME} -d /home/${USERNAME} -m ubuntu && \
     echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
