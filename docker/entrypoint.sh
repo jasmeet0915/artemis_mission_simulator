@@ -16,5 +16,4 @@ if [ "$TARGET_UID" != "$CURRENT_UID" ]; then
     usermod -ou "$TARGET_UID" commander
 fi
 
-# Transfer control back from root to commander user
 exec gosu commander "$@"

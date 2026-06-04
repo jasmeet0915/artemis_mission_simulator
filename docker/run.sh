@@ -37,6 +37,8 @@ exec docker run --rm -it \
     --name "$CONTAINER_NAME" \
     --hostname artemis \
     --network host \
+    --user root \
+    --entrypoint /home/commander/artemis_workspace/src/docker/entrypoint.sh \
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
     -e HOST_UID="$(id -u)" \
@@ -45,4 +47,4 @@ exec docker run --rm -it \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$REPO_ROOT":/home/commander/artemis_workspace/src \
     ${GPU_FLAGS[@]+"${GPU_FLAGS[@]}"} \
-    "$IMAGE_NAME"
+    "$IMAGE_NAME" /bin/bash
