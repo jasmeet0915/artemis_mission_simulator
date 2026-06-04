@@ -2,16 +2,11 @@
   "name": "Artemis Mission Simulator (ROS 2)",
   "build": {
     "dockerfile": "../docker/Dockerfile",
-    "context": "../docker",
-    // Build args for the Dockerfile.
-    // Can't pass the output of 'id -u' and 'id -g' directly here for the UID and GID
-    // So we use updateRemoteUserUID for the remapping
-    "args": {
-      "HOST_USERNAME": "${localEnv:USER}"
-    }
+    "context": "../docker"
   },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/commander_${localEnv:USER}/artemis_workspace/src,type=bind",
-  "workspaceFolder": "/home/commander_${localEnv:USER}/artemis_workspace/src",
+  "remoteUser": "commander",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/commander/artemis_workspace/src,type=bind",
+  "workspaceFolder": "/home/commander/artemis_workspace/src",
   "updateRemoteUserUID": true,
   // Run xhost on the host so the container can connect to the X server.
   "initializeCommand": "xhost +local:docker > /dev/null 2>&1 || true",
@@ -20,7 +15,7 @@
     "--hostname=artemis",
     "--network=host",
     "-e", "QT_X11_NO_MITSHM=1",
-    "-e", "WORKSPACE_DIR=/home/commander_${localEnv:USER}/artemis_workspace"
+    "-e", "WORKSPACE_DIR=/home/commander/artemis_workspace"
     ,"--gpus=all"
     ,"-e", "NVIDIA_VISIBLE_DEVICES=all"
     ,"-e", "NVIDIA_DRIVER_CAPABILITIES=all"
@@ -43,11 +38,12 @@
         "ms-azuretools.vscode-docker",
         "redhat.vscode-xml",
         "redhat.vscode-yaml",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "anthropic.claude-code"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.cwd": "/home/commander_${localEnv:USER}/artemis_workspace"
+        "terminal.integrated.cwd": "/home/commander/artemis_workspace"
       }
     }
   }
