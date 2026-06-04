@@ -28,10 +28,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rasterio \
     python3-requests \
     python3-tqdm \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Source ROS in every interactive shell. /etc/bash.bashrc applies to any user
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc
 
-USER ${USERNAME}
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 WORKDIR /home/${USERNAME}/artemis_workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
