@@ -24,7 +24,10 @@
     "DISPLAY": "${localEnv:DISPLAY}"
   },
   "mounts": [
-    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+    "source=artemis-build,target=/home/commander/build,type=volume",
+    "source=artemis-install,target=/home/commander/install,type=volume",
+    "source=artemis-log,target=/home/commander/log,type=volume"
   ],
   "customizations": {
     "vscode": {
@@ -34,7 +37,6 @@
         "ms-python.flake8",
         "ms-vscode.cmake-tools",
         "llvm-vs-code-extensions.vscode-clangd",
-        "twxs.cmake",
         "ms-azuretools.vscode-docker",
         "redhat.vscode-xml",
         "redhat.vscode-yaml",

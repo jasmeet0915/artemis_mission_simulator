@@ -36,3 +36,6 @@ RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc
 
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
+# Creating build directories here as the commander user to ensure correct ownsherip when
+# they are mounted as named volumes
+RUN mkdir build install log

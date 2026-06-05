@@ -46,5 +46,8 @@ exec docker run --rm -it \
     -e WORKSPACE_DIR="/home/commander" \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$REPO_ROOT":/home/commander/src \
+    -v artemis-build:/home/commander/build \
+    -v artemis-install:/home/commander/install \
+    -v artemis-log:/home/commander/log \
     ${GPU_FLAGS[@]+"${GPU_FLAGS[@]}"} \
     "$IMAGE_NAME" /bin/bash
