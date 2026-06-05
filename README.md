@@ -21,19 +21,25 @@ An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NAS
 
 Two supported workflows — pick whichever fits your tooling. Both use the same `docker/Dockerfile`.
 
-Both workflows build a non-root user named `commander_${USER}` (e.g. `commander_alice`) with your host UID/GID, so files created inside the container are owned by your host user on disk. The container hostname is `artemis` — your shell prompt will look like `commander_alice@artemis:/workspace$`.
+The container user is `commander` and the hostname is `artemis`, so your shell prompt will look like `commander@artemis:~$`. Your host UID/GID are mapped into the container at startup so files created inside are owned correctly on the host.
+
+colcon build artifacts (`build/`, `install/`, `log/`) are persisted in named Docker volumes so they survive container restarts. To wipe them (e.g. after rebuilding the image):
+
+```bash
+docker volume rm artemis-build artemis-install artemis-log
+```
 
 #### Option A: Docker scripts (no IDE required)
 
 ```bash
-# Build the Docker image (uses your host UID/GID and username)
+# Build the Docker image
 ./docker/build.sh
 
 # Start the container (auto-detects NVIDIA GPU, mounts workspace)
 ./docker/run.sh
 
-# Inside the container
-cd /workspace && colcon build --symlink-install
+# Inside the container — source is at ~/src, build from home directory
+colcon build --symlink-install
 source install/setup.bash
 ```
 
@@ -43,12 +49,13 @@ Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemNam
 
 1. Open the repo in VS Code.
 2. Run **Dev Containers: Reopen in Container** from the command palette.
-3. VS Code builds the image from `docker/Dockerfile` and drops you into a shell as `commander_${USER}@artemis`.
+3. VS Code builds the image from `docker/Dockerfile` and drops you into a shell as `commander@artemis`.
 
-The repo is mounted at `/workspace/src`, so `colcon build` runs from `/workspace`:
+The repo is mounted at `~/src`, so `colcon build` runs from the home directory:
 
 ```bash
-cd /workspace && colcon build --symlink-install
+colcon build --symlink-install
+source install/setup.bash
 ```
 
 NVIDIA GPU passthrough is opt-in for the devcontainer — uncomment the `--gpus=all` lines in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) if you have `nvidia-container-toolkit` installed.
