@@ -5,8 +5,8 @@
     "context": "../docker"
   },
   "remoteUser": "commander",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/commander/artemis_workspace/src,type=bind",
-  "workspaceFolder": "/home/commander/artemis_workspace/src",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/commander/src,type=bind",
+  "workspaceFolder": "/home/commander/src",
   "updateRemoteUserUID": true,
   // Run xhost on the host so the container can connect to the X server.
   "initializeCommand": "xhost +local:docker > /dev/null 2>&1 || true",
@@ -15,7 +15,7 @@
     "--hostname=artemis",
     "--network=host",
     "-e", "QT_X11_NO_MITSHM=1",
-    "-e", "WORKSPACE_DIR=/home/commander/artemis_workspace"
+    "-e", "WORKSPACE_DIR=/home/commander"
     ,"--gpus=all"
     ,"-e", "NVIDIA_VISIBLE_DEVICES=all"
     ,"-e", "NVIDIA_DRIVER_CAPABILITIES=all"
@@ -43,7 +43,7 @@
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.cwd": "/home/commander/artemis_workspace"
+        "terminal.integrated.cwd": "/home/commander"
       }
     }
   }

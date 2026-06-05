@@ -34,5 +34,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Source ROS in every interactive shell. /etc/bash.bashrc applies to any user
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc
 
-WORKDIR /home/${USERNAME}/artemis_workspace
 USER ${USERNAME}
+WORKDIR /home/${USERNAME}

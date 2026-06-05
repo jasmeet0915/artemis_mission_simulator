@@ -32,19 +32,19 @@ GPU_FLAGS=(--gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIE
 # Allow X11 forwarding
 xhost +local:docker &>/dev/null || true
 
-echo "🌙 Starting container (workspace mounted at /home/commander/artemis_workspace)"
+echo "🌙 Starting container (workspace mounted at /home/commander/src)"
 exec docker run --rm -it \
     --name "$CONTAINER_NAME" \
     --hostname artemis \
     --network host \
     --user root \
-    --entrypoint /home/commander/artemis_workspace/src/docker/entrypoint.sh \
+    --entrypoint /home/commander/src/docker/entrypoint.sh \
     -e DISPLAY="${DISPLAY}" \
     -e QT_X11_NO_MITSHM=1 \
     -e HOST_UID="$(id -u)" \
     -e HOST_GID="$(id -g)" \
-    -e WORKSPACE_DIR="/home/commander/artemis_workspace" \
+    -e WORKSPACE_DIR="/home/commander" \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-    -v "$REPO_ROOT":/home/commander/artemis_workspace/src \
+    -v "$REPO_ROOT":/home/commander/src \
     ${GPU_FLAGS[@]+"${GPU_FLAGS[@]}"} \
     "$IMAGE_NAME" /bin/bash
