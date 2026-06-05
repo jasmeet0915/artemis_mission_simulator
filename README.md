@@ -15,9 +15,21 @@ An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NAS
 
 - Docker
 - X11 display server (Linux) or XQuartz (macOS)
-- (Optional) NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
 ### Build & Run
+
+Two supported workflows — pick whichever fits your tooling. Both use the same `docker/Dockerfile`.
+
+The container user is `commander` and the hostname is `artemis`, so your shell prompt will look like `commander@artemis:~$`. Your host UID/GID are mapped into the container at startup so files created inside are owned correctly on the host.
+
+colcon build artifacts (`build/`, `install/`, `log/`) are persisted in named Docker volumes so they survive container restarts. To wipe them (e.g. after rebuilding the image):
+
+```bash
+docker volume rm artemis-build artemis-install artemis-log
+```
+
+#### Option A: Docker scripts (no IDE required)
 
 ```bash
 # Build the Docker image
@@ -26,10 +38,27 @@ An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NAS
 # Start the container (auto-detects NVIDIA GPU, mounts workspace)
 ./docker/run.sh
 
-# Inside the container
+# Inside the container — source is at ~/src, build from home directory
 colcon build --symlink-install
 source install/setup.bash
 ```
+
+#### Option B: VS Code Devcontainer
+
+Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+
+1. Open the repo in VS Code.
+2. Run **Dev Containers: Reopen in Container** from the command palette.
+3. VS Code builds the image from `docker/Dockerfile` and drops you into a shell as `commander@artemis`.
+
+The repo is mounted at `~/src`, so `colcon build` runs from the home directory:
+
+```bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+NVIDIA GPU passthrough is opt-in for the devcontainer — uncomment the `--gpus=all` lines in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) if you have `nvidia-container-toolkit` installed.
 
 ## Launch
 

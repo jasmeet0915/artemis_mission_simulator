@@ -2,13 +2,21 @@ FROM ros:jazzy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /workspace
+ENV USERNAME=commander
+
+# Rename the existing ubuntu user inside the container to commander to match the project theme
+RUN groupmod -n ${USERNAME} ubuntu && \
+    usermod -l ${USERNAME} -d /home/${USERNAME} -m ubuntu && \
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
 
 # Install Gazebo Harmonic + ROS-Gazebo integration and Python dependencies.
-# Keep this list in sync with exec_depend entries in
-# src/lunar_terrain_exporter/package.xml.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ros-gz \
+    ros-jazzy-ament-lint-auto \
+    ros-jazzy-ament-lint-common \
+    ros-jazzy-ament-cmake-clang-format \
+    ros-jazzy-ament-cmake-pytest \
     python3-pip \
     gdal-bin \
     python3-gdal \
@@ -20,8 +28,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rasterio \
     python3-requests \
     python3-tqdm \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
-# Source ROS on shell entry; workspace sourced if built
-RUN echo 'source /opt/ros/jazzy/setup.bash' >> /root/.bashrc && \
-    echo '[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash' >> /root/.bashrc
+# Source ROS in every interactive shell. /etc/bash.bashrc applies to any user
+RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc
+
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+# Creating build directories here as the commander user to ensure correct ownsherip when
+# they are mounted as named volumes
+RUN mkdir build install log
