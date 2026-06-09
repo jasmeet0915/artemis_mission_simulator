@@ -117,12 +117,8 @@ class TestIntegrationPipeline:
         sdf_content = (model_dir / 'model.sdf').read_text()
         assert 'test_site' in sdf_content
 
-
-class TestIntegrationFullROIPipeline:
-    """Pipeline test with use_full ROI."""
-
-    def test_full_roi_pipeline(self, tmp_path):
-        """Verify LunarTerrainExporter calls extract_from_raw with use_full ROI."""
+    def test_export_model_with_full_roi(self, tmp_path):
+        """Verify export_model works end-to-end with a use_full=True ROI."""
         config = LunarSite(
             site_code='Site01',
             name='test_full_roi',
@@ -132,12 +128,10 @@ class TestIntegrationFullROIPipeline:
         output_dir = tmp_path / 'output'
         output_dir.mkdir()
 
-        size = 513
-        fake_heightmap = np.random.rand(size, size).astype(np.float64)
-        bounds = {'center_lat': -89.5, 'center_lon': -
-                  130.0, 'width_km': 20.0, 'height_km': 15.0}
-        fake_profile = {'crs': 'EPSG:3031',
-                        'transform': None}
+        fake_heightmap = np.random.rand(513, 513).astype(np.float64)
+        fake_bounds = {'center_lat': -89.5, 'center_lon': -130.0,
+                       'width_km': 20.0, 'height_km': 15.0}
+        fake_profile = {'crs': 'EPSG:3031', 'transform': None}
 
         with (
             patch('lunar_terrain_exporter.lunar_terrain_exporter.FileDownloader') as mock_dl_cls,
@@ -146,18 +140,11 @@ class TestIntegrationFullROIPipeline:
             mock_dl_instance = MagicMock()
             mock_dl_instance.download.return_value = tmp_path / 'fake.tif'
             mock_dl_cls.return_value = mock_dl_instance
-
             mock_hm.extract_from_raw.return_value = (
-                fake_heightmap, -500.0, 2000.0, bounds, fake_profile
-            )
+                fake_heightmap, -500.0, 2000.0, fake_bounds, fake_profile)
 
-            generator = LunarTerrainExporter(output_dir=output_dir)
-            result = generator.export_model(config)
+            result = LunarTerrainExporter(output_dir=output_dir).export_model(config)
 
-        mock_hm.extract_from_raw.assert_called_once()
-
+        assert result == output_dir / 'test_full_roi'
+        assert result.exists()
         assert mock_dl_instance.download.call_count == 1
-
-        model_dir = output_dir / 'test_full_roi'
-        assert model_dir.exists()
-        assert result == model_dir

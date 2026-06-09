@@ -21,7 +21,7 @@ import pytest
 _BASE_URL = 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp'
 
 
-class TestCatalogEntry:
+class TestGetSite:
     def test_entry_has_required_keys(self):
         entry = get_site('connecting_ridge')
         assert 'site_code' in entry
@@ -34,9 +34,21 @@ class TestCatalogEntry:
         assert entry['site_name'] == 'connecting_ridge'
         assert entry['description'] != ''
 
+    def test_lookup_by_code(self):
+        entry = get_site('Site01')
+        assert entry['site_name'] == 'connecting_ridge'
 
-class TestSiteCatalog:
-    def test_catalog_has_27_sites(self):
+    def test_unknown_site_raises(self):
+        with pytest.raises(KeyError, match='no_such_site'):
+            get_site('no_such_site')
+
+    def test_error_lists_available(self):
+        with pytest.raises(KeyError, match='connecting_ridge'):
+            get_site('bad_name')
+
+
+class TestListSites:
+    def test_returns_all_27(self):
         assert len(list_sites()) == 27
 
     def test_known_sites_present(self):
@@ -55,30 +67,6 @@ class TestSiteCatalog:
         codes = [e['site_code'] for e in list_sites()]
         assert len(codes) == len(set(codes))
 
-
-class TestListSites:
-    def test_returns_all_27(self):
-        sites = list_sites()
-        assert len(sites) == 27
-
     def test_returns_catalog_entry_dicts(self):
         sites = list_sites()
         assert all(isinstance(s, dict) for s in sites)
-
-
-class TestGetSite:
-    def test_lookup_by_name(self):
-        entry = get_site('connecting_ridge')
-        assert entry['site_code'] == 'Site01'
-
-    def test_lookup_by_code(self):
-        entry = get_site('Site01')
-        assert entry['site_name'] == 'connecting_ridge'
-
-    def test_unknown_site_raises(self):
-        with pytest.raises(KeyError, match='no_such_site'):
-            get_site('no_such_site')
-
-    def test_error_lists_available(self):
-        with pytest.raises(KeyError, match='connecting_ridge'):
-            get_site('bad_name')

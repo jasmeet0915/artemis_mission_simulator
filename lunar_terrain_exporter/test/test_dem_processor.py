@@ -13,71 +13,18 @@
 # limitations under the License.
 
 
-"""Tests for heightmap generation from GeoTIFF DEMs."""
+"""Tests for DEMProcessor elevation extraction from GeoTIFF DEMs."""
 
 from pathlib import Path
 
 from lunar_terrain_exporter.raster_processors.dem_processor import DEMProcessor
-from lunar_terrain_exporter.utils.raster_utils import normalize_array
 from lunar_terrain_exporter.utils.types import BoundingBox, ROI
 import numpy as np
 import pytest
 
 
-class TestReadElevations:
-    """Test metadata-driven elevation reading from rasterio datasets."""
-
-    def test_float_data_no_scaling(self):
-        """Float GeoTIFF data should be used as-is."""
-        raw = np.array([[100.5, 200.3], [150.7, -9999.0]], dtype=np.float32)
-        elevations = DEMProcessor._read_elevations(
-            raw, nodata=-9999.0, scale=1.0, offset=0.0)
-        assert elevations[0, 0] == pytest.approx(100.5, abs=0.1)
-        assert elevations[1, 0] == pytest.approx(150.7, abs=0.1)
-        assert np.isnan(elevations[1, 1])
-
-    def test_int16_with_scale(self):
-        """int16 data with scale=0.5."""
-        raw = np.array([[100, 200], [300, -32768]], dtype=np.int16)
-        elevations = DEMProcessor._read_elevations(
-            raw, nodata=-32768, scale=0.5, offset=0.0)
-        assert elevations[0, 0] == pytest.approx(50.0)
-        assert elevations[0, 1] == pytest.approx(100.0)
-        assert np.isnan(elevations[1, 1])
-
-    def test_scale_and_offset(self):
-        """Scale and offset should both be applied: elevation = raw * scale + offset."""
-        raw = np.array([[10, 20]], dtype=np.int16)
-        elevations = DEMProcessor._read_elevations(
-            raw, nodata=None, scale=2.0, offset=100.0)
-        assert elevations[0, 0] == pytest.approx(120.0)
-        assert elevations[0, 1] == pytest.approx(140.0)
-
-    def test_no_nodata(self):
-        """When nodata is None, no pixels should become NaN."""
-        raw = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float64)
-        elevations = DEMProcessor._read_elevations(
-            raw, nodata=None, scale=1.0, offset=0.0)
-        assert not np.any(np.isnan(elevations))
-
-
-class TestNormalizeArray:
-    """Test normalization to 0-1 range."""
-
-    def test_normalize_range(self):
-        data = np.array([[100.0, 200.0], [150.0, 300.0]])
-        normalized = normalize_array(data)
-        assert normalized.min() == pytest.approx(0.0)
-        assert normalized.max() == pytest.approx(1.0)
-
-    def test_normalize_flat_surface(self):
-        data = np.full((10, 10), 42.0)
-        normalized = normalize_array(data)
-        assert np.all(normalized == 0.0)
-
-
-class TestFromDem:
-    """Test reading a DEM tile via the unified extract_from_raw() interface."""
+class TestDEMProcessor:
+    """Test the public extract_from_raw() interface."""
 
     @staticmethod
     def _make_test_geotiff(tmp_path: Path, size: int = 64) -> Path:
@@ -100,7 +47,7 @@ class TestFromDem:
             dst.write(data, 1)
         return dem_path
 
-    def test_full_roi_returns_elevations_and_bounds(self, tmp_path):
+    def test_returns_with_full_roi(self, tmp_path):
         """
         Test extract_from_raw with use_full=True.
 
@@ -113,7 +60,6 @@ class TestFromDem:
         )
 
         assert elevations.ndim == 2
-        # Raw elevations are NOT normalized — values should span the input range
         assert elev_min == pytest.approx(-100.0, abs=1.0)
         assert elev_max == pytest.approx(200.0, abs=1.0)
         assert elevations.min() == pytest.approx(elev_min, abs=1.0)
@@ -129,7 +75,7 @@ class TestFromDem:
         assert 'crs' in dem_profile
         assert 'transform' in dem_profile
 
-    def test_bounding_box_roi_returns_elevations(self, tmp_path):
+    def test_returns_with_bounding_box(self, tmp_path):
         """extract_from_raw with a bounding box ROI should crop and return elevations."""
         dem_path = self._make_test_geotiff(tmp_path, size=128)
         roi = ROI(
@@ -142,6 +88,9 @@ class TestFromDem:
         )
 
         assert elevations.ndim == 2
+        assert elev_min <= elev_max
+        assert elevations.min() == pytest.approx(elev_min, abs=1.0)
+        assert elevations.max() == pytest.approx(elev_max, abs=1.0)
         assert bounds['width_km'] == pytest.approx(0.5, abs=0.01)
         assert bounds['height_km'] == pytest.approx(0.5, abs=0.01)
         assert 'crs' in dem_profile

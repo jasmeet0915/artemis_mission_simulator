@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-"""Tests for the lunar terrain generator modules."""
+"""Tests for SDFModelWriter output structure and content."""
 
 from pathlib import Path
 import tempfile

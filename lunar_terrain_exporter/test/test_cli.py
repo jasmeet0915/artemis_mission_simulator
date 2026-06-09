@@ -15,8 +15,12 @@
 
 """Tests for the CLI argument parsing and subcommands."""
 
-from lunar_terrain_exporter.cli import build_parser
+from pathlib import Path
+import tempfile
+
+from lunar_terrain_exporter.cli import build_parser, load_sites_from_yaml
 import pytest
+import yaml
 
 
 class TestSiteSubcommand:
@@ -87,3 +91,95 @@ class TestNoSubcommand:
         parser = build_parser()
         args = parser.parse_args([])
         assert args.command is None
+
+
+class TestLoadSitesFromYaml:
+    def _write_yaml(self, data: dict, path: Path) -> Path:
+        config_file = path / 'sites.yaml'
+        with open(config_file, 'w') as f:
+            yaml.dump(data, f)
+        return config_file
+
+    def test_load_single_site_with_bbox(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                'sites': [{
+                    'site': 'connecting_ridge',
+                    'roi': {
+                        'use_full': False,
+                        'bounding_box': {'lat': -86.5, 'lon': -4.0},
+                    },
+                }]
+            }, Path(tmpdir))
+            sites = load_sites_from_yaml(config_file)
+            assert len(sites) == 1
+            assert sites[0].name == 'connecting_ridge'
+            assert sites[0].site_code == 'Site01'
+            assert sites[0].roi.bounding_box.width_km == 10.0
+
+    def test_load_single_site_with_full_roi(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                'sites': [{
+                    'site': 'connecting_ridge',
+                    'roi': {'use_full': True},
+                }]
+            }, Path(tmpdir))
+            sites = load_sites_from_yaml(config_file)
+            assert len(sites) == 1
+            assert sites[0].name == 'connecting_ridge'
+            assert sites[0].roi.use_full is True
+            assert sites[0].roi.bounding_box is None
+            assert 'Site01' in sites[0].dem_url
+
+    def test_load_multiple_sites(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                'sites': [
+                    {
+                        'site': 'connecting_ridge',
+                        'roi': {
+                            'use_full': False,
+                            'bounding_box': {'lat': -86.0, 'lon': 0.0},
+                        },
+                    },
+                    {
+                        'site': 'shackleton_rim',
+                        'roi': {
+                            'use_full': False,
+                            'bounding_box': {
+                                'lat': -87.0, 'lon': 10.0,
+                                'width_km': 5.0, 'height_km': 5.0,
+                            },
+                        },
+                    },
+                ]
+            }, Path(tmpdir))
+            sites = load_sites_from_yaml(config_file)
+            assert len(sites) == 2
+            assert sites[0].name == 'connecting_ridge'
+            assert sites[1].roi.bounding_box.width_km == 5.0
+
+    def test_missing_required_field_raises(self):
+        """An entry without a 'site' key is skipped (warning printed)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                'sites': [{'name': 'bad'}]
+            }, Path(tmpdir))
+            sites = load_sites_from_yaml(config_file)
+            assert len(sites) == 0
+
+    def test_load_site_with_bbox_checks_dem_url(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = self._write_yaml({
+                'sites': [{
+                    'site': 'shackleton_rim',
+                    'roi': {
+                        'use_full': False,
+                        'bounding_box': {'lat': -86.5, 'lon': -4.0, 'width_km': 5.0},
+                    },
+                }]
+            }, Path(tmpdir))
+            sites = load_sites_from_yaml(config_file)
+            assert sites[0].roi.bounding_box.width_km == 5.0
+            assert 'Site04' in sites[0].dem_url
