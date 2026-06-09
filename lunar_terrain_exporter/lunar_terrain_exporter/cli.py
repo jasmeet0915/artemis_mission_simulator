@@ -13,7 +13,8 @@
 # limitations under the License.
 
 
-"""Command-line interface for generating lunar terrain models.
+"""
+Command-line interface for generating lunar terrain models.
 
 Subcommands
 -----------
@@ -22,92 +23,93 @@ batch  Export multiple sites listed in a YAML config file.
 """
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 
 import yaml
 
 from .lunar_terrain_exporter import LunarTerrainExporter
-from .utils.types import BoundingBox, ROI, LunarSite
+from .utils.types import BoundingBox, LunarSite, ROI
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="lunar_terrain_exporter",
+        prog='lunar_terrain_exporter',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
             "Export terrain models (only SDF models supported for now) from NASA's "
-            "PGDA (Planetary Geodesy Data Archive) Product 78:\nHigh resolution "
-            "DEMs for Lunar South Pole Sites: "
-            "https://pgda.gsfc.nasa.gov/products/78"
+            'PGDA (Planetary Geodesy Data Archive) Product 78:\nHigh resolution '
+            'DEMs for Lunar South Pole Sites: '
+            'https://pgda.gsfc.nasa.gov/products/78'
         ),
     )
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest='command')
 
     # site subcommand
     site_parser = subparsers.add_parser(
-        "site",
-        help="Export model for a single site from the PGDA-78 catalog",
+        'site',
+        help='Export model for a single site from the PGDA-78 catalog',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "examples:\n"
-            "  # Full DEM tile\n"
-            "  lunar_terrain_exporter site connecting_ridge --output-dir ./models\n\n"
-            "  # Custom ROI with bounding-box crop\n"
-            "  lunar_terrain_exporter site shackleton_rim "
-            "--lat -86.5 --lon -4.0 --width 5 --height 5 --output-dir ./models"
+            'examples:\n'
+            '  # Full DEM tile\n'
+            '  lunar_terrain_exporter site connecting_ridge --output-dir ./models\n\n'
+            '  # Custom ROI with bounding-box crop\n'
+            '  lunar_terrain_exporter site shackleton_rim '
+            '--lat -86.5 --lon -4.0 --width 5 --height 5 --output-dir ./models'
         ),
     )
     site_parser.add_argument(
-        "site_name", type=str,
-        help="Site name or site code from the PGDA-78 catalog (e.g. connecting_ridge or Site01)",
+        'site_name', type=str,
+        help='Site name or site code from the PGDA-78 catalog (e.g. connecting_ridge or Site01)',
     )
     site_parser.add_argument(
-        "--lat", type=float, default=None,
-        help="Center latitude for custom crop",
+        '--lat', type=float, default=None,
+        help='Center latitude for custom crop',
     )
     site_parser.add_argument(
-        "--lon", type=float, default=None,
-        help="Center longitude for custom crop",
+        '--lon', type=float, default=None,
+        help='Center longitude for custom crop',
     )
     site_parser.add_argument(
-        "--width", type=float, default=10.0,
-        help="Region width in km (default: 10)",
+        '--width', type=float, default=10.0,
+        help='Region width in km (default: 10)',
     )
     site_parser.add_argument(
-        "--height", type=float, default=10.0,
-        help="Region height in km (default: 10)",
+        '--height', type=float, default=10.0,
+        help='Region height in km (default: 10)',
     )
     site_parser.add_argument(
-        "--output-dir", type=str, default=".",
-        help="Output directory for generated models (default: .)",
+        '--output-dir', type=str, default='.',
+        help='Output directory for generated models (default: .)',
     )
 
     # batch subcommand
     batch_parser = subparsers.add_parser(
-        "batch",
-        help="Export multiple sites from a YAML config file",
+        'batch',
+        help='Export multiple sites from a YAML config file',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "examples:\n"
-            "  lunar_terrain_exporter batch "
-            "--config config/artemis_sites.yaml --output-dir ./models"
+            'examples:\n'
+            '  lunar_terrain_exporter batch '
+            '--config config/artemis_sites.yaml --output-dir ./models'
         ),
     )
     batch_parser.add_argument(
-        "--config", type=str, required=True,
-        help="Path to YAML config file listing sites to export",
+        '--config', type=str, required=True,
+        help='Path to YAML config file listing sites to export',
     )
     batch_parser.add_argument(
-        "--output-dir", type=str, default=".",
-        help="Output directory for generated models (default: .)",
+        '--output-dir', type=str, default='.',
+        help='Output directory for generated models (default: .)',
     )
 
     return parser
 
 
 def load_sites_from_yaml(config_path: Path) -> list[LunarSite]:
-    """Parse a YAML config file and return a list of LunarSite objects.
+    """
+    Parse a YAML config file and return a list of LunarSite objects.
 
     Each entry must have a ``site`` key with a name or code from the
     PGDA-78 catalog.  An optional ``roi`` block can override the default
@@ -117,27 +119,27 @@ def load_sites_from_yaml(config_path: Path) -> list[LunarSite]:
         data = yaml.safe_load(f)
 
     sites: list[LunarSite] = []
-    for entry in data["sites"]:
+    for entry in data['sites']:
         # Build ROI from optional roi block (defaults to full DEM)
-        roi_raw = entry.get("roi", {})
-        use_full = bool(roi_raw.get("use_full", True))
+        roi_raw = entry.get('roi', {})
+        use_full = bool(roi_raw.get('use_full', True))
 
         bounding_box = None
-        bb_raw = roi_raw.get("bounding_box")
+        bb_raw = roi_raw.get('bounding_box')
         if bb_raw is not None:
             bounding_box = BoundingBox(
-                lat=float(bb_raw["lat"]),
-                lon=float(bb_raw["lon"]),
-                width_km=float(bb_raw.get("width_km", 10.0)),
-                height_km=float(bb_raw.get("height_km", 10.0)),
+                lat=float(bb_raw['lat']),
+                lon=float(bb_raw['lon']),
+                width_km=float(bb_raw.get('width_km', 10.0)),
+                height_km=float(bb_raw.get('height_km', 10.0)),
             )
 
         roi = ROI(use_full=use_full, bounding_box=bounding_box)
 
         try:
-            config = LunarSite.from_catalog(entry["site"], roi=roi)
+            config = LunarSite.from_catalog(entry['site'], roi=roi)
         except (KeyError, ValueError) as exc:
-            print(f"Warning: skipping entry {entry!r}: {exc}", file=sys.stderr)
+            print(f'Warning: skipping entry {entry!r}: {exc}', file=sys.stderr)
             continue
         sites.append(config)
 
@@ -155,7 +157,7 @@ def main(argv: list[str] | None = None) -> None:
     output_dir = Path(args.output_dir)
     sites: list[LunarSite] = []
 
-    if args.command == "site":
+    if args.command == 'site':
         if args.lat is not None and args.lon is not None:
             roi = ROI(
                 use_full=False,
@@ -172,19 +174,19 @@ def main(argv: list[str] | None = None) -> None:
         try:
             site = LunarSite.from_catalog(args.site_name, roi=roi)
         except (KeyError, ValueError) as exc:
-            print(f"Error: {exc}", file=sys.stderr)
+            print(f'Error: {exc}', file=sys.stderr)
             sys.exit(1)
 
         sites.append(site)
 
-    elif args.command == "batch":
-        print(f"Loading sites from {args.config}...")
+    elif args.command == 'batch':
+        print(f'Loading sites from {args.config}...')
         sites = load_sites_from_yaml(Path(args.config))
-        print(f"Found {len(sites)} site(s) to export.")
+        print(f'Found {len(sites)} site(s) to export.')
 
     exporter = LunarTerrainExporter(output_dir)
     for site in sites:
         print(f"\nExporting '{site.name}' ({site.site_code}) → {output_dir}/")
         exporter.export_model(site)
 
-    print("\nDone!")
+    print('\nDone!')

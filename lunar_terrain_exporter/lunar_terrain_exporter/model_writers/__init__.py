@@ -17,4 +17,4 @@
 
 from .sdf_model_writer import SDFModelWriter
 
-__all__ = ["SDFModelWriter"]
+__all__ = ['SDFModelWriter']

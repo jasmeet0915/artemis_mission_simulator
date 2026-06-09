@@ -17,4 +17,4 @@
 
 from .dem_processor import DEMProcessor
 
-__all__ = ["DEMProcessor"]
+__all__ = ['DEMProcessor']

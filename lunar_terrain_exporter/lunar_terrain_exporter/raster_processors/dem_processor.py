@@ -20,15 +20,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-import rasterio
 from pyproj import CRS, Transformer
+import rasterio
 from rasterio.windows import from_bounds
 
 from ..utils.types import ROI
 
 
 class DEMProcessor:
-    """Extracts elevation data from PGDA Product 78 polar DEM GeoTIFFs.
+    """
+    Extracts elevation data from PGDA Product 78 polar DEM GeoTIFFs.
 
     Handles the south pole polar stereographic projection used by
     Barker et al. (2021) 5 m/pix LOLA DEMs.
@@ -41,7 +42,8 @@ class DEMProcessor:
         scale: float = 1.0,
         offset: float = 0.0,
     ) -> np.ndarray:
-        """Convert raw raster values to elevation in meters using dataset metadata.
+        """
+        Convert raw raster values to elevation in meters using dataset metadata.
 
         elevation_m = raw * scale + offset
         Pixels matching nodata become NaN.
@@ -57,7 +59,8 @@ class DEMProcessor:
         dem_path: Path,
         roi: ROI,
     ) -> tuple[np.ndarray, float, float, dict, dict]:
-        """Extract elevation data from a DEM, full-tile or bounding-box crop.
+        """
+        Extract elevation data from a DEM, full-tile or bounding-box crop.
 
         Uses the CRS embedded in the GeoTIFF and *pyproj* for all
         coordinate transformations.
@@ -68,14 +71,16 @@ class DEMProcessor:
                  entire raster is read; otherwise the area is cropped to
                  ``roi.bounding_box``.
 
-        Returns:
-            (elevations, elev_min, elev_max, bounds, dem_profile)
+        Returns
+        -------
+        (elevations, elev_min, elev_max, bounds, dem_profile)
 
             *elevations*: float64 array of elevation values in meters.
             *bounds*: dict with ``center_lat``, ``center_lon``,
             ``width_km``, ``height_km``.
             *dem_profile*: dict with ``crs`` and ``transform`` suitable
             for writing a GeoTIFF of the output array.
+
         """
         with rasterio.open(dem_path) as src:
             geographic_crs = CRS(src.crs).geodetic_crs
@@ -130,15 +135,15 @@ class DEMProcessor:
         center_lon, center_lat = to_geographic.transform(x_center, y_center)
 
         bounds = {
-            "center_lat": center_lat,
-            "center_lon": center_lon,
-            "width_km": (x_max - x_min) / 1000.0,
-            "height_km": (y_max - y_min) / 1000.0,
+            'center_lat': center_lat,
+            'center_lon': center_lon,
+            'width_km': (x_max - x_min) / 1000.0,
+            'height_km': (y_max - y_min) / 1000.0,
         }
 
         dem_profile = {
-            "crs": crs,
-            "transform": out_transform,
+            'crs': crs,
+            'transform': out_transform,
         }
 
         return elevations, elev_min, elev_max, bounds, dem_profile
