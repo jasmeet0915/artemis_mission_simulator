@@ -273,6 +273,11 @@ class TestFromCatalog:
         assert config.roi.use_full is False
         assert config.roi.bounding_box.lat == -86.5
 
+    def test_creates_config_by_code(self):
+        config = LunarSite.from_catalog("Site01")
+        assert config.name == "connecting_ridge"
+        assert config.site_code == "Site01"
+
     def test_unknown_site_raises(self):
         with pytest.raises(KeyError, match="no_such_site"):
             LunarSite.from_catalog("no_such_site")

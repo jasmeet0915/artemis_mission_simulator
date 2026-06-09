@@ -18,7 +18,6 @@
 import pytest
 
 from lunar_terrain_exporter.cli import build_parser, load_sites_from_yaml
-from lunar_terrain_exporter.utils.types import BoundingBox, ROI, LunarSite
 
 
 class TestSiteSubcommand:
@@ -89,32 +88,3 @@ class TestNoSubcommand:
         parser = build_parser()
         args = parser.parse_args([])
         assert args.command is None
-
-
-class TestLunarSiteFromCatalog:
-    def test_creates_config_full_roi(self):
-        config = LunarSite.from_catalog("connecting_ridge")
-        assert config.name == "connecting_ridge"
-        assert config.site_code == "Site01"
-        assert "Site01" in config.dem_url
-        assert config.roi.use_full is True
-        assert config.description != ""
-
-    def test_creates_config_by_code(self):
-        config = LunarSite.from_catalog("Site01")
-        assert config.name == "connecting_ridge"
-        assert config.site_code == "Site01"
-
-    def test_creates_config_custom_roi(self):
-        roi = ROI(
-            use_full=False,
-            bounding_box=BoundingBox(
-                lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
-        )
-        config = LunarSite.from_catalog("shackleton_rim", roi=roi)
-        assert config.roi.use_full is False
-        assert config.roi.bounding_box.lat == -86.5
-
-    def test_unknown_site_raises(self):
-        with pytest.raises(KeyError, match="no_such_site"):
-            LunarSite.from_catalog("no_such_site")
