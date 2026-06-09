@@ -24,10 +24,10 @@ if ! command -v nvidia-smi &>/dev/null || ! nvidia-smi &>/dev/null; then
     echo "❌ No NVIDIA GPU detected."
     echo "   This simulator requires an NVIDIA GPU with nvidia-container-toolkit installed."
     echo "   See https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html"
-    # exit 1
+    exit 1
 fi
 echo "🖥  NVIDIA GPU detected — using hardware acceleration"
-# GPU_FLAGS=(--gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all)
+GPU_FLAGS=(--gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all)
 
 # Allow X11 forwarding
 xhost +local:docker &>/dev/null || true
