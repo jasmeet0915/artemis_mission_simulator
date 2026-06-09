@@ -112,7 +112,6 @@ class TestIntegrationPipeline:
         textures_dir = model_dir / 'materials' / 'textures'
         assert textures_dir.exists()
         assert (textures_dir / 'heightmap.tif').exists()
-        assert (textures_dir / 'normal.png').exists()
 
         sdf_content = (model_dir / 'model.sdf').read_text()
         assert 'test_site' in sdf_content

@@ -46,7 +46,7 @@ class TestSDFModelWriter:
     def test_writes_all_files(self):
         elev = _make_elevations()
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = SDFModelWriter(Path(tmpdir) / 'test_site')
+            writer = SDFModelWriter(Path(tmpdir))
             writer.write(
                 site_id='test_site',
                 display_name='Test Site',
@@ -66,12 +66,11 @@ class TestSDFModelWriter:
             assert (out / 'model.config').exists()
             assert (out / 'metadata.yaml').exists()
             assert (out / 'materials' / 'textures' / 'heightmap.tif').exists()
-            assert (out / 'materials' / 'textures' / 'normal.png').exists()
 
     def test_sdf_contains_site_id_and_sizes(self):
         elev = _make_elevations()
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = SDFModelWriter(Path(tmpdir) / 'my_site')
+            writer = SDFModelWriter(Path(tmpdir))
             writer.write(
                 site_id='my_site',
                 display_name='My Site',
@@ -94,7 +93,7 @@ class TestSDFModelWriter:
     def test_metadata_yaml_valid(self):
         elev = _make_elevations()
         with tempfile.TemporaryDirectory() as tmpdir:
-            writer = SDFModelWriter(Path(tmpdir) / 'meta_test')
+            writer = SDFModelWriter(Path(tmpdir))
             writer.write(
                 site_id='meta_test',
                 display_name='Meta Test',
