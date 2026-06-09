@@ -1,0 +1,68 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker/build.sh
+
+      - name: Build colcon workspace
+        run: |
+          docker run --rm \
+            --user root \
+            --entrypoint /home/commander/src/docker/entrypoint.sh \
+            -e HOST_UID="$(id -u)" \
+            -e HOST_GID="$(id -g)" \
+            -v "${{ github.workspace }}:/home/commander/src" \
+            -v "artemis-build:/home/commander/build" \
+            -v "artemis-install:/home/commander/install" \
+            -v "artemis-log:/home/commander/log" \
+            artemis-mission-simulator:latest \
+            bash -c "source /opt/ros/jazzy/setup.bash && colcon build"
+
+      - name: Run workspace tests
+        run: |
+          docker run --rm \
+            --user root \
+            --entrypoint /home/commander/src/docker/entrypoint.sh \
+            -e HOST_UID="$(id -u)" \
+            -e HOST_GID="$(id -g)" \
+            -v "${{ github.workspace }}:/home/commander/src" \
+            -v "artemis-build:/home/commander/build" \
+            -v "artemis-install:/home/commander/install" \
+            -v "artemis-log:/home/commander/log" \
+            artemis-mission-simulator:latest \
+            bash -c "source /opt/ros/jazzy/setup.bash && colcon test"
+
+      # Doing || true at the end of colcon test-result so that this step does
+      # not report failure redundantly as 'Run workspace tests' will already do that 
+      - name: Show test results
+        if: always()
+        run: |
+          docker run --rm \
+            --user root \
+            --entrypoint /home/commander/src/docker/entrypoint.sh \
+            -e HOST_UID="$(id -u)" \
+            -e HOST_GID="$(id -g)" \
+            -v "${{ github.workspace }}:/home/commander/src" \
+            -v "artemis-build:/home/commander/build" \
+            -v "artemis-install:/home/commander/install" \
+            -v "artemis-log:/home/commander/log" \
+            artemis-mission-simulator:latest \
+            bash -c "source /opt/ros/jazzy/setup.bash && colcon test-result" || true
+
+      - name: Clean up Docker volumes
+        if: always()
+        run: |
+          docker volume rm artemis-build artemis-install artemis-log

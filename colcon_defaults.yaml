@@ -9,3 +9,7 @@ test:
     # Stream test output directly so failures are visible immediately
     - console_direct+
   return-code-on-test-failure: true
+
+test-result:
+  all: true
+  verbose: true
