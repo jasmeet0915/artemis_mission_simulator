@@ -15,13 +15,13 @@
 
 """Tests for heightmap generation from GeoTIFF DEMs."""
 
-import numpy as np
-import pytest
 from pathlib import Path
 
 from lunar_terrain_exporter.raster_processors.dem_processor import DEMProcessor
 from lunar_terrain_exporter.utils.raster_utils import normalize_array
 from lunar_terrain_exporter.utils.types import BoundingBox, ROI
+import numpy as np
+import pytest
 
 
 class TestReadElevations:
@@ -85,23 +85,27 @@ class TestFromDem:
         import rasterio
         from rasterio.transform import from_bounds
 
-        dem_path = tmp_path / "test_dem.tif"
+        dem_path = tmp_path / 'test_dem.tif'
         # 1km x 1km tile centered at stereo origin (south pole)
         transform = from_bounds(-500, -500, 500, 500, size, size)
         data = np.linspace(-100.0, 200.0, size * size,
                            dtype=np.float32).reshape(size, size)
 
         with rasterio.open(
-            dem_path, "w", driver="GTiff", height=size, width=size,
-            count=1, dtype="float32",
-            crs="EPSG:3031",
+            dem_path, 'w', driver='GTiff', height=size, width=size,
+            count=1, dtype='float32',
+            crs='EPSG:3031',
             transform=transform, nodata=-9999.0,
         ) as dst:
             dst.write(data, 1)
         return dem_path
 
     def test_full_roi_returns_elevations_and_bounds(self, tmp_path):
-        """extract_from_raw with use_full=True should return elevations, range, bounds, and profile."""
+        """
+        Test extract_from_raw with use_full=True.
+
+        Should return elevations, range, bounds, and profile.
+        """
         dem_path = self._make_test_geotiff(tmp_path)
         roi = ROI(use_full=True)
         elevations, elev_min, elev_max, bounds, dem_profile = (
@@ -115,15 +119,15 @@ class TestFromDem:
         assert elevations.min() == pytest.approx(elev_min, abs=1.0)
         assert elevations.max() == pytest.approx(elev_max, abs=1.0)
 
-        assert "center_lat" in bounds
-        assert "center_lon" in bounds
-        assert "width_km" in bounds
-        assert "height_km" in bounds
-        assert bounds["width_km"] == pytest.approx(1.0, abs=0.1)
-        assert bounds["height_km"] == pytest.approx(1.0, abs=0.1)
+        assert 'center_lat' in bounds
+        assert 'center_lon' in bounds
+        assert 'width_km' in bounds
+        assert 'height_km' in bounds
+        assert bounds['width_km'] == pytest.approx(1.0, abs=0.1)
+        assert bounds['height_km'] == pytest.approx(1.0, abs=0.1)
 
-        assert "crs" in dem_profile
-        assert "transform" in dem_profile
+        assert 'crs' in dem_profile
+        assert 'transform' in dem_profile
 
     def test_bounding_box_roi_returns_elevations(self, tmp_path):
         """extract_from_raw with a bounding box ROI should crop and return elevations."""
@@ -138,7 +142,7 @@ class TestFromDem:
         )
 
         assert elevations.ndim == 2
-        assert bounds["width_km"] == pytest.approx(0.5, abs=0.01)
-        assert bounds["height_km"] == pytest.approx(0.5, abs=0.01)
-        assert "crs" in dem_profile
-        assert "transform" in dem_profile
+        assert bounds['width_km'] == pytest.approx(0.5, abs=0.01)
+        assert bounds['height_km'] == pytest.approx(0.5, abs=0.01)
+        assert 'crs' in dem_profile
+        assert 'transform' in dem_profile

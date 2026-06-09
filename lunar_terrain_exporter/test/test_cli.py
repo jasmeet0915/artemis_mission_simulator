@@ -15,52 +15,51 @@
 
 """Tests for the CLI argument parsing and subcommands."""
 
+from lunar_terrain_exporter.cli import build_parser
 import pytest
-
-from lunar_terrain_exporter.cli import build_parser, load_sites_from_yaml
 
 
 class TestSiteSubcommand:
     def test_site_full_roi(self):
         parser = build_parser()
         args = parser.parse_args([
-            "site", "connecting_ridge",
-            "--output-dir", "/tmp/out",
+            'site', 'connecting_ridge',
+            '--output-dir', '/tmp/out',
         ])
-        assert args.command == "site"
-        assert args.site_name == "connecting_ridge"
-        assert args.output_dir == "/tmp/out"
+        assert args.command == 'site'
+        assert args.site_name == 'connecting_ridge'
+        assert args.output_dir == '/tmp/out'
         assert args.lat is None
         assert args.lon is None
 
     def test_site_with_code(self):
         """CLI should accept a site code as well as a name."""
         parser = build_parser()
-        args = parser.parse_args(["site", "Site01"])
-        assert args.site_name == "Site01"
+        args = parser.parse_args(['site', 'Site01'])
+        assert args.site_name == 'Site01'
 
     def test_site_with_crop(self):
         parser = build_parser()
         args = parser.parse_args([
-            "site", "shackleton_rim",
-            "--lat", "-86.5",
-            "--lon", "-4.0",
-            "--width", "5.0",
-            "--height", "5.0",
-            "--output-dir", "/tmp/out",
+            'site', 'shackleton_rim',
+            '--lat', '-86.5',
+            '--lon', '-4.0',
+            '--width', '5.0',
+            '--height', '5.0',
+            '--output-dir', '/tmp/out',
         ])
-        assert args.site_name == "shackleton_rim"
+        assert args.site_name == 'shackleton_rim'
         assert args.lat == -86.5
         assert args.width == 5.0
 
     def test_site_default_output_dir(self):
         parser = build_parser()
-        args = parser.parse_args(["site", "connecting_ridge"])
-        assert args.output_dir == "."
+        args = parser.parse_args(['site', 'connecting_ridge'])
+        assert args.output_dir == '.'
 
     def test_site_default_dimensions(self):
         parser = build_parser()
-        args = parser.parse_args(["site", "connecting_ridge"])
+        args = parser.parse_args(['site', 'connecting_ridge'])
         assert args.width == 10.0
         assert args.height == 10.0
 
@@ -69,18 +68,18 @@ class TestBatchSubcommand:
     def test_batch_mode(self):
         parser = build_parser()
         args = parser.parse_args([
-            "batch",
-            "--config", "sites.yaml",
-            "--output-dir", "/tmp/out",
+            'batch',
+            '--config', 'sites.yaml',
+            '--output-dir', '/tmp/out',
         ])
-        assert args.command == "batch"
-        assert args.config == "sites.yaml"
-        assert args.output_dir == "/tmp/out"
+        assert args.command == 'batch'
+        assert args.config == 'sites.yaml'
+        assert args.output_dir == '/tmp/out'
 
     def test_batch_requires_config(self):
         parser = build_parser()
         with pytest.raises(SystemExit):
-            parser.parse_args(["batch", "--output-dir", "/tmp/out"])
+            parser.parse_args(['batch', '--output-dir', '/tmp/out'])
 
 
 class TestNoSubcommand:
