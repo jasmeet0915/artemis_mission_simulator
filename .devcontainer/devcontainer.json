@@ -16,9 +16,9 @@
     "--network=host",
     "-e", "QT_X11_NO_MITSHM=1",
     "-e", "WORKSPACE_DIR=/home/commander"
-    ,"--gpus=all"
-    ,"-e", "NVIDIA_VISIBLE_DEVICES=all"
-    ,"-e", "NVIDIA_DRIVER_CAPABILITIES=all"
+    // ,"--gpus=all"
+    // ,"-e", "NVIDIA_VISIBLE_DEVICES=all"
+    // ,"-e", "NVIDIA_DRIVER_CAPABILITIES=all"
   ],
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}"
