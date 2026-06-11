@@ -1,13 +1,51 @@
-# Artemis Mission Simulator
+<p align="center">
+  <img src="media/logo.png" alt="Artemis Mission Simulator" width="600"/>
+</p>
 
-An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NASA's Artemis programme moon base and scientific operations as close to reality as possible.
+<p align="center">
+  <a href="https://github.com/jasmeet0915/artemis_mission_simulator/actions/workflows/build_and_test.yml">
+    <img src="https://github.com/jasmeet0915/artemis_mission_simulator/actions/workflows/build_and_test.yml/badge.svg" alt="Build & Test"/>
+  </a>
+  <img src="https://img.shields.io/badge/ROS_2-Jazzy-blue" alt="ROS 2 Jazzy"/>
+  <img src="https://img.shields.io/badge/Gazebo-Harmonic-orange" alt="Gazebo Harmonic"/>
+  <img src="https://img.shields.io/badge/license-Apache_2.0-green" alt="License"/>
+</p>
 
-![Shackleton Rim terrain in Gazebo](media/hero.gif)
-<p align="center"><em>GIF showing the Shackleton Rim terrain in Gazebo which comes pre-generated with this repo. You can generate your own using the lunar_terrain_exporter cli tool of this workspace</em></p>
-
-**Stack:** ROS 2 Jazzy · Gazebo Harmonic · Docker
+<p align="center">
+  An open-source ROS 2 + Gazebo platform for simulating NASA's Artemis lunar missions —
+  terrain, illumination, robotics, and beyond.
+</p>
 
 ---
+
+<p align="center">
+  <img src="media/hero.gif" alt="Shackleton Rim terrain in Gazebo"/>
+  <br/>
+  <em>Shackleton Rim terrain in Gazebo, generated from NASA LRO elevation data</em>
+</p>
+
+---
+
+## Overview
+
+Artemis Mission Simulator is a plug-and-play simulation playground for researchers and engineers working on space robotics for the Artemis programme. The goal is two-fold: simulate the lunar environment as faithfully as possible, and provide a ready-to-use testing ground for rovers, drones, humanoids, and other systems intended for lunar surface operations.
+
+**Milestone 1 — Lunar Environment (in progress)**
+- Real terrain from NASA PGDA-78 LRO elevation data for Artemis south-pole landing sites
+- Accurate solar illumination and permanently shadowed regions via ephemeris data
+- Procedural surface texturing for VO and SLAM testing
+
+**Upcoming milestones**
+- Moonfall drone simulation
+- Lunar Terrain Vehicles (LTVs) and rovers
+- Lunar base environment
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`lunar_terrain_exporter`](lunar_terrain_exporter/) | CLI tool for generating Gazebo SDF terrain models from NASA PGDA-78 south-pole DEMs |
+| [`artemis_mission_launcher`](artemis_mission_launcher/) | ROS 2 launch files and Gazebo world definitions |
 
 ## Setup
 
@@ -17,70 +55,57 @@ An open-source Gazebo and ROS 2 based simulation platform aiming to simulate NAS
 - X11 display server (Linux) or XQuartz (macOS)
 - NVIDIA GPU + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
-### Build & Run
+### Option A — Docker scripts
 
-Two supported workflows — pick whichever fits your tooling. Both use the same `docker/Dockerfile`.
+```bash
+# Build the image
+./docker/build.sh
 
-The container user is `commander` and the hostname is `artemis`, so your shell prompt will look like `commander@artemis:~$`. Your host UID/GID are mapped into the container at startup so files created inside are owned correctly on the host.
+# Launch the container (auto-detects NVIDIA GPU, mounts workspace)
+./docker/run.sh
 
-colcon build artifacts (`build/`, `install/`, `log/`) are persisted in named Docker volumes so they survive container restarts. To wipe them (e.g. after rebuilding the image):
+# Inside the container
+colcon build --symlink-install
+source install/setup.bash
+```
+
+### Option B — VS Code Devcontainer
+
+Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+
+1. Open the repo in VS Code.
+2. Run **Dev Containers: Reopen in Container**.
+3. Build from the terminal:
+
+```bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+> NVIDIA GPU passthrough is opt-in — uncomment the `--gpus=all` lines in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json).
+
+Both flows map your host UID/GID into the container so mounted files are always owned by your host user. Build artifacts persist across restarts in named Docker volumes. To wipe them after an image rebuild:
 
 ```bash
 docker volume rm artemis-build artemis-install artemis-log
 ```
 
-#### Option A: Docker scripts (no IDE required)
-
-```bash
-# Build the Docker image
-./docker/build.sh
-
-# Start the container (auto-detects NVIDIA GPU, mounts workspace)
-./docker/run.sh
-
-# Inside the container — source is at ~/src, build from home directory
-colcon build --symlink-install
-source install/setup.bash
-```
-
-#### Option B: VS Code Devcontainer
-
-Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-
-1. Open the repo in VS Code.
-2. Run **Dev Containers: Reopen in Container** from the command palette.
-3. VS Code builds the image from `docker/Dockerfile` and drops you into a shell as `commander@artemis`.
-
-The repo is mounted at `~/src`, so `colcon build` runs from the home directory:
-
-```bash
-colcon build --symlink-install
-source install/setup.bash
-```
-
-NVIDIA GPU passthrough is opt-in for the devcontainer — uncomment the `--gpus=all` lines in [`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json) if you have `nvidia-container-toolkit` installed.
-
 ## Launch
-
-### Lunar Surface (pre-built terrain)
 
 ```bash
 ros2 launch artemis_mission_launcher lunar_surface.launch.py world:=lunar_empty_world
 ```
 
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| [`lunar_terrain_exporter`](lunar_terrain_exporter/) | CLI tool and pipeline for generating Gazebo terrain models from NASA PGDA-78 south-pole DEMs |
-| [`artemis_mission_launcher`](artemis_mission_launcher/) | ROS 2 launch files and Gazebo world definitions |
-
-More packages upcoming!
-
 ## Contributing
 
-Checkout [Contributing.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
+
+---
+
+<p align="center">
+  <sub>Logo generated with Google Gemini.</sub>
+</p>

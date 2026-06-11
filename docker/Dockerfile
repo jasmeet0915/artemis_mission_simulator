@@ -3,6 +3,7 @@ FROM ros:jazzy
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV USERNAME=commander
+ENV COLCON_DEFAULTS_FILE=/home/commander/src/colcon_defaults.yaml
 
 # Rename the existing ubuntu user inside the container to commander to match the project theme
 RUN groupmod -n ${USERNAME} ubuntu && \

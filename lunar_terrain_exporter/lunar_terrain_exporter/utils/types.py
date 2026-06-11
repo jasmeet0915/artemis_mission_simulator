@@ -15,11 +15,11 @@
 
 """Data types for terrain generation configuration."""
 
-import re
 from dataclasses import dataclass, field
+import re
 
-_VALID_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
-_BASE_URL = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp"
+_VALID_NAME_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+_BASE_URL = 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp'
 
 
 @dataclass
@@ -35,12 +35,12 @@ class BoundingBox:
         """Validate bounding box values. Raises ValueError on invalid data."""
         if self.lat > -80.0:
             raise ValueError(
-                f"lat must be <= -80.0 for south pole DEMs (got: {self.lat})"
+                f'lat must be <= -80.0 for south pole DEMs (got: {self.lat})'
             )
         if self.width_km <= 0:
-            raise ValueError(f"width_km must be > 0 (got: {self.width_km})")
+            raise ValueError(f'width_km must be > 0 (got: {self.width_km})')
         if self.height_km <= 0:
-            raise ValueError(f"height_km must be > 0 (got: {self.height_km})")
+            raise ValueError(f'height_km must be > 0 (got: {self.height_km})')
 
 
 @dataclass
@@ -55,32 +55,33 @@ class ROI:
         if not self.use_full:
             if self.bounding_box is None:
                 raise ValueError(
-                    "bounding_box is required when use_full is False"
+                    'bounding_box is required when use_full is False'
                 )
             self.bounding_box.validate()
 
 
 @dataclass
 class LunarSite:
-    """A single lunar terrain site with its DEM source and region of interest.
+    """
+    A single lunar terrain site with its DEM source and region of interest.
 
     The DEM URL is derived automatically from *site_code*.
     """
 
     site_code: str
     name: str
-    description: str = ""
+    description: str = ''
     roi: ROI = field(default_factory=ROI)
 
     @classmethod
-    def from_catalog(cls, identifier: str, roi: ROI | None = None) -> "LunarSite":
+    def from_catalog(cls, identifier: str, roi: ROI | None = None) -> 'LunarSite':
         """Build a LunarSite by looking up *identifier* (name or code) in the PGDA-78 catalog."""
         from .site_catalog import get_site
         entry = get_site(identifier)
         site = cls(
-            site_code=entry["site_code"],
-            name=entry["site_name"],
-            description=entry["description"],
+            site_code=entry['site_code'],
+            name=entry['site_name'],
+            description=entry['description'],
             roi=roi or ROI(use_full=True),
         )
         site.validate()
@@ -89,15 +90,15 @@ class LunarSite:
     @property
     def dem_url(self) -> str:
         """DEM (surface elevation) GeoTIFF URL."""
-        return f"{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_surf.tif"
+        return f'{_BASE_URL}/{self.site_code}/{self.site_code}_final_adj_5mpp_surf.tif'
 
     def validate(self) -> None:
         """Validate configuration values. Raises ValueError on invalid data."""
         if not self.name or not _VALID_NAME_RE.match(self.name):
             raise ValueError(
-                f"name must be non-empty and contain only alphanumeric, "
-                f"hyphens, or underscores (got: {self.name!r})"
+                f'name must be non-empty and contain only alphanumeric, '
+                f'hyphens, or underscores (got: {self.name!r})'
             )
         if not self.site_code:
-            raise ValueError("site_code must be a non-empty string")
+            raise ValueError('site_code must be a non-empty string')
         self.roi.validate()

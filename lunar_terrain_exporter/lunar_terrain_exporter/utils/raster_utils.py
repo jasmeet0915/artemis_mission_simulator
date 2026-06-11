@@ -21,15 +21,18 @@ import numpy as np
 
 
 def normalize_array(data: np.ndarray) -> np.ndarray:
-    """Min-max normalize an array to [0, 1]. NaN values become 0.
+    """
+    Min-max normalize an array to [0, 1]. NaN values become 0.
 
     Args:
         data: Input array (any shape). NaN pixels are replaced with
               the array minimum before normalisation so they map to 0.
 
-    Returns:
-        float64 array in [0, 1].  If the array is flat (max == min)
-        the result is all zeros.
+    Returns
+    -------
+    float64 array in [0, 1].  If the array is flat (max == min)
+    the result is all zeros.
+
     """
     data = np.nan_to_num(
         data,

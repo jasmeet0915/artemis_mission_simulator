@@ -1,0 +1,15 @@
+build:
+  symlink-install: true
+  event-handlers:
+    # Groups per-package output together, cleaner with parallel builds
+    - console_cohesion+
+
+test:
+  event-handlers:
+    # Stream test output directly so failures are visible immediately
+    - console_direct+
+  return-code-on-test-failure: true
+
+test-result:
+  all: true
+  verbose: true

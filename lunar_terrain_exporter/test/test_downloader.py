@@ -15,50 +15,39 @@
 
 """Tests for the file downloader with local caching."""
 
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import tempfile
+from unittest.mock import MagicMock, patch
 
 from lunar_terrain_exporter.utils.file_downloader import FileDownloader
 
 
 class TestFileDownloader:
-    def test_cache_uses_url_filename(self):
-        """Cache path is simply cache_dir / filename from URL."""
+    def test_cache_hit_returns_file_without_downloading(self):
+        """If file exists in cache, return it by URL-derived filename without downloading."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dl = FileDownloader(Path(tmpdir))
-            url = "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif"
-            # Pre-create the file so download() returns the cached path
-            expected = Path(tmpdir) / "Site01_final_adj_5mpp_surf.tif"
-            expected.write_bytes(b"data")
-            result = dl.download(url)
-            assert result == expected
-            assert result.name == "Site01_final_adj_5mpp_surf.tif"
+            url = 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site01/Site01_final_adj_5mpp_surf.tif'
+            expected = Path(tmpdir) / 'Site01_final_adj_5mpp_surf.tif'
+            expected.write_bytes(b'data')
 
-    def test_returns_cached_file_without_download(self):
-        """If file exists in cache, return it without downloading."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            dl = FileDownloader(Path(tmpdir))
-            url = "https://example.com/test.img"
-            cache_path = Path(tmpdir) / "test.img"
-            cache_path.write_bytes(b"cached data")
-
-            with patch("lunar_terrain_exporter.utils.file_downloader.requests") as mock_req:
+            with patch('lunar_terrain_exporter.utils.file_downloader.requests') as mock_req:
                 result = dl.download(url)
                 mock_req.get.assert_not_called()
-            assert result == cache_path
+            assert result == expected
+            assert result.name == 'Site01_final_adj_5mpp_surf.tif'
 
     def test_downloads_when_not_cached(self):
         """Downloads and saves file when not in cache."""
         with tempfile.TemporaryDirectory() as tmpdir:
             dl = FileDownloader(Path(tmpdir))
-            url = "https://example.com/test.img"
+            url = 'https://example.com/test.img'
 
             mock_resp = MagicMock()
-            mock_resp.iter_content.return_value = [b"chunk1", b"chunk2"]
+            mock_resp.iter_content.return_value = [b'chunk1', b'chunk2']
             mock_resp.raise_for_status = MagicMock()
 
-            with patch("lunar_terrain_exporter.utils.file_downloader.requests") as mock_req:
+            with patch('lunar_terrain_exporter.utils.file_downloader.requests') as mock_req:
                 mock_req.get.return_value.__enter__ = MagicMock(
                     return_value=mock_resp)
                 mock_req.get.return_value.__exit__ = MagicMock(
@@ -66,4 +55,4 @@ class TestFileDownloader:
                 result = dl.download(url)
 
             assert result.exists()
-            assert result.read_bytes() == b"chunk1chunk2"
+            assert result.read_bytes() == b'chunk1chunk2'

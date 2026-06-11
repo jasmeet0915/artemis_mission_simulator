@@ -93,20 +93,20 @@ class SDFModelWriter:
     ) -> Path:
         """Write all model files (SDF, config, textures, metadata)."""
         model_dir = self._output_dir / site_id
-        textures_dir = model_dir / "materials" / "textures"
+        textures_dir = model_dir / 'materials' / 'textures'
         textures_dir.mkdir(parents=True, exist_ok=True)
 
         # GeoTIFF DEM heightmap (preserves CRS and resolution)
         height, width = elevations.shape
         profile = {
-            "driver": "GTiff",
-            "height": height,
-            "width": width,
-            "count": 1,
-            "dtype": "float32",
+            'driver': 'GTiff',
+            'height': height,
+            'width': width,
+            'count': 1,
+            'dtype': 'float32',
             **dem_profile,
         }
-        with rasterio.open(textures_dir / "heightmap.tif", "w", **profile) as dst:
+        with rasterio.open(textures_dir / 'heightmap.tif', 'w', **profile) as dst:
             dst.write(elevations.astype(np.float32), 1)
 
         elevation_range = max(elevation_max - elevation_min, 1.0)
@@ -115,33 +115,33 @@ class SDFModelWriter:
             site_id=site_id,
             size_x=size_x_m,
             size_y=size_y_m,
-            size_z=f"{elevation_range:.1f}",
-            z_offset=f"{elevation_min:.1f}",
+            size_z=f'{elevation_range:.1f}',
+            z_offset=f'{elevation_min:.1f}',
         )
-        (model_dir / "model.sdf").write_text(sdf_content)
+        (model_dir / 'model.sdf').write_text(sdf_content)
 
         config_content = _MODEL_CONFIG_TEMPLATE.substitute(
             display_name=display_name,
             description=description,
         )
-        (model_dir / "model.config").write_text(config_content)
+        (model_dir / 'model.config').write_text(config_content)
 
         metadata = {
-            "site_id": site_id,
-            "display_name": display_name,
-            "description": description,
-            "coordinates": {"lat": float(lat), "lon": float(lon)},
-            "size_x_m": size_x_m,
-            "size_y_m": size_y_m,
-            "resolution_x": int(elevations.shape[1]),
-            "resolution_y": int(elevations.shape[0]),
-            "elevation_min_m": round(elevation_min, 2),
-            "elevation_max_m": round(elevation_max, 2),
-            "elevation_range_m": round(elevation_range, 2),
-            "source": source,
+            'site_id': site_id,
+            'display_name': display_name,
+            'description': description,
+            'coordinates': {'lat': float(lat), 'lon': float(lon)},
+            'size_x_m': size_x_m,
+            'size_y_m': size_y_m,
+            'resolution_x': int(elevations.shape[1]),
+            'resolution_y': int(elevations.shape[0]),
+            'elevation_min_m': round(elevation_min, 2),
+            'elevation_max_m': round(elevation_max, 2),
+            'elevation_range_m': round(elevation_range, 2),
+            'source': source,
         }
-        with open(model_dir / "metadata.yaml", "w") as f:
+        with open(model_dir / 'metadata.yaml', 'w') as f:
             yaml.dump(metadata, f, default_flow_style=False, sort_keys=False)
 
-        print(f"  Model written to: {model_dir}")
+        print(f'  Model written to: {model_dir}')
         return model_dir
