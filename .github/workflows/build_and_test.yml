@@ -43,10 +43,10 @@ jobs:
             -v "artemis-install:/home/commander/install" \
             -v "artemis-log:/home/commander/log" \
             artemis-mission-simulator:latest \
-            bash -c "source /opt/ros/jazzy/setup.bash && colcon test"
+            bash -c "source /home/commander/install/setup.bash && colcon test"
 
       # Doing || true at the end of colcon test-result so that this step does
-      # not report failure redundantly as 'Run workspace tests' will already do that 
+      # not report failure redundantly as 'Run workspace tests' will already do that
       - name: Show test results
         if: always()
         run: |
@@ -60,7 +60,7 @@ jobs:
             -v "artemis-install:/home/commander/install" \
             -v "artemis-log:/home/commander/log" \
             artemis-mission-simulator:latest \
-            bash -c "source /opt/ros/jazzy/setup.bash && colcon test-result" || true
+            bash -c "source /home/commander/install/setup.bash && colcon test-result" || true
 
       - name: Clean up Docker volumes
         if: always()
