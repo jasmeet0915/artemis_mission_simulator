@@ -26,7 +26,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_pytest REQUIRED)
   # Enabled per task as the test files are created (Task 2, Task 5).
-  # ament_add_pytest_test(test_epoch test/test_epoch.py)
+  ament_add_pytest_test(test_epoch test/test_epoch.py)
   # ament_add_pytest_test(test_lunar_world_gz_args test/test_lunar_world_gz_args.py)
 endif()
 
