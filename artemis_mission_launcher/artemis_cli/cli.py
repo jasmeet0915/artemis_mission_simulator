@@ -25,7 +25,7 @@ from artemis_cli.launch_stack import (
 )
 from artemis_cli.utils.epoch import EpochParseError, parse_epoch
 
-DEFAULT_WORLD = 'lunar_empty_world.sdf'
+DEFAULT_SITE = 'lunar_empty'
 
 
 def main(argv=None):
@@ -43,8 +43,8 @@ def main(argv=None):
              'YYYY-MM-DD | YYYY-MM-DDTHH:MM:SSZ (default: now)',
     )
     liftoff.add_argument(
-        '--world', default=DEFAULT_WORLD,
-        help=f'World file to load (default: {DEFAULT_WORLD})',
+        '--site', default=DEFAULT_SITE,
+        help=f'Mission site to launch (default: {DEFAULT_SITE})',
     )
     liftoff.add_argument(
         '-i', '--interactive', action='store_true',
@@ -64,13 +64,13 @@ def _run_liftoff(args):
         return 2
 
     try:
-        launcher = StackLauncher(epoch_sec=epoch_sec, world=args.world)
+        launcher = StackLauncher(epoch_sec=epoch_sec, site=args.site)
     except MissionAlreadyRunning as exc:
         print(f'artemis liftoff: {exc}', file=sys.stderr)
         return 3
 
     launcher.launch_simulation()
-    print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), world {args.world}')
+    print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), site {args.site}')
 
     if args.interactive:
         launcher.attach()  # replaces this process; does not return

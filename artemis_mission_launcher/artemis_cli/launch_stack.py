@@ -47,10 +47,10 @@ def default_workspace_setup():
 class StackLauncher:
     """Create the tmux session and launch each mission stack in a pane."""
 
-    def __init__(self, epoch_sec, world, session_name=SESSION_NAME,
+    def __init__(self, epoch_sec, site, session_name=SESSION_NAME,
                  workspace_setup=None):
         self.epoch_sec = epoch_sec
-        self.world = world
+        self.site = site
         self.session_name = session_name
         self.workspace_setup = (
             workspace_setup if workspace_setup is not None
@@ -81,7 +81,7 @@ class StackLauncher:
         self._source_workspace(pane)
         pane.send_keys(
             'ros2 launch artemis_mission_launcher lunar_world.launch.py '
-            f'world:={self.world} initial_sim_time:={self.epoch_sec}',
+            f'site:={self.site} initial_sim_time:={self.epoch_sec}',
             enter=True,
         )
 

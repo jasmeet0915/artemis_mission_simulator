@@ -14,11 +14,14 @@
 
 
 """
-Launch Gazebo with a specified world file and an optional mission epoch.
+Launch Gazebo for a mission site, with an optional mission epoch.
+
+The world file is derived from the site name (``<site>_world.sdf``); this
+mapping is intentionally simple and will be refined as real sites land.
 
 Usage:
     ros2 launch artemis_mission_launcher lunar_world.launch.py
-    ros2 launch artemis_mission_launcher lunar_world.launch.py world:=lunar_surface.sdf
+    ros2 launch artemis_mission_launcher lunar_world.launch.py site:=lunar_empty
     ros2 launch artemis_mission_launcher lunar_world.launch.py initial_sim_time:=1782216000
 """
 import os
@@ -43,9 +46,11 @@ def launch_setup(context, *args, **kwargs):
     pkg = get_package_share_directory('artemis_mission_launcher')
     gui_config = os.path.join(pkg, 'config', 'gz', 'gui.config')
 
-    world_name = LaunchConfiguration('world').perform(context)
+    site = LaunchConfiguration('site').perform(context)
     initial_sim_time = LaunchConfiguration('initial_sim_time').perform(context)
-    world_file = os.path.join(pkg, 'worlds', world_name)
+    # Derive the world file from the site name. Placeholder convention until
+    # real per-site worlds exist; the mission manager will consume the site too.
+    world_file = os.path.join(pkg, 'worlds', f'{site}_world.sdf')
 
     gz_args = build_gz_args(gui_config, world_file, initial_sim_time)
 
@@ -63,10 +68,10 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    declare_world_name_arg = DeclareLaunchArgument(
-        'world',
-        default_value='lunar_empty_world.sdf',
-        description='Name of the world to open',
+    declare_site_arg = DeclareLaunchArgument(
+        'site',
+        default_value='lunar_empty',
+        description='Mission site name; the world file is <site>_world.sdf',
     )
 
     declare_initial_sim_time_arg = DeclareLaunchArgument(
@@ -77,7 +82,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        declare_world_name_arg,
+        declare_site_arg,
         declare_initial_sim_time_arg,
         OpaqueFunction(function=launch_setup),
     ])
