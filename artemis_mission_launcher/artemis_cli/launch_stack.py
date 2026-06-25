@@ -17,7 +17,7 @@ import time
 
 import libtmux
 
-SESSION_NAME = "artemis"
+SESSION_NAME = 'artemis'
 
 
 class MissionAlreadyRunning(RuntimeError):
@@ -25,19 +25,20 @@ class MissionAlreadyRunning(RuntimeError):
 
 
 def default_workspace_setup():
-    """Best-effort path to the workspace's install/setup.bash.
+    """
+    Return a best-effort path to the workspace's install/setup.bash.
 
     Overridable via ARTEMIS_WS_SETUP; otherwise derived from the first
     entry of COLCON_PREFIX_PATH. Returns None when it cannot be found,
     in which case the in-pane source step is skipped.
     """
-    override = os.environ.get("ARTEMIS_WS_SETUP")
+    override = os.environ.get('ARTEMIS_WS_SETUP')
     if override:
         return override
-    prefix_path = os.environ.get("COLCON_PREFIX_PATH", "")
+    prefix_path = os.environ.get('COLCON_PREFIX_PATH', '')
     for prefix in prefix_path.split(os.pathsep):
         if prefix:
-            candidate = os.path.join(prefix, "setup.bash")
+            candidate = os.path.join(prefix, 'setup.bash')
             if os.path.exists(candidate):
                 return candidate
     return None
@@ -60,41 +61,41 @@ class StackLauncher:
         self.server = libtmux.Server()
         if self.server.has_session(self.session_name):
             raise MissionAlreadyRunning(
-                f"a mission is already in progress (tmux session "
+                'a mission is already in progress (tmux session '
                 f"'{self.session_name}'). Kill it with: "
-                f"tmux kill-session -t {self.session_name}"
+                f'tmux kill-session -t {self.session_name}'
             )
 
         self.session = self.server.new_session(self.session_name, attach=False)
         self.simulation_window = self.session.windows[0]
-        self.simulation_window.rename_window("simulation")
+        self.simulation_window.rename_window('simulation')
         print(f"[artemis] created tmux session '{self.session_name}'")
 
     def _source_workspace(self, pane):
         if self.workspace_setup:
-            pane.send_keys(f"source {self.workspace_setup}", enter=True)
+            pane.send_keys(f'source {self.workspace_setup}', enter=True)
 
     def launch_simulation(self):
-        print("[artemis] launching simulation stack...")
+        print('[artemis] launching simulation stack...')
         pane = self.simulation_window.panes[0]
         self._source_workspace(pane)
         pane.send_keys(
-            "ros2 launch artemis_mission_launcher lunar_world.launch.py "
-            f"world:={self.world} initial_sim_time:={self.epoch_sec}",
+            'ros2 launch artemis_mission_launcher lunar_world.launch.py '
+            f'world:={self.world} initial_sim_time:={self.epoch_sec}',
             enter=True,
         )
 
     def attach(self):
-        os.execvp("tmux", ["tmux", "attach-session", "-t", self.session_name])
+        os.execvp('tmux', ['tmux', 'attach-session', '-t', self.session_name])
 
     def smooth_shutdown(self):
         if not self.server.has_session(self.session_name):
-            print("[artemis] tmux session already terminated.")
+            print('[artemis] tmux session already terminated.')
             return
-        print("[artemis] shutting down mission...")
+        print('[artemis] shutting down mission...')
         for window in self.session.windows:
             for pane in window.panes:
-                pane.send_keys("C-c")
+                pane.send_keys('C-c')
         time.sleep(self.close_time)
         self.session.kill()
-        print("[artemis] tmux session terminated cleanly.")
+        print('[artemis] tmux session terminated cleanly.')

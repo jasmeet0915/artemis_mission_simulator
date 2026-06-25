@@ -13,42 +13,42 @@
 # limitations under the License.
 """argparse entry point for the `artemis` command."""
 import argparse
+from datetime import datetime, timezone
 import signal
 import sys
 import time
-from datetime import datetime, timezone
 
 from artemis_cli.epoch import EpochParseError, parse_epoch
 from artemis_cli.launch_stack import (
-    SESSION_NAME,
     MissionAlreadyRunning,
+    SESSION_NAME,
     StackLauncher,
 )
 
-DEFAULT_WORLD = "lunar_empty_world.sdf"
+DEFAULT_WORLD = 'lunar_empty_world.sdf'
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog="artemis", description="Artemis mission control CLI"
+        prog='artemis', description='Artemis mission control CLI'
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers = parser.add_subparsers(dest='command', required=True)
 
     liftoff = subparsers.add_parser(
-        "liftoff", help="Launch the Artemis mission simulation"
+        'liftoff', help='Launch the Artemis mission simulation'
     )
     liftoff.add_argument(
-        "--epoch", default="now",
-        help="Mission UTC epoch: now | now+<N>{s,m,h,d} | "
-             "YYYY-MM-DD | YYYY-MM-DDTHH:MM:SSZ (default: now)",
+        '--epoch', default='now',
+        help='Mission UTC epoch: now | now+<N>{s,m,h,d} | '
+             'YYYY-MM-DD | YYYY-MM-DDTHH:MM:SSZ (default: now)',
     )
     liftoff.add_argument(
-        "--world", default=DEFAULT_WORLD,
-        help=f"World file to load (default: {DEFAULT_WORLD})",
+        '--world', default=DEFAULT_WORLD,
+        help=f'World file to load (default: {DEFAULT_WORLD})',
     )
     liftoff.add_argument(
-        "-i", "--interactive", action="store_true",
-        help="Attach to the tmux session after launching",
+        '-i', '--interactive', action='store_true',
+        help='Attach to the tmux session after launching',
     )
     liftoff.set_defaults(func=_run_liftoff)
 
@@ -60,17 +60,17 @@ def _run_liftoff(args):
     try:
         epoch_sec = parse_epoch(args.epoch, datetime.now(timezone.utc))
     except EpochParseError as exc:
-        print(f"artemis liftoff: {exc}", file=sys.stderr)
+        print(f'artemis liftoff: {exc}', file=sys.stderr)
         return 2
 
     try:
         launcher = StackLauncher(epoch_sec=epoch_sec, world=args.world)
     except MissionAlreadyRunning as exc:
-        print(f"artemis liftoff: {exc}", file=sys.stderr)
+        print(f'artemis liftoff: {exc}', file=sys.stderr)
         return 3
 
     launcher.launch_simulation()
-    print(f"[artemis] mission epoch {epoch_sec} (Unix UTC), world {args.world}")
+    print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), world {args.world}')
 
     if args.interactive:
         launcher.attach()  # replaces this process; does not return
@@ -82,7 +82,7 @@ def _run_liftoff(args):
 
     signal.signal(signal.SIGINT, _shutdown)
     signal.signal(signal.SIGTERM, _shutdown)
-    print(f"[artemis] running in background. Attach: tmux attach -t {SESSION_NAME}")
-    print("[artemis] Press Ctrl-C to shut down the mission.")
+    print(f'[artemis] running in background. Attach: tmux attach -t {SESSION_NAME}')
+    print('[artemis] Press Ctrl-C to shut down the mission.')
     while True:
         time.sleep(1)

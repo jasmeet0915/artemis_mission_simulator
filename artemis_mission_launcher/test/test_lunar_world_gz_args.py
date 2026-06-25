@@ -17,8 +17,8 @@ from pathlib import Path
 
 
 def _load_launch_module():
-    path = Path(__file__).resolve().parents[1] / "launch" / "lunar_world.launch.py"
-    spec = importlib.util.spec_from_file_location("lunar_world_launch", path)
+    path = Path(__file__).resolve().parents[1] / 'launch' / 'lunar_world.launch.py'
+    spec = importlib.util.spec_from_file_location('lunar_world_launch', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -26,12 +26,12 @@ def _load_launch_module():
 
 def test_gz_args_includes_initial_sim_time_when_set():
     mod = _load_launch_module()
-    args = mod.build_gz_args("/g/gui.config", "/w/world.sdf", "1782216000")
-    assert "--initial-sim-time 1782216000" in args
+    args = mod.build_gz_args('/g/gui.config', '/w/world.sdf', '1782216000')
+    assert '--initial-sim-time 1782216000' in args
 
 
 def test_gz_args_omits_initial_sim_time_when_empty():
     mod = _load_launch_module()
-    args = mod.build_gz_args("/g/gui.config", "/w/world.sdf", "")
-    assert "--initial-sim-time" not in args
-    assert args.endswith("/w/world.sdf")
+    args = mod.build_gz_args('/g/gui.config', '/w/world.sdf', '')
+    assert '--initial-sim-time' not in args
+    assert args.endswith('/w/world.sdf')
