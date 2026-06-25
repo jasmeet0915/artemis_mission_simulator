@@ -123,16 +123,16 @@ def render_frame(*, site, epoch_sec, elapsed_s, metrics, history):
     clock_iso = format_iso(epoch_sec + int(elapsed_s))
     status_text, status_style = _status(metrics)
 
+    banner = Align.center(Text(_BANNER, style=f'bold {_CYAN}'))
+    footer = Align.center(Text(
+        'Ctrl-b 1 → simulation     ·     Ctrl-C → abort mission', style=_DIM))
+
     layout = Layout()
     layout.split_column(
         Layout(_header(status_text, status_style), name='header', size=1),
-        Layout(Align.center(Text(_BANNER, style=f'bold {_CYAN}')),
-               name='banner', size=6),
+        Layout(banner, name='banner', size=6),
         Layout(name='body'),
-        Layout(Align.center(
-            Text('Ctrl-b 1 → simulation     ·     Ctrl-C → abort mission',
-                 style=_DIM)),
-            name='footer', size=1),
+        Layout(footer, name='footer', size=1),
     )
     layout['body'].split_row(
         Layout(_mission_panel(site, clock_iso, _hms(elapsed_s)), name='mission'),
