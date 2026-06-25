@@ -26,6 +26,7 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_epoch test/test_epoch.py)
+  ament_add_pytest_test(test_home_metrics test/test_home_metrics.py)
   ament_add_pytest_test(test_lunar_world_gz_args test/test_lunar_world_gz_args.py)
 endif()
 
