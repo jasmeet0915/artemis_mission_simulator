@@ -31,6 +31,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-tqdm \
     tmux \
     python3-libtmux \
+    python3-psutil \
+    python3-rich \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
