@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rasterio \
     python3-requests \
     python3-tqdm \
+    tmux \
+    python3-libtmux \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
