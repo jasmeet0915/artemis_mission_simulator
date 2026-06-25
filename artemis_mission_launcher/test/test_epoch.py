@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for artemis_cli.epoch.parse_epoch."""
+"""Tests for artemis_cli.utils.epoch."""
 from datetime import datetime, timezone
 
-from artemis_cli.utils.epoch import EpochParseError, parse_epoch
+from artemis_cli.utils.epoch import EpochParseError, format_iso, parse_epoch
 import pytest
 
 # 2026-06-23T12:00:00Z == 1782216000
@@ -64,3 +64,11 @@ def test_surrounding_whitespace_is_ignored():
 def test_malformed_raises(bad):
     with pytest.raises(EpochParseError):
         parse_epoch(bad, NOW)
+
+
+def test_format_iso_known_value():
+    assert format_iso(NOW_SEC) == '2026-06-23T12:00:00Z'
+
+
+def test_format_iso_roundtrips_with_parse_epoch():
+    assert parse_epoch(format_iso(NOW_SEC), NOW) == NOW_SEC
