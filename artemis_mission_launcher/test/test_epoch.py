@@ -14,7 +14,7 @@
 """Tests for artemis_cli.epoch.parse_epoch."""
 from datetime import datetime, timezone
 
-from artemis_cli.epoch import EpochParseError, parse_epoch
+from artemis_cli.utils.epoch import EpochParseError, parse_epoch
 import pytest
 
 # 2026-06-23T12:00:00Z == 1782216000

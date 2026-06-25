@@ -18,12 +18,12 @@ import signal
 import sys
 import time
 
-from artemis_cli.epoch import EpochParseError, parse_epoch
 from artemis_cli.launch_stack import (
     MissionAlreadyRunning,
     SESSION_NAME,
     StackLauncher,
 )
+from artemis_cli.utils.epoch import EpochParseError, parse_epoch
 
 DEFAULT_WORLD = 'lunar_empty_world.sdf'
 
