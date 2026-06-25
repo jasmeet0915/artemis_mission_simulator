@@ -15,11 +15,7 @@
 """Entry point for the `artemis` command."""
 import sys
 
-
-def main():
-    print("artemis: not implemented yet", file=sys.stderr)
-    return 1
-
+from artemis_cli.cli import main
 
 if __name__ == "__main__":
     sys.exit(main())
