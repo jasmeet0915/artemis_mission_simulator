@@ -69,6 +69,7 @@ def _run_liftoff(args):
         print(f'artemis liftoff: {exc}', file=sys.stderr)
         return 3
 
+    launcher.launch_home()
     launcher.launch_simulation()
     print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), site {args.site}')
 

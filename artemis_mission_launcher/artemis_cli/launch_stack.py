@@ -67,13 +67,26 @@ class StackLauncher:
             )
 
         self.session = self.server.new_session(self.session_name, attach=False)
-        self.simulation_window = self.session.windows[0]
-        self.simulation_window.rename_window('simulation')
+        self.mission_window = self.session.windows[0]
+        self.mission_window.rename_window('mission-control')
+        self.simulation_window = self.session.new_window(
+            window_name='simulation', attach=False)
+        self.mission_window.select()  # land here on attach
         print(f"[artemis] created tmux session '{self.session_name}'")
 
     def _source_workspace(self, pane):
         if self.workspace_setup:
             pane.send_keys(f'source {self.workspace_setup}', enter=True)
+
+    def launch_home(self):
+        print('[artemis] booting mission control...')
+        pane = self.mission_window.panes[0]
+        self._source_workspace(pane)
+        pane.send_keys(
+            'python3 -m artemis_cli.home '
+            f'--site {self.site} --epoch-sec {self.epoch_sec}',
+            enter=True,
+        )
 
     def launch_simulation(self):
         print('[artemis] launching simulation stack...')
