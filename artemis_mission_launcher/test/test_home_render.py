@@ -17,21 +17,19 @@ from artemis_cli.home.render import block_text, line_graph
 _BLANK_BRAILLE = chr(0x2800)
 
 
-def test_block_text_three_rows_and_width():
-    lines = block_text('12').plain.split('\n')
-    assert len(lines) == 3
-    # two 3-wide glyphs + one gap space
-    assert all(len(line) == 7 for line in lines)
+def test_block_text_is_multirow_and_nonblank():
+    plain = block_text('12').plain
+    assert '\n' in plain  # figlet output spans multiple rows
+    assert plain.strip() != ''
 
 
-def test_block_text_unknown_char_is_blank():
-    lines = block_text(',').plain.split('\n')
-    assert len(lines) == 3
-    assert all(line == '   ' for line in lines)
+def test_block_text_empty_is_blank():
+    assert block_text('').plain == ''
 
 
-def test_block_text_empty_is_three_rows():
-    assert len(block_text('').plain.split('\n')) == 3
+def test_block_text_custom_font():
+    plain = block_text('A', font='standard').plain
+    assert plain.strip() != ''
 
 
 def test_line_graph_dimensions():

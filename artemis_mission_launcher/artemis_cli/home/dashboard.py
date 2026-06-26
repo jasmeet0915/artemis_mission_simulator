@@ -18,7 +18,6 @@ from rich import box
 from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -27,11 +26,19 @@ _DIM = 'cyan'
 _ACCENT = 'bright_white'
 _OK = 'bright_green'
 _WARN = 'yellow'
+_BORDER = 'dim cyan'
 _VERSION = '0.1.0'
 
 _BLOCKS = '▁▂▃▄▅▆▇█'
 _GRAPH_W = 18
 _GRAPH_H = 2
+
+
+def _card(renderable, title=None):
+    """Wrap a renderable in a thin, dim 'card' panel."""
+    title_text = Text(title, style=_CYAN) if title else None
+    return Panel(renderable, title=title_text, title_align='left',
+                 border_style=_BORDER, box=box.ROUNDED, padding=(0, 1))
 
 
 def sparkline(values, width, vmax=None):
@@ -79,22 +86,40 @@ def _header():
     return grid
 
 
-def _mission_panel(site, date_str, time_str, epoch_total, tplus,
-                   status_text, status_style):
-    body = Table.grid(padding=(0, 0))
+def _section_title(label, suffix=None):
+    parts = [(f'{label}', f'bold {_CYAN}')]
+    if suffix is not None:
+        text, style = suffix
+        parts.append((f'   {text}', style))
+    return Text.assemble(*parts)
+
+
+def _clock_card(date_str, time_str, epoch_total, tplus):
+    body = Table.grid()
     body.add_column()
     body.add_row(Text(date_str, style=_DIM))
     body.add_row(block_text(time_str, style=f'bold {_CYAN}'))
-    body.add_row(Text(''))
     body.add_row(Text(f'{epoch_total:,} s', style=_DIM))
     body.add_row(Text.assemble(('T+ ELAPSED  ', _DIM), (tplus, _ACCENT)))
-    body.add_row(Rule(style=_DIM))
-    body.add_row(Text('CURRENT SITE', style=_DIM))
-    body.add_row(block_text(site.upper(), style=f'bold {_ACCENT}', gap=0))
-    title = Text.assemble(('MISSION STATUS  ', f'bold {_CYAN}'),
-                          (f'● {status_text}', status_style))
-    return Panel(body, title=title, title_align='left',
-                 border_style=_DIM, box=box.SQUARE, padding=(1, 2))
+    return _card(body, title='MISSION CLOCK')
+
+
+def _site_card(site):
+    body = Table.grid()
+    body.add_column()
+    body.add_row(block_text(site.upper(), style=f'bold {_ACCENT}'))
+    return _card(body, title='CURRENT SITE')
+
+
+def _mission_column(site, date_str, time_str, epoch_total, tplus,
+                    status_text, status_style):
+    col = Table.grid(padding=(1, 0), expand=True)
+    col.add_column()
+    col.add_row(_section_title('MISSION STATUS',
+                               (f'● {status_text}', status_style)))
+    col.add_row(_clock_card(date_str, time_str, epoch_total, tplus))
+    col.add_row(_site_card(site))
+    return col
 
 
 def _welcome():
@@ -107,36 +132,48 @@ def _welcome():
     return Align.center(inner, vertical='top')
 
 
-def _systems_panel(metrics, history):
-    grid = Table.grid(padding=(1, 2))
+def _metric_row(label, gauge, value):
+    grid = Table.grid(expand=True)
     grid.add_column(style=_DIM, justify='left', min_width=8)
-    grid.add_column(justify='left')
+    grid.add_column(justify='left', ratio=1)
     grid.add_column(style=_ACCENT, justify='right')
+    grid.add_row(label, gauge, value)
+    return grid
+
+
+def _systems_column(metrics, history):
     temp_val = '--' if metrics.temp_c is None else f'{metrics.temp_c:.0f} °C'
-    grid.add_row(
+    body = Table.grid(padding=(2, 0), expand=True)
+    body.add_column()
+    body.add_row(_metric_row(
         'CPU',
         line_graph(history.get('cpu', []), _GRAPH_W, _GRAPH_H,
                    vmax=100, style=_CYAN),
-        f'{metrics.cpu_pct:.0f}%')
-    grid.add_row(
+        f'{metrics.cpu_pct:.0f}%'))
+    body.add_row(_metric_row(
         'MEMORY',
         Text(_bar(metrics.mem_pct, _GRAPH_W), style=_CYAN),
-        f'{metrics.mem_used_gb:.1f}/{metrics.mem_total_gb:.1f} GB')
-    grid.add_row(
+        f'{metrics.mem_used_gb:.1f}/{metrics.mem_total_gb:.1f} GB'))
+    body.add_row(_metric_row(
         'TEMP',
         line_graph(history.get('temp', []), _GRAPH_W, _GRAPH_H, style=_CYAN),
-        temp_val)
-    grid.add_row(
+        temp_val))
+    body.add_row(_metric_row(
         'DISK',
         Text(_bar(metrics.disk_pct, _GRAPH_W), style=_CYAN),
-        f'{metrics.disk_pct:.0f}%')
-    grid.add_row(
+        f'{metrics.disk_pct:.0f}%'))
+    body.add_row(_metric_row(
         'NETWORK',
         line_graph(history.get('net', []), _GRAPH_W, _GRAPH_H, style=_CYAN),
-        f'↑{metrics.net_up_kbs:.1f} ↓{metrics.net_down_kbs:.1f}')
-    grid.add_row('UPTIME', Text(''), f'{metrics.uptime_s / 3600.0:.1f} h')
-    return Panel(grid, title='SYSTEM OVERVIEW', title_align='left',
-                 border_style=_DIM, box=box.SQUARE, padding=(1, 2))
+        f'↑{metrics.net_up_kbs:.1f} ↓{metrics.net_down_kbs:.1f}'))
+    body.add_row(_metric_row(
+        'UPTIME', Text(''), f'{metrics.uptime_s / 3600.0:.1f} h'))
+
+    col = Table.grid(padding=(1, 0), expand=True)
+    col.add_column()
+    col.add_row(_section_title('SYSTEM OVERVIEW'))
+    col.add_row(_card(body))
+    return col
 
 
 def render_frame(*, site, epoch_sec, elapsed_s, metrics, history):
@@ -157,10 +194,10 @@ def render_frame(*, site, epoch_sec, elapsed_s, metrics, history):
         Layout(footer, name='footer', size=1),
     )
     layout['body'].split_row(
-        Layout(_mission_panel(site, date_str, time_str, epoch_total,
-                              _hms(elapsed_s), status_text, status_style),
+        Layout(_mission_column(site, date_str, time_str, epoch_total,
+                               _hms(elapsed_s), status_text, status_style),
                name='mission'),
         Layout(_welcome(), name='welcome'),
-        Layout(_systems_panel(metrics, history), name='systems'),
+        Layout(_systems_column(metrics, history), name='systems'),
     )
     return layout

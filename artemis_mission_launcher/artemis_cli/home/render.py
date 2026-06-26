@@ -13,86 +13,34 @@
 # limitations under the License.
 """Swappable text-rendering primitives for the mission-control dashboard.
 
-`block_text` and `line_graph` are the only rendering seams: `pyfiglet` /
-`plotext` can later reimplement them without changing layout code.
+`block_text` (figlet 'big' text via pyfiglet) and `line_graph` (braille line
+plot) are the only rendering seams: swap the font / plotting backend here
+without changing layout code.
 """
+from pyfiglet import Figlet
 from rich.text import Text
 
-# --- block_text: a 3-text-row half-block font ------------------------------
-# Each glyph is a 5-pixel-tall, 3-pixel-wide '#'/' ' grid. Pixel rows are
-# paired top/bottom into half-block chars, so 6 padded pixel rows -> 3 text
-# rows. Fixed width keeps every glyph aligned (no drift).
-_FONT5 = {
-    ' ': ['   ', '   ', '   ', '   ', '   '],
-    '0': ['###', '# #', '# #', '# #', '###'],
-    '1': [' # ', '## ', ' # ', ' # ', '###'],
-    '2': ['###', '  #', '###', '#  ', '###'],
-    '3': ['###', '  #', '###', '  #', '###'],
-    '4': ['# #', '# #', '###', '  #', '  #'],
-    '5': ['###', '#  ', '###', '  #', '###'],
-    '6': ['###', '#  ', '###', '# #', '###'],
-    '7': ['###', '  #', '  #', '  #', '  #'],
-    '8': ['###', '# #', '###', '# #', '###'],
-    '9': ['###', '# #', '###', '  #', '###'],
-    ':': ['   ', ' # ', '   ', ' # ', '   '],
-    '-': ['   ', '   ', '###', '   ', '   '],
-    '_': ['   ', '   ', '   ', '   ', '###'],
-    'A': ['###', '# #', '###', '# #', '# #'],
-    'B': ['## ', '# #', '## ', '# #', '## '],
-    'C': ['###', '#  ', '#  ', '#  ', '###'],
-    'D': ['## ', '# #', '# #', '# #', '## '],
-    'E': ['###', '#  ', '###', '#  ', '###'],
-    'F': ['###', '#  ', '###', '#  ', '#  '],
-    'G': ['###', '#  ', '# #', '# #', '###'],
-    'H': ['# #', '# #', '###', '# #', '# #'],
-    'I': ['###', ' # ', ' # ', ' # ', '###'],
-    'J': ['###', '  #', '  #', '# #', '###'],
-    'K': ['# #', '# #', '## ', '# #', '# #'],
-    'L': ['#  ', '#  ', '#  ', '#  ', '###'],
-    'M': ['# #', '###', '###', '# #', '# #'],
-    'N': ['# #', '###', '# #', '# #', '# #'],
-    'O': ['###', '# #', '# #', '# #', '###'],
-    'P': ['###', '# #', '###', '#  ', '#  '],
-    'Q': ['###', '# #', '# #', '###', '  #'],
-    'R': ['## ', '# #', '## ', '# #', '# #'],
-    'S': ['###', '#  ', '###', '  #', '###'],
-    'T': ['###', ' # ', ' # ', ' # ', ' # '],
-    'U': ['# #', '# #', '# #', '# #', '###'],
-    'V': ['# #', '# #', '# #', '# #', ' # '],
-    'W': ['# #', '# #', '###', '###', '# #'],
-    'X': ['# #', '# #', ' # ', '# #', '# #'],
-    'Y': ['# #', '# #', ' # ', ' # ', ' # '],
-    'Z': ['###', '  #', ' # ', '#  ', '###'],
-}
-
-_HALF = {(False, False): ' ', (True, False): '▀',
-         (False, True): '▄', (True, True): '█'}
+# 'digital' is compact (3 rows) and legible, so the big clock / site / welcome
+# fit a one-third-width column. Swap this one name to restyle every big label.
+_DEFAULT_FONT = 'digital'
+_FIGLETS = {}
 
 
-def _to_block(grid):
-    """Pair a 5-row pixel grid (padded to 6) into 3 half-block text rows."""
-    rows = list(grid) + ['   ']
-    out = []
-    for top, bot in ((rows[0], rows[1]), (rows[2], rows[3]),
-                     (rows[4], rows[5])):
-        out.append(''.join(
-            _HALF[(top[c] == '#', bot[c] == '#')] for c in range(3)))
-    return tuple(out)
+def _figlet(font):
+    """Return a cached Figlet renderer for `font`."""
+    fig = _FIGLETS.get(font)
+    if fig is None:
+        fig = Figlet(font=font)
+        _FIGLETS[font] = fig
+    return fig
 
 
-_GLYPHS = {ch: _to_block(grid) for ch, grid in _FONT5.items()}
-_BLANK = ('   ', '   ', '   ')
-
-
-def block_text(s, *, style=None, gap=1):
-    """Render a string as 3 rows of half-block 'big' text."""
-    glyphs = [_GLYPHS.get(ch.upper(), _BLANK) for ch in s]
-    sep = ' ' * gap
-    if glyphs:
-        lines = [sep.join(g[r] for g in glyphs) for r in range(3)]
-    else:
-        lines = ['', '', '']
-    return Text('\n'.join(lines), style=style or '')
+def block_text(s, *, style=None, font=None):
+    """Render a string as multi-row figlet 'big' text."""
+    if not s:
+        return Text('', style=style or '')
+    art = _figlet(font or _DEFAULT_FONT).renderText(s).rstrip('\n')
+    return Text(art, style=style or '')
 
 
 # --- line_graph: a braille (2x4 dots/cell) line plot -----------------------
