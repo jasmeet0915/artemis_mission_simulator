@@ -86,17 +86,26 @@ _FONT = {
     ' ': ('00000', '00000', '00000', '00000', '00000'),
 }
 _FONT_BLANK = ('00000',) * 5
-_FILL = '█'
+# Terminal cells are ~2:1 (tall:wide), so drawing one bitmap pixel per cell makes
+# letters twice as tall as wide and unreadable. Half-block glyphs pack two
+# vertical pixels into each text row, restoring a near-square aspect: the 5-row
+# bitmap becomes 3 text rows of ▀ / ▄ / █.
+_HALF = {(0, 0): ' ', (1, 0): '▀', (0, 1): '▄', (1, 1): '█'}
 
 
 def big_text(s, *, style=None):
-    """Render an uppercase string as 5-row block-letter banner text."""
+    """Render an uppercase string as block-letter banner text (half-block)."""
     glyphs = [_FONT.get(ch, _FONT_BLANK) for ch in str(s).upper()]
     if not glyphs:
         return Text('', style=style or '')
     rows = []
-    for r in range(5):
-        cells = [g[r].replace('1', _FILL).replace('0', ' ') for g in glyphs]
+    for top in range(0, 6, 2):           # row pairs (0,1) (2,3) (4,pad)
+        cells = []
+        for g in glyphs:
+            upper = g[top] if top < len(g) else '00000'
+            lower = g[top + 1] if top + 1 < len(g) else '00000'
+            cells.append(''.join(
+                _HALF[(int(upper[c]), int(lower[c]))] for c in range(5)))
         rows.append(' '.join(cells))
     return Text('\n'.join(rows), style=style or '')
 

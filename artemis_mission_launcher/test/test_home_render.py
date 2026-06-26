@@ -17,9 +17,9 @@ from artemis_cli.home.render import big_text, line_graph, seven_seg
 _BLANK_BRAILLE = chr(0x2800)
 
 
-def test_big_text_is_five_rows_and_nonblank():
+def test_big_text_is_three_rows_and_nonblank():
     plain = big_text('HI').plain
-    assert plain.count('\n') == 4  # exactly five rows
+    assert plain.count('\n') == 2  # three half-block rows
     assert plain.strip() != ''
 
 
@@ -29,7 +29,7 @@ def test_big_text_empty_is_blank():
 
 def test_big_text_unknown_char_does_not_raise():
     # Unknown glyphs degrade to blank; lowercase is upcased.
-    assert big_text('ab!').plain.count('\n') == 4
+    assert big_text('ab!').plain.count('\n') == 2
 
 
 def test_seven_seg_is_three_rows_and_nonblank():

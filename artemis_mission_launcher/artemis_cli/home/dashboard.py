@@ -179,7 +179,7 @@ def _center(epoch_sec):
     col.add_row(Text('ARTEMIS LUNAR SURFACE PROGRAM', style=_DIM))
     col.add_row(Text(''))
     col.add_row(moon_art(epoch_sec, lit_style=f'bold {_BLUE}',
-                         shadow_style=_MUTE))
+                         shadow_style=_DIM))
     col.add_row(Text(''))
     col.add_row(caption)
     return Align.center(col, vertical='middle')
