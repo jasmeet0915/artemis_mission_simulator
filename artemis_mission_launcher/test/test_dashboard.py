@@ -44,6 +44,15 @@ def test_welcome_card_has_green_nominal():
                for s in txt.spans)
 
 
+def test_radar_dimensions_and_blip():
+    from artemis_cli.dashboard.widgets.mission_overview import _radar
+    txt = _radar(27, 13)
+    lines = txt.plain.split('\n')
+    assert len(lines) == 13
+    assert all(len(line) == 27 for line in lines)
+    assert '◉' in txt.plain          # the contact blip
+
+
 def test_mock_provider_fills_sane_values():
     state = DashboardState()
     MockProvider().update(state)

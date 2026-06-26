@@ -11,70 +11,60 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Mission Overview panel: site metadata + a simple ASCII spacecraft."""
+"""Mission Overview panel: site metadata + a mission-control radar scope."""
 from __future__ import annotations
 
+import math
+
 from rich.align import Align
-from rich.console import RenderableType
-from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from textual.widgets import Static
 
 from .. import theme
 from ..state import DashboardState
 
-# Fixed background starfield (x, y) positions.
-_STARS = ((2, 1), (7, 9), (23, 2), (25, 10), (19, 1), (5, 11), (21, 7),
-          (12, 0), (1, 5), (16, 12))
-_BRIGHT_STARS = ((25, 4), (3, 10), (14, 1))
-
-# Simple ASCII spacecraft. Spaces are transparent (stars show through);
-# '#' marks the window, flame rows are styled separately below.
-_CRAFT = (
-    '    /\\',
-    '   /  \\',
-    '   |  |',
-    '   |##|',
-    '   |  |',
-    '  /|  |\\',
-    ' / |  | \\',
-    '/__|__|__\\',
-    '   |||',
-    '  \\|||/',
-    '   \\|/',
-    '    v',
-)
+# Faint background starfield (x, y) positions for the radar scope.
+_STARS = ((2, 1), (24, 2), (5, 11), (21, 9), (12, 0), (1, 6), (25, 6))
 
 
-def _spacecraft(width: int, height: int) -> Text:
-    """Draw a centered ASCII spacecraft over a faint starfield."""
+def _radar(width: int, height: int) -> Text:
+    """A polar radar scope: range rings, crosshair, and a contact blip.
+
+    Cells are ~twice as tall as wide, so the horizontal radius is taken at the
+    full half-width while the vertical radius uses the half-height; this keeps
+    the rings looking round rather than squashed.
+    """
+    cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
     grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
 
-    def put(x: int, y: int, ch: str, st: str) -> None:
-        if 0 <= x < width and 0 <= y < height:
-            grid[y][x] = (ch, st)
+    def put(x: float, y: float, ch: str, st: str) -> None:
+        xi, yi = int(round(x)), int(round(y))
+        if 0 <= xi < width and 0 <= yi < height:
+            grid[yi][xi] = (ch, st)
 
+    # faint starfield behind the scope
     for sx, sy in _STARS:
         put(sx, sy, '·', theme.FAINT)
-    for sx, sy in _BRIGHT_STARS:
-        put(sx, sy, '✦', theme.MUTED)
 
-    art_w = max(len(line) for line in _CRAFT)
-    left = (width - art_w) // 2
-    top = (height - len(_CRAFT)) // 2
-    for r, line in enumerate(_CRAFT):
-        for c, ch in enumerate(line):
-            if ch == ' ':
-                continue
-            if ch == '#':
-                style = f'bold {theme.ACCENT}'
-            elif r == len(_CRAFT) - 1:           # flame tip
-                style = f'bold {theme.ACCENT}'
-            elif r >= len(_CRAFT) - 3:            # exhaust flame
-                style = theme.WARN
-            else:                                 # hull / fins
-                style = theme.PRIMARY
-            put(left + c, top + r, ch, style)
+    # crosshair (drawn first so the rings sit on top at the axes)
+    for x in range(width):
+        put(x, cy, '─', theme.FAINT)
+    for y in range(height):
+        put(cx, y, '│', theme.FAINT)
+    put(cx, cy, '┼', theme.FAINT)
+
+    # concentric range rings
+    for frac in (1.0, 0.66, 0.33):
+        rx, ry = cx * frac, cy * frac
+        for i in range(160):
+            t = 2.0 * math.pi * i / 160.0
+            put(cx + rx * math.cos(t), cy + ry * math.sin(t), '·', theme.PRIMARY)
+
+    # a single contact blip riding the middle ring
+    bt = -0.9
+    put(cx + cx * 0.66 * math.cos(bt), cy + cy * 0.66 * math.sin(bt),
+        '◉', f'bold {theme.ACCENT}')
 
     text = Text()
     for r, row in enumerate(grid):
@@ -85,7 +75,7 @@ def _spacecraft(width: int, height: int) -> Text:
     return text
 
 
-def _fields(state: DashboardState) -> RenderableType:
+def _fields(state: DashboardState) -> Table:
     visible = ('YES', theme.OK) if state.earth_visible else ('NO', theme.ERR)
     rows = (
         ('◆', 'SITE', state.site_name.upper(), theme.PRIMARY),
@@ -104,14 +94,18 @@ def _fields(state: DashboardState) -> RenderableType:
     return grid
 
 
-def render(state: DashboardState) -> RenderableType:
-    body = Table.grid(expand=True, padding=(0, 1))
-    body.add_column(justify='left', ratio=3)
-    body.add_column(justify='center', ratio=2)
-    body.add_row(
-        Align(_fields(state), vertical='middle'),
-        Align(_orbit(27, 13), vertical='middle'),
-    )
-    return Panel(body, title=Text('MISSION OVERVIEW', style=theme.TITLE),
-                 title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 1))
+class MissionOverviewPanel(Static):
+    """Bordered card: site metadata on the left, radar scope on the right."""
+
+    def on_mount(self) -> None:
+        self.border_title = 'MISSION OVERVIEW'
+
+    def update_state(self, state: DashboardState) -> None:
+        body = Table.grid(expand=True, padding=(0, 1))
+        body.add_column(justify='left', ratio=3)
+        body.add_column(justify='center', ratio=2)
+        body.add_row(
+            Align(_fields(state), vertical='middle'),
+            Align(_radar(27, 13), vertical='middle'),
+        )
+        self.update(body)
