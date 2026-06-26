@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Entry point for `python3 -m artemis_cli.home`."""
-import sys
+"""Data providers for the dashboard."""
+from .base import Provider
+from .mock_provider import MockProvider
+from .system_provider import SystemProvider
 
-from artemis_cli.home.app import main
-
-if __name__ == '__main__':
-    sys.exit(main())
+__all__ = ['Provider', 'MockProvider', 'SystemProvider']

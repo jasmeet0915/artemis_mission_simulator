@@ -11,17 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for artemis_cli.home.app argument handling."""
-from artemis_cli.home.app import main
+"""Stateless rendering widgets. Each module exposes ``render(state)``."""
+from . import footer, header, mission_clock, mission_overview, system_monitor
 
-import pytest
-
-
-def test_main_requires_epoch_sec():
-    with pytest.raises(SystemExit):
-        main([])
-
-
-def test_main_rejects_non_integer_epoch():
-    with pytest.raises(SystemExit):
-        main(['--epoch-sec', 'not-a-number'])
+__all__ = ['header', 'mission_overview', 'mission_clock', 'system_monitor',
+           'footer']

@@ -83,7 +83,7 @@ class StackLauncher:
         pane = self.mission_window.panes[0]
         self._source_workspace(pane)
         pane.send_keys(
-            'python3 -m artemis_cli.home '
+            'python3 -m artemis_cli.dashboard '
             f'--site {self.site} --epoch-sec {self.epoch_sec}',
             enter=True,
         )
