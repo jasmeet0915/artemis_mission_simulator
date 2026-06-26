@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .dashboard import run
+from .app import ArtemisDashboardApp
 from .providers import MockProvider, SystemProvider
 
 
@@ -38,7 +38,7 @@ def main(argv=None) -> int:
     provider = MockProvider(**kwargs) if args.mock else SystemProvider(**kwargs)
 
     try:
-        run(provider)
+        ArtemisDashboardApp(provider).run()
     except KeyboardInterrupt:
         pass
     return 0

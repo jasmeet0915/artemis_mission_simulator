@@ -62,6 +62,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
+# Textual powers the mission-control home UI. Only PyPI ships a modern release
+# (the apt python3-textual is years old and lacks the widgets we use), so it is
+# pip-installed into the image. End users pull the image and never run pip; the
+# --break-system-packages flag is safe in this single-purpose container.
+RUN pip install --no-cache-dir --break-system-packages 'textual>=5,<9'
+
 # Source ROS in every interactive shell. /etc/bash.bashrc applies to any user
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc
 
