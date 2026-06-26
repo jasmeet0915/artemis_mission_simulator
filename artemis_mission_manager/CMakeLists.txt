@@ -27,6 +27,9 @@ install(TARGETS mission_manager
 install(DIRECTORY include/
   DESTINATION include)
 
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_site_metadata_reader test/test_site_metadata_reader.cpp)
