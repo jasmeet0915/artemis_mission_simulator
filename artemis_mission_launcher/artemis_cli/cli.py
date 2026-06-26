@@ -70,6 +70,7 @@ def _run_liftoff(args):
         return 3
 
     launcher.launch_simulation()
+    launcher.launch_mission_manager()
     print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), site {args.site}')
 
     if args.interactive:

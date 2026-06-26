@@ -13,6 +13,10 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 ### Pre-built sites in the package:
 
+> **Note:** The committed pre-built models now live in the `artemis_assets` package
+> (`artemis_assets/models/`). The exporter remains a pure tool and writes new models to
+> whatever `--output-dir` you pass.
+
 **Name: Connecting Ridge**
 
 *Site Code: Site01*
