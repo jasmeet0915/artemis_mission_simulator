@@ -25,7 +25,7 @@ from artemis_cli.launch_stack import (
 )
 from artemis_cli.utils.epoch import EpochParseError, parse_epoch
 
-DEFAULT_SITE = 'lunar_empty'
+DEFAULT_SITE = 'empty_lunar'
 
 
 def main(argv=None):
