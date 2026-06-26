@@ -68,6 +68,31 @@ def test_mission_clock_digits_and_solar_bar():
     asyncio.run(go())
 
 
+def test_system_monitor_cpu_sparkline_bounded():
+    from textual.widgets import Sparkline
+
+    async def go():
+        app = ArtemisDashboardApp(
+            MockProvider(site='shackleton_rim', epoch_sec=0, acceleration=100.0))
+        async with app.run_test() as pilot:
+            for _ in range(3):
+                await pilot.pause()
+            spark = app.query_one('#cpu-spark', Sparkline)
+            assert 1 <= len(spark.data) <= HISTORY
+    asyncio.run(go())
+
+
+def test_system_monitor_boots_with_real_provider_gpu_na():
+    async def go():
+        app = ArtemisDashboardApp(
+            SystemProvider(site='shackleton_rim', epoch_sec=0,
+                           acceleration=100.0))
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            assert app.state.gpu_percent is None   # N/A branch ran, no crash
+    asyncio.run(go())
+
+
 def test_mock_provider_fills_sane_values():
     state = DashboardState()
     MockProvider().update(state)

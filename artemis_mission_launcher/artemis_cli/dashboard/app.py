@@ -30,6 +30,7 @@ from .state import DashboardState
 from .widgets.header import StatusPanel, WelcomeCard, WordmarkPanel
 from .widgets.mission_clock import MissionClockPanel
 from .widgets.mission_overview import MissionOverviewPanel
+from .widgets.system_monitor import SystemMonitorPanel
 
 _CSS = f"""
 Screen {{
@@ -80,7 +81,7 @@ class ArtemisDashboardApp(App):
             with Horizontal(id='main'):
                 yield MissionOverviewPanel(id='overview', classes='panel')
                 yield MissionClockPanel(id='clock', classes='panel')
-            yield Static('', id='monitor', classes='panel')
+            yield SystemMonitorPanel(id='monitor', classes='panel')
             yield Static('', id='footer', classes='panel')
 
     def on_mount(self) -> None:
