@@ -53,6 +53,21 @@ def test_radar_dimensions_and_blip():
     assert '◉' in txt.plain          # the contact blip
 
 
+def test_mission_clock_digits_and_solar_bar():
+    from textual.widgets import Digits, ProgressBar
+
+    async def go():
+        app = ArtemisDashboardApp(
+            MockProvider(site='shackleton_rim', epoch_sec=0, acceleration=100.0))
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            digits = app.query_one('#clock-digits', Digits)
+            assert digits.value == app.state.mission_clock
+            bar = app.query_one('#solar-bar', ProgressBar)
+            assert bar.percentage is not None
+    asyncio.run(go())
+
+
 def test_mock_provider_fills_sane_values():
     state = DashboardState()
     MockProvider().update(state)

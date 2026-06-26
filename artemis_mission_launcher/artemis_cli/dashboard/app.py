@@ -28,6 +28,7 @@ from . import theme
 from .providers import Provider
 from .state import DashboardState
 from .widgets.header import StatusPanel, WelcomeCard, WordmarkPanel
+from .widgets.mission_clock import MissionClockPanel
 from .widgets.mission_overview import MissionOverviewPanel
 
 _CSS = f"""
@@ -78,7 +79,7 @@ class ArtemisDashboardApp(App):
                 yield StatusPanel(id='status', classes='panel')
             with Horizontal(id='main'):
                 yield MissionOverviewPanel(id='overview', classes='panel')
-                yield Static('', id='clock', classes='panel')
+                yield MissionClockPanel(id='clock', classes='panel')
             yield Static('', id='monitor', classes='panel')
             yield Static('', id='footer', classes='panel')
 
