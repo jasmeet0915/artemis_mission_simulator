@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical
 
 from . import theme
 from .providers import Provider
@@ -31,13 +31,17 @@ Screen {{
     background: {theme.BG};
     color: {theme.PRIMARY};
 }}
-#header {{ height: 9; }}
-#main {{ height: 1fr; }}
-#monitor {{ height: 15; }}
+/* flexible spacers vertically centre the fixed-height content block */
+#top-spacer, #bottom-spacer {{ height: 1fr; }}
+#header {{ height: 8; }}
+#main {{ height: 15; }}
+#monitor {{ height: 14; }}
 #footer {{ height: 1; color: {theme.FAINT}; }}
 
+/* three equal columns keep the Welcome card centred on screen */
 #wordmark {{ width: 1fr; padding: 0 1; }}
 #welcome {{ width: 1fr; }}
+#status-wrap {{ width: 1fr; align-horizontal: right; }}
 #status {{ width: 34; }}
 
 #overview {{ width: 3fr; }}
@@ -68,15 +72,18 @@ class ArtemisDashboardApp(App):
 
     def compose(self) -> ComposeResult:
         with Vertical(id='root'):
+            yield Container(id='top-spacer')
             with Horizontal(id='header'):
                 yield WordmarkPanel(id='wordmark', classes='panel')
                 yield WelcomeCard(id='welcome', classes='panel')
-                yield StatusPanel(id='status', classes='panel')
+                with Container(id='status-wrap'):
+                    yield StatusPanel(id='status', classes='panel')
             with Horizontal(id='main'):
                 yield MissionOverviewPanel(id='overview', classes='panel')
                 yield MissionClockPanel(id='clock', classes='panel')
             yield SystemMonitorPanel(id='monitor', classes='panel')
             yield FooterPanel(id='footer', classes='panel')
+            yield Container(id='bottom-spacer')
 
     def on_mount(self) -> None:
         # Defer the first paint until the whole widget tree (including nested
