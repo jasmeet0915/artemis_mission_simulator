@@ -14,51 +14,75 @@
 
 
 """
-Launch Gazebo with a specified world file.
+Launch Gazebo for a mission site, with an optional mission epoch.
+
+The world file is derived from the site name (``<site>_world.sdf``); this
+mapping is intentionally simple and will be refined as real sites land.
 
 Usage:
     ros2 launch artemis_mission_launcher lunar_world.launch.py
-    ros2 launch artemis_mission_launcher lunar_world.launch.py world:=lunar_surface.sdf
+    ros2 launch artemis_mission_launcher lunar_world.launch.py site:=lunar_empty
+    ros2 launch artemis_mission_launcher lunar_world.launch.py initial_sim_time:=1782216000
 """
 import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration
 
 
-def generate_launch_description():
-    artemis_mission_launcher_pkg = get_package_share_directory('artemis_mission_launcher')
-    pkg_worlds_dir = os.path.join(artemis_mission_launcher_pkg, 'worlds')
-    gui_config = os.path.join(
-        artemis_mission_launcher_pkg, 'config', 'gz', 'gui.config',
-    )
+def build_gz_args(gui_config, world_file, initial_sim_time):
+    """Assemble the gz_args string, seeding sim time only when provided."""
+    args = f'-v 4 -r --gui-config {gui_config} '
+    if initial_sim_time:
+        args += f'--initial-sim-time {initial_sim_time} '
+    args += world_file
+    return args
 
-    declare_world_name_arg = DeclareLaunchArgument(
-        'world',
-        default_value='lunar_empty_world.sdf',
-        description='Name of the world to open',
-    )
 
-    world_name = LaunchConfiguration('world')
-    world_file = PathJoinSubstitution([pkg_worlds_dir, world_name])
+def launch_setup(context, *args, **kwargs):
+    pkg = get_package_share_directory('artemis_mission_launcher')
+    gui_config = os.path.join(pkg, 'config', 'gz', 'gui.config')
+
+    site = LaunchConfiguration('site').perform(context)
+    initial_sim_time = LaunchConfiguration('initial_sim_time').perform(context)
+    # Derive the world file from the site name. Placeholder convention until
+    # real per-site worlds exist; the mission manager will consume the site too.
+    world_file = os.path.join(pkg, 'worlds', f'{site}_world.sdf')
+
+    gz_args = build_gz_args(gui_config, world_file, initial_sim_time)
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
+            os.path.join(
                 get_package_share_directory('ros_gz_sim'),
                 'launch',
                 'gz_sim.launch.py',
-            ])
+            )
         ),
-        launch_arguments={
-            'gz_args': ['-v 4 -r --gui-config ', gui_config, ' ', world_file],
-        }.items(),
+        launch_arguments={'gz_args': gz_args}.items(),
+    )
+    return [gz_sim]
+
+
+def generate_launch_description():
+    declare_site_arg = DeclareLaunchArgument(
+        'site',
+        default_value='lunar_empty',
+        description='Mission site name; the world file is <site>_world.sdf',
+    )
+
+    declare_initial_sim_time_arg = DeclareLaunchArgument(
+        'initial_sim_time',
+        default_value='',
+        description='Initial Gazebo sim time in Unix seconds (UTC). '
+                    'Empty leaves the gz default.',
     )
 
     return LaunchDescription([
-        declare_world_name_arg,
-        gz_sim,
+        declare_site_arg,
+        declare_initial_sim_time_arg,
+        OpaqueFunction(function=launch_setup),
     ])
