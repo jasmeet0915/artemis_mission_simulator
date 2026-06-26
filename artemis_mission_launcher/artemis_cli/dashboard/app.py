@@ -31,6 +31,9 @@ Screen {{
     background: {theme.BG};
     color: {theme.PRIMARY};
 }}
+/* inset the whole dashboard from the screen edges (margin shows screen bg) */
+#root {{ padding: 0 3; }}
+
 /* flexible spacers vertically centre the fixed-height content block */
 #top-spacer, #bottom-spacer {{ height: 1fr; }}
 #header {{ height: 8; }}
