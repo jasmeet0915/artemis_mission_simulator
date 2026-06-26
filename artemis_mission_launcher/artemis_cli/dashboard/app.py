@@ -27,6 +27,7 @@ from textual.widgets import Static
 from . import theme
 from .providers import Provider
 from .state import DashboardState
+from .widgets.header import StatusPanel, WelcomeCard, WordmarkPanel
 
 _CSS = f"""
 Screen {{
@@ -48,13 +49,11 @@ Screen {{
 .panel {{ background: {theme.BG}; }}
 
 /* bordered mission-control cards */
-#welcome, #overview, #clock, #monitor {{
+#welcome, #status, #overview, #clock, #monitor {{
     border: round {theme.FAINT};
     background: {theme.PANEL_BG};
 }}
-#overview {{ border-title-color: {theme.ACCENT}; }}
-#clock {{ border-title-color: {theme.ACCENT}; }}
-#monitor {{ border-title-color: {theme.ACCENT}; }}
+#overview, #clock, #monitor {{ border-title-color: {theme.ACCENT}; }}
 """
 
 
@@ -73,9 +72,9 @@ class ArtemisDashboardApp(App):
     def compose(self) -> ComposeResult:
         with Vertical(id='root'):
             with Horizontal(id='header'):
-                yield Static('', id='wordmark', classes='panel')
-                yield Static('', id='welcome', classes='panel')
-                yield Static('', id='status', classes='panel')
+                yield WordmarkPanel(id='wordmark', classes='panel')
+                yield WelcomeCard(id='welcome', classes='panel')
+                yield StatusPanel(id='status', classes='panel')
             with Horizontal(id='main'):
                 yield Static('', id='overview', classes='panel')
                 yield Static('', id='clock', classes='panel')

@@ -11,51 +11,55 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Header widget: ARTEMIS wordmark, welcome line, and UTC/uptime/host table."""
+"""Header widgets: ARTEMIS wordmark, Welcome card, and UTC/uptime/host box."""
 from __future__ import annotations
 
 from rich.align import Align
-from rich.console import Group, RenderableType
-from rich.panel import Panel
+from rich.console import Group
 from rich.table import Table
 from rich.text import Text
+from textual.widgets import Static
 
 from .. import theme
 from ..state import DashboardState
 from .glyphs import big_text
 
 
-def _left() -> RenderableType:
-    return Group(
-        big_text('ARTEMIS', style=f'bold {theme.ACCENT}'),
-        Text('MISSION LAUNCHER      v1.0.0', style=theme.MUTED),
-    )
+class WordmarkPanel(Static):
+    """ARTEMIS block-font wordmark with a small subtitle."""
+
+    def update_state(self, state: DashboardState) -> None:
+        self.update(Group(
+            big_text('ARTEMIS', style=f'bold {theme.ACCENT}'),
+            Text('MISSION LAUNCHER      v1.0.0', style=theme.MUTED),
+        ))
 
 
-def _center() -> RenderableType:
-    inner = Table.grid()
-    inner.add_column(justify='center')
-    inner.add_row(Text('✦', style=theme.ACCENT))
-    inner.add_row(Text('Welcome, Commander', style=f'bold {theme.PRIMARY}'))
-    inner.add_row(Text('All systems nominal.', style=theme.MUTED))
-    return Align.center(inner, vertical='middle')
+class WelcomeCard(Static):
+    """Centre greeting in its own bordered card; 'nominal' shown in green."""
+
+    @staticmethod
+    def render_text() -> Text:
+        text = Text(justify='center')
+        text.append('Welcome, Commander', style=f'bold {theme.ACCENT}')
+        text.append('\n')
+        text.append('All systems ', style=theme.MUTED)
+        text.append('nominal', style=f'bold {theme.OK}')
+        text.append('.', style=theme.MUTED)
+        return text
+
+    def update_state(self, state: DashboardState) -> None:
+        self.update(Align.center(self.render_text(), vertical='middle'))
 
 
-def _right(state: DashboardState) -> RenderableType:
-    grid = Table.grid(padding=(0, 1))
-    grid.add_column(style=theme.MUTED, justify='left')
-    grid.add_column(style=theme.PRIMARY, justify='left')
-    grid.add_row('◷ UTC TIME', Text(state.utc_time, style=theme.ACCENT))
-    grid.add_row('⊙ UPTIME', Text(state.uptime, style=theme.PRIMARY))
-    grid.add_row('◆ HOST', Text(state.hostname, style=theme.OK))
-    return Panel(grid, box=theme.BOX, border_style=theme.BORDER,
-                 padding=(0, 1))
+class StatusPanel(Static):
+    """Top-right box: UTC time, uptime and host."""
 
-
-def render(state: DashboardState) -> RenderableType:
-    grid = Table.grid(expand=True)
-    grid.add_column(justify='left', ratio=5)
-    grid.add_column(justify='center', ratio=6)
-    grid.add_column(justify='right', ratio=4)
-    grid.add_row(_left(), _center(), _right(state))
-    return grid
+    def update_state(self, state: DashboardState) -> None:
+        grid = Table.grid(padding=(0, 1))
+        grid.add_column(style=theme.MUTED, justify='left')
+        grid.add_column(style=theme.PRIMARY, justify='left')
+        grid.add_row('◷ UTC TIME', Text(state.utc_time, style=theme.ACCENT))
+        grid.add_row('⊙ UPTIME', Text(state.uptime, style=theme.PRIMARY))
+        grid.add_row('◆ HOST', Text(state.hostname, style=theme.OK))
+        self.update(grid)

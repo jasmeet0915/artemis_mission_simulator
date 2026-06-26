@@ -31,6 +31,19 @@ def test_app_boots_and_has_panels():
     asyncio.run(go())
 
 
+def test_welcome_card_has_green_nominal():
+    from artemis_cli.dashboard import theme
+    from artemis_cli.dashboard.widgets.header import WelcomeCard
+    txt = WelcomeCard.render_text()
+    plain = txt.plain
+    assert 'Welcome, Commander' in plain
+    start = plain.index('nominal')
+    end = start + len('nominal')
+    # a styled span covering 'nominal' uses the OK (green) colour
+    assert any(s.start <= start and s.end >= end and theme.OK in str(s.style)
+               for s in txt.spans)
+
+
 def test_mock_provider_fills_sane_values():
     state = DashboardState()
     MockProvider().update(state)
