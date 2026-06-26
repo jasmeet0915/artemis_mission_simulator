@@ -71,6 +71,8 @@ class StackLauncher:
         self.mission_window.rename_window('mission-control')
         self.simulation_window = self.session.new_window(
             window_name='simulation', attach=False)
+        self.mission_manager_window = self.session.new_window(
+            window_name='mission_manager', attach=False)
         self.mission_window.select()  # land here on attach
         print(f"[artemis] created tmux session '{self.session_name}'")
 
@@ -95,6 +97,16 @@ class StackLauncher:
         pane.send_keys(
             'ros2 launch artemis_mission_launcher lunar_world.launch.py '
             f'site:={self.site} initial_sim_time:={self.epoch_sec}',
+            enter=True,
+        )
+
+    def launch_mission_manager(self):
+        print('[artemis] launching mission manager stack...')
+        pane = self.mission_manager_window.panes[0]
+        self._source_workspace(pane)
+        pane.send_keys(
+            'ros2 launch artemis_mission_manager mission_manager.launch.py '
+            f'site:={self.site}',
             enter=True,
         )
 

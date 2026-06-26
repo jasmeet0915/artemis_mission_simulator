@@ -45,7 +45,10 @@
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.cwd": "/home/commander"
+        "terminal.integrated.cwd": "/home/commander",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true
       }
     }
   }
