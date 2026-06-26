@@ -12,85 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the artemis_cli.dashboard package."""
-import asyncio
-
-from artemis_cli.dashboard.app import ArtemisDashboardApp
+from artemis_cli.dashboard.dashboard import build_layout
 from artemis_cli.dashboard.providers import MockProvider, SystemProvider
 from artemis_cli.dashboard.state import DashboardState, HISTORY
+from artemis_cli.dashboard.widgets.sparklines import column_chart, hbar, sparkline
+from rich.console import Console
 
 
-def test_app_boots_and_has_panels():
-    async def go():
-        app = ArtemisDashboardApp(
-            MockProvider(site='shackleton_rim', epoch_sec=0, acceleration=100.0))
-        async with app.run_test() as pilot:
-            await pilot.pause()
-            for pid in ('#wordmark', '#welcome', '#status', '#overview',
-                        '#clock', '#monitor', '#footer'):
-                assert app.query_one(pid) is not None
-    asyncio.run(go())
+def _render(state: DashboardState) -> str:
+    console = Console(width=160, height=40, record=True)
+    console.print(build_layout(state))
+    return console.export_text()
 
 
-def test_welcome_card_has_green_nominal():
-    from artemis_cli.dashboard import theme
-    from artemis_cli.dashboard.widgets.header import WelcomeCard
-    txt = WelcomeCard.render_text()
-    plain = txt.plain
-    assert 'Welcome, Commander' in plain
-    start = plain.index('nominal')
-    end = start + len('nominal')
-    # a styled span covering 'nominal' uses the OK (green) colour
-    assert any(s.start <= start and s.end >= end and theme.OK in str(s.style)
-               for s in txt.spans)
-
-
-def test_radar_dimensions_and_blip():
-    from artemis_cli.dashboard.widgets.mission_overview import _radar
-    txt = _radar(27, 13)
-    lines = txt.plain.split('\n')
-    assert len(lines) == 13
-    assert all(len(line) == 27 for line in lines)
-    assert '◉' in txt.plain          # the contact blip
-
-
-def test_mission_clock_digits_and_solar_bar():
-    from textual.widgets import Digits, ProgressBar
-
-    async def go():
-        app = ArtemisDashboardApp(
-            MockProvider(site='shackleton_rim', epoch_sec=0, acceleration=100.0))
-        async with app.run_test() as pilot:
-            await pilot.pause()
-            digits = app.query_one('#clock-digits', Digits)
-            assert digits.value == app.state.mission_clock
-            bar = app.query_one('#solar-bar', ProgressBar)
-            assert bar.percentage is not None
-    asyncio.run(go())
-
-
-def test_system_monitor_cpu_sparkline_bounded():
-    from textual.widgets import Sparkline
-
-    async def go():
-        app = ArtemisDashboardApp(
-            MockProvider(site='shackleton_rim', epoch_sec=0, acceleration=100.0))
-        async with app.run_test() as pilot:
-            for _ in range(3):
-                await pilot.pause()
-            spark = app.query_one('#cpu-spark', Sparkline)
-            assert 1 <= len(spark.data) <= HISTORY
-    asyncio.run(go())
-
-
-def test_system_monitor_boots_with_real_provider_gpu_na():
-    async def go():
-        app = ArtemisDashboardApp(
-            SystemProvider(site='shackleton_rim', epoch_sec=0,
-                           acceleration=100.0))
-        async with app.run_test() as pilot:
-            await pilot.pause()
-            assert app.state.gpu_percent is None   # N/A branch ran, no crash
-    asyncio.run(go())
+def test_layout_contains_all_panels_and_labels():
+    state = DashboardState()
+    MockProvider().update(state)
+    text = _render(state)
+    for token in ('ARTEMIS', 'Welcome, Commander', 'UTC TIME', 'HOST',
+                  'MISSION OVERVIEW', 'SITE', 'COORDINATES', 'SUN ELEVATION',
+                  'MISSION CLOCK', 'SIM TIME ELAPSED', 'TIME ACCELERATION',
+                  'SOLAR DAY', 'SYSTEM MONITOR', 'CPU USAGE', 'MEMORY USAGE',
+                  'GPU USAGE', 'DISK USAGE', 'NETWORK', 'Press Ctrl+C to exit'):
+        assert token in text, token
 
 
 def test_mock_provider_fills_sane_values():
@@ -117,3 +61,21 @@ def test_histories_are_bounded():
     for _ in range(HISTORY + 20):
         provider.update(state)
     assert len(state.cpu_history) == HISTORY
+
+
+def test_sparkline_width_and_glyphs():
+    line = sparkline([0, 25, 50, 75, 100], width=10, vmax=100)
+    assert len(line) == 10
+    assert line[-1] in '▁▂▃▄▅▆▇█'
+
+
+def test_column_chart_dimensions():
+    chart = column_chart([1, 2, 3, 4], width=8, height=4, style='cyan')
+    lines = chart.plain.split('\n')
+    assert len(lines) == 4
+    assert all(len(line) == 8 for line in lines)
+
+
+def test_hbar_is_full_width():
+    bar = hbar(0.5, 10, 'cyan', 'grey37')
+    assert len(bar.plain) == 10

@@ -14,7 +14,7 @@
 """Central neon-blue colour palette and panel styling for the dashboard."""
 from rich import box
 
-# --- palette (neon blue on the terminal's own background) ------------------
+# --- palette (neon blue on a deep-blue black) ------------------------------
 PRIMARY = '#2e9bff'       # default content / values / clock (neon blue)
 ACCENT = '#6cc4ff'        # emphasis (titles, big text, live highlights)
 OK = '#4ade80'            # nominal / good values

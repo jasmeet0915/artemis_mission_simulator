@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Terminal-native Artemis mission-control dashboard (Textual)."""
-from .app import ArtemisDashboardApp
+"""Terminal-native Artemis mission-control dashboard (Rich)."""
+from .dashboard import build_layout, run
 from .state import DashboardState
 
-__all__ = ['ArtemisDashboardApp', 'DashboardState']
+__all__ = ['build_layout', 'run', 'DashboardState']

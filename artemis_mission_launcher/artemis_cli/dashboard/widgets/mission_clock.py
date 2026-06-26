@@ -11,21 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Mission Clock panel: large Digits clock, sim time, acceleration, solar bar."""
+"""Mission Clock panel: large clock, sim time, acceleration, solar-day bar."""
 from __future__ import annotations
 
+from rich.console import Group, RenderableType
+from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
-from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.css.query import NoMatches
-from textual.widgets import Digits, Label, ProgressBar, Static
 
+from .glyphs import big_text
+from .sparklines import hbar
 from .. import theme
 from ..state import DashboardState
 
 
-def _stats(state: DashboardState) -> Table:
+def _stats(state: DashboardState) -> RenderableType:
     grid = Table.grid(expand=True)
     grid.add_column(justify='left', ratio=1)
     grid.add_column(justify='left', ratio=1)
@@ -36,39 +37,26 @@ def _stats(state: DashboardState) -> Table:
     return grid
 
 
-class MissionClockPanel(Vertical):
-    """Bordered card with the big mission clock and time stats."""
+def _solar(state: DashboardState) -> RenderableType:
+    pct = state.solar_day_progress * 100.0
+    bar = Table.grid(expand=True)
+    bar.add_column(ratio=1)
+    bar.add_column(justify='right', width=6)
+    bar.add_row(hbar(state.solar_day_progress, 28, theme.PRIMARY, theme.FAINT),
+                Text(f'{pct:.0f}%', style=theme.MUTED))
+    return Group(Text('SOLAR DAY @ SOUTH POLE', style=theme.MUTED), bar)
 
-    DEFAULT_CSS = f"""
-    MissionClockPanel {{ padding: 1 2; }}
-    MissionClockPanel #clock-date {{ color: {theme.PRIMARY}; text-style: bold; }}
-    MissionClockPanel #clock-digits {{ color: {theme.ACCENT}; }}
-    MissionClockPanel .clock-muted {{ color: {theme.MUTED}; }}
-    MissionClockPanel #solar-bar {{ width: 1fr; margin-top: 1; }}
-    MissionClockPanel #solar-bar Bar > .bar--bar {{ color: {theme.PRIMARY}; }}
-    MissionClockPanel #solar-bar Bar > .bar--complete {{ color: {theme.OK}; }}
-    MissionClockPanel #solar-bar PercentageStatus {{ color: {theme.MUTED}; }}
-    """
 
-    def on_mount(self) -> None:
-        self.border_title = 'MISSION CLOCK'
-        self.update_state(self.app.state)   # initial paint; children now mounted
-
-    def compose(self) -> ComposeResult:
-        yield Label('', id='clock-date')
-        yield Digits('', id='clock-digits')
-        yield Label('UTC', classes='clock-muted')
-        yield Static(id='clock-stats')
-        yield Label('SOLAR DAY @ SOUTH POLE', classes='clock-muted')
-        yield ProgressBar(total=100, show_eta=False, id='solar-bar')
-
-    def update_state(self, state: DashboardState) -> None:
-        try:
-            date = self.query_one('#clock-date', Label)
-        except NoMatches:
-            return   # children not mounted yet; on_mount/next tick will paint
-        date.update(state.mission_date)
-        self.query_one('#clock-digits', Digits).update(state.mission_clock)
-        self.query_one('#clock-stats', Static).update(_stats(state))
-        self.query_one('#solar-bar', ProgressBar).update(
-            total=100, progress=state.solar_day_progress * 100.0)
+def render(state: DashboardState) -> RenderableType:
+    body = Group(
+        Text(state.mission_date, style=f'bold {theme.PRIMARY}'),
+        big_text(state.mission_clock, style=f'bold {theme.ACCENT}'),
+        Text('UTC', style=theme.MUTED),
+        Rule(style=theme.FAINT),
+        _stats(state),
+        Text(''),
+        _solar(state),
+    )
+    return Panel(body, title=Text('MISSION CLOCK', style=theme.TITLE),
+                 title_align='left', box=theme.BOX,
+                 border_style=theme.BORDER, padding=(1, 2))

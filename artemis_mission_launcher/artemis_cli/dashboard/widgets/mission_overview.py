@@ -17,9 +17,10 @@ from __future__ import annotations
 import math
 
 from rich.align import Align
+from rich.console import RenderableType
+from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from textual.widgets import Static
 
 from .. import theme
 from ..state import DashboardState
@@ -41,7 +42,6 @@ def _radar(width: int, height: int) -> Text:
         if 0 <= xi < width and 0 <= yi < height:
             grid[yi][xi] = (ch, st)
 
-    # faint starfield behind the scope
     for sx, sy in _STARS:
         put(sx, sy, '·', theme.FAINT)
 
@@ -73,7 +73,7 @@ def _radar(width: int, height: int) -> Text:
     return text
 
 
-def _fields(state: DashboardState) -> Table:
+def _fields(state: DashboardState) -> RenderableType:
     visible = ('YES', theme.OK) if state.earth_visible else ('NO', theme.ERR)
     rows = (
         ('◆', 'SITE', state.site_name.upper(), theme.PRIMARY),
@@ -92,18 +92,14 @@ def _fields(state: DashboardState) -> Table:
     return grid
 
 
-class MissionOverviewPanel(Static):
-    """Bordered card: site metadata on the left, radar scope on the right."""
-
-    def on_mount(self) -> None:
-        self.border_title = 'MISSION OVERVIEW'
-
-    def update_state(self, state: DashboardState) -> None:
-        body = Table.grid(expand=True, padding=(0, 1))
-        body.add_column(justify='left', ratio=3)
-        body.add_column(justify='center', ratio=2)
-        body.add_row(
-            Align(_fields(state), vertical='middle'),
-            Align(_radar(27, 13), vertical='middle'),
-        )
-        self.update(body)
+def render(state: DashboardState) -> RenderableType:
+    body = Table.grid(expand=True, padding=(0, 1))
+    body.add_column(justify='left', ratio=3)
+    body.add_column(justify='center', ratio=2)
+    body.add_row(
+        Align(_fields(state), vertical='middle'),
+        Align(_radar(27, 13), vertical='middle'),
+    )
+    return Panel(body, title=Text('MISSION OVERVIEW', style=theme.TITLE),
+                 title_align='left', box=theme.BOX,
+                 border_style=theme.BORDER, padding=(1, 1))
