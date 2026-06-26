@@ -11,13 +11,21 @@ RUN groupmod -n ${USERNAME} ubuntu && \
     echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Install Gazebo Harmonic + ROS-Gazebo integration and Python dependencies.
+# Install Gazebo
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ros-gz \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ament lint / build tooling.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ament-lint-auto \
     ros-jazzy-ament-lint-common \
     ros-jazzy-ament-cmake-clang-format \
     ros-jazzy-ament-cmake-pytest \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python + system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     gdal-bin \
     python3-gdal \
@@ -29,6 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rasterio \
     python3-requests \
     python3-tqdm \
+    tmux \
+    python3-libtmux \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
