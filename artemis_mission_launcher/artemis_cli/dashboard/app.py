@@ -27,11 +27,12 @@ from .widgets.mission_overview import MissionOverviewPanel
 from .widgets.system_monitor import SystemMonitorPanel
 
 _CSS = f"""
+/* No painted background: let the terminal's own background show through. */
 Screen {{
-    background: {theme.BG};
+    background: transparent;
     color: {theme.PRIMARY};
 }}
-/* inset the whole dashboard from the screen edges (margin shows screen bg) */
+/* inset the whole dashboard from the screen edges */
 #root {{ padding: 0 3; }}
 
 /* flexible spacers vertically centre the fixed-height content block */
@@ -50,12 +51,12 @@ Screen {{
 #overview {{ width: 3fr; }}
 #clock {{ width: 2fr; }}
 
-.panel {{ background: {theme.BG}; }}
+.panel {{ background: transparent; }}
 
 /* bordered mission-control cards */
 #welcome, #status, #overview, #clock, #monitor {{
     border: round {theme.FAINT};
-    background: {theme.PANEL_BG};
+    background: transparent;
 }}
 #overview, #clock, #monitor {{ border-title-color: {theme.ACCENT}; }}
 """
