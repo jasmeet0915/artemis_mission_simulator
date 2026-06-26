@@ -12,24 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for artemis_cli.home.render."""
-from artemis_cli.home.render import block_text, line_graph
+from artemis_cli.home.render import line_graph, seven_seg
 
 _BLANK_BRAILLE = chr(0x2800)
 
 
-def test_block_text_is_multirow_and_nonblank():
-    plain = block_text('12').plain
-    assert '\n' in plain  # figlet output spans multiple rows
+def test_seven_seg_is_three_rows_and_nonblank():
+    plain = seven_seg('12:30').plain
+    assert plain.count('\n') == 2  # exactly three rows
     assert plain.strip() != ''
 
 
-def test_block_text_empty_is_blank():
-    assert block_text('').plain == ''
+def test_seven_seg_empty_is_blank():
+    assert seven_seg('').plain == ''
 
 
-def test_block_text_custom_font():
-    plain = block_text('A', font='standard').plain
-    assert plain.strip() != ''
+def test_seven_seg_unknown_char_renders_blank_glyph_without_raising():
+    # Unknown characters degrade to a blank 3-col glyph rather than crashing.
+    plain = seven_seg('9?').plain
+    assert plain.count('\n') == 2
+    assert plain.strip() != ''  # the '9' still renders
 
 
 def test_line_graph_dimensions():

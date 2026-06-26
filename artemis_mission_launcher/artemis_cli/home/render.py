@@ -13,34 +13,43 @@
 # limitations under the License.
 """Swappable text-rendering primitives for the mission-control dashboard.
 
-`block_text` (figlet 'big' text via pyfiglet) and `line_graph` (braille line
-plot) are the only rendering seams: swap the font / plotting backend here
-without changing layout code.
+`seven_seg` (a self-contained 7-segment LED renderer for the big clock) and
+`line_graph` (braille line plot) are the only rendering seams: change the glyph
+table / plotting backend here without touching layout code. Deliberately no
+external font dependency — Debian's `python3-pyfiglet` ships no fonts, so we draw
+the digits ourselves.
 """
-from pyfiglet import Figlet
 from rich.text import Text
 
-# 'digital' is compact (3 rows) and legible, so the big clock / site / welcome
-# fit a one-third-width column. Swap this one name to restyle every big label.
-_DEFAULT_FONT = 'digital'
-_FIGLETS = {}
+# --- seven_seg: a 3-row, ASCII 7-segment LED renderer ----------------------
+# Each glyph is exactly three columns wide; glyphs are joined with a single
+# space so adjacent bars never touch. Covers everything a clock/date needs.
+_SEG = {
+    '0': (' _ ', '| |', '|_|'),
+    '1': ('   ', '  |', '  |'),
+    '2': (' _ ', ' _|', '|_ '),
+    '3': (' _ ', ' _|', ' _|'),
+    '4': ('   ', '|_|', '  |'),
+    '5': (' _ ', '|_ ', ' _|'),
+    '6': (' _ ', '|_ ', '|_|'),
+    '7': (' _ ', '  |', '  |'),
+    '8': (' _ ', '|_|', '|_|'),
+    '9': (' _ ', '|_|', ' _|'),
+    ':': ('   ', ' · ', ' · '),
+    '-': ('   ', ' _ ', '   '),
+    '.': ('   ', '   ', ' . '),
+    ' ': ('   ', '   ', '   '),
+}
+_SEG_BLANK = ('   ', '   ', '   ')
 
 
-def _figlet(font):
-    """Return a cached Figlet renderer for `font`."""
-    fig = _FIGLETS.get(font)
-    if fig is None:
-        fig = Figlet(font=font)
-        _FIGLETS[font] = fig
-    return fig
-
-
-def block_text(s, *, style=None, font=None):
-    """Render a string as multi-row figlet 'big' text."""
-    if not s:
+def seven_seg(s, *, style=None):
+    """Render a digit/clock string as 3-row 7-segment 'LED' text."""
+    glyphs = [_SEG.get(ch, _SEG_BLANK) for ch in str(s)]
+    if not glyphs:
         return Text('', style=style or '')
-    art = _figlet(font or _DEFAULT_FONT).renderText(s).rstrip('\n')
-    return Text(art, style=style or '')
+    rows = [' '.join(g[r] for g in glyphs) for r in range(3)]
+    return Text('\n'.join(rows), style=style or '')
 
 
 # --- line_graph: a braille (2x4 dots/cell) line plot -----------------------

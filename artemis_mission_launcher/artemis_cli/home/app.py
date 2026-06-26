@@ -23,7 +23,7 @@ from rich.console import Console
 from rich.live import Live
 
 _REFRESH_HZ = 4.0
-_HISTORY = 12
+_HISTORY = 36
 _BOOT_LINES = (
     'Initializing flight computer',
     'Establishing telemetry link',

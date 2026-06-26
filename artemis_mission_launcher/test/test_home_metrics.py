@@ -26,3 +26,5 @@ def test_reader_returns_system_metrics_with_sane_values():
     assert metrics.net_down_kbs >= 0.0
     assert metrics.uptime_s > 0.0
     assert metrics.temp_c is None or metrics.temp_c > 0.0
+    assert isinstance(metrics.cpu_model, str) and metrics.cpu_model
+    assert metrics.cpu_ghz is None or metrics.cpu_ghz > 0.0

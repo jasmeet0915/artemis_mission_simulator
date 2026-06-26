@@ -26,6 +26,8 @@ class SystemMetrics:
     """A single sample of host telemetry shown on the dashboard."""
 
     cpu_pct: float
+    cpu_model: str
+    cpu_ghz: float | None
     mem_used_gb: float
     mem_total_gb: float
     mem_pct: float
@@ -34,6 +36,23 @@ class SystemMetrics:
     net_up_kbs: float
     net_down_kbs: float
     uptime_s: float
+
+
+def _read_cpu_model():
+    """Return a short CPU model string (e.g. 'Intel i7-12700H'), or 'CPU'."""
+    try:
+        with open('/proc/cpuinfo') as info:
+            for line in info:
+                if line.startswith('model name'):
+                    name = line.split(':', 1)[1].strip()
+                    # Trim marketing noise: '(R)', '(TM)', 'CPU', trailing '@ ...'.
+                    for junk in ('(R)', '(TM)', 'CPU', 'Core'):
+                        name = name.replace(junk, '')
+                    name = name.split('@')[0]
+                    return ' '.join(name.split())
+    except OSError:
+        pass
+    return 'CPU'
 
 
 def _read_temp_c():
@@ -64,6 +83,7 @@ class MetricsReader:
         psutil.cpu_percent(interval=None)  # prime the rolling CPU average
         self._net = psutil.net_io_counters()
         self._net_t = time.monotonic()
+        self._cpu_model = _read_cpu_model()  # static; read once
 
     def read(self):
         """Sample the host and return a SystemMetrics."""
@@ -75,8 +95,15 @@ class MetricsReader:
         down = (net.bytes_recv - self._net.bytes_recv) / dt / 1024.0
         self._net = net
         self._net_t = now
+        try:
+            freq = psutil.cpu_freq()
+            cpu_ghz = freq.current / 1000.0 if freq and freq.current else None
+        except (OSError, AttributeError):
+            cpu_ghz = None
         return SystemMetrics(
             cpu_pct=psutil.cpu_percent(interval=None),
+            cpu_model=self._cpu_model,
+            cpu_ghz=cpu_ghz,
             mem_used_gb=vm.used / _GIB,
             mem_total_gb=vm.total / _GIB,
             mem_pct=vm.percent,

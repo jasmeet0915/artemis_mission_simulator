@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for artemis_cli.home.dashboard."""
-from artemis_cli.home.dashboard import render_frame, sparkline
+from artemis_cli.home.dashboard import render_frame
 from artemis_cli.home.metrics import SystemMetrics
 from rich.console import Console
 
@@ -20,6 +20,8 @@ from rich.console import Console
 def _metrics(cpu_pct=12.0, temp_c=57.0):
     return SystemMetrics(
         cpu_pct=cpu_pct,
+        cpu_model='Intel i7-12700H',
+        cpu_ghz=2.1,
         mem_used_gb=6.7,
         mem_total_gb=16.0,
         mem_pct=42.0,
@@ -45,26 +47,19 @@ def _render_text(metrics):
     return console.export_text()
 
 
-def test_sparkline_length_and_glyphs():
-    line = sparkline([0, 50, 100], width=3, vmax=100)
-    assert len(line) == 3
-    assert line[0] in '▁▂▃▄▅▆▇█'
-    # rising series ends higher than it starts
-    assert '▁▂▃▄▅▆▇█'.index(line[-1]) > '▁▂▃▄▅▆▇█'.index(line[0])
-
-
-def test_sparkline_empty_is_blank_width():
-    assert sparkline([], width=5) == ' ' * 5
-
-
 def test_frame_shows_titles_and_metric_labels():
     text = _render_text(_metrics())
     assert 'MISSION STATUS' in text
     assert 'SYSTEM OVERVIEW' in text
     assert 'CURRENT SITE' in text
-    assert 'T+ ELAPSED' in text
+    assert 'MISSION TIME' in text
+    assert 'SIM TIME' in text
     for label in ('CPU', 'MEMORY', 'TEMP', 'DISK', 'NETWORK', 'UPTIME'):
         assert label in text
+
+
+def test_frame_shows_cpu_model():
+    assert 'Intel i7-12700H' in _render_text(_metrics())
 
 
 def test_frame_status_nominal_then_caution():
