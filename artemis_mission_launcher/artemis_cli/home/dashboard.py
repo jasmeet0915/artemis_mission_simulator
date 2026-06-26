@@ -124,8 +124,7 @@ def _systems_panel(metrics, history):
         f'{metrics.mem_used_gb:.1f}/{metrics.mem_total_gb:.1f} GB')
     grid.add_row(
         'TEMP',
-        line_graph(history.get('temp', []), _GRAPH_W, _GRAPH_H,
-                   vmax=100, style=_CYAN),
+        line_graph(history.get('temp', []), _GRAPH_W, _GRAPH_H, style=_CYAN),
         temp_val)
     grid.add_row(
         'DISK',
