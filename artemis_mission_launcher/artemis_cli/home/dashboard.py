@@ -163,7 +163,7 @@ def _center(epoch_sec):
     user = (os.environ.get('USER') or 'commander').upper()
     banner = Table.grid()
     banner.add_column(justify='center')
-    banner.add_row(big_text('WELCOME', style=f'bold {_BLUE}'))
+    banner.add_row(big_text('WELCOME,', style=f'bold {_BLUE}'))
     banner.add_row(Text(''))
     banner.add_row(big_text(user, style=f'bold {_BRIGHT}'))
     welcome_card = _card(Align.center(banner))
@@ -173,10 +173,14 @@ def _center(epoch_sec):
         ('☾ ', _BRIGHT), (ph['name'], f'bold {_BLUE}'),
         (f"   ·   {ph['fraction'] * 100:.0f}% ILLUMINATED", _DIM))
 
+    # Spaced caps read as a larger, grander sub-title in a terminal.
+    subtitle = Text(' '.join('ARTEMIS LUNAR SURFACE PROGRAM'),
+                    style=f'bold {_BLUE}')
+
     col = Table.grid(expand=True)
     col.add_column(justify='center')
     col.add_row(welcome_card)
-    col.add_row(Text('ARTEMIS LUNAR SURFACE PROGRAM', style=_DIM))
+    col.add_row(subtitle)
     col.add_row(Text(''))
     col.add_row(moon_art(epoch_sec, lit_style=f'bold {_BLUE}',
                          shadow_style=_DIM))
@@ -247,8 +251,8 @@ def render_frame(*, site, epoch_sec, elapsed_s, metrics, history):
         Layout(_mission_column(site, date_str, time_str, epoch_total,
                                _dhms(elapsed_s), status_text, status_style,
                                epoch_sec),
-               name='mission', ratio=42),
-        Layout(_center(epoch_sec), name='center', ratio=52),
-        Layout(_systems_column(metrics, history), name='systems', ratio=38),
+               name='mission', ratio=44),
+        Layout(_center(epoch_sec), name='center', ratio=57),
+        Layout(_systems_column(metrics, history), name='systems', ratio=31),
     )
     return layout
