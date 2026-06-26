@@ -54,7 +54,9 @@ def test_frame_shows_titles_and_metric_labels():
     assert 'CURRENT SITE' in text
     assert 'MISSION TIME' in text
     assert 'SIM TIME' in text
-    for label in ('CPU', 'MEMORY', 'TEMP', 'DISK', 'NETWORK', 'UPTIME'):
+    assert 'LUNAR PHASE' in text
+    for label in ('CPU', 'MEMORY', 'TEMPERATURE', 'STORAGE', 'NETWORK',
+                  'UPTIME'):
         assert label in text
 
 
@@ -69,5 +71,5 @@ def test_frame_status_nominal_then_caution():
 
 def test_frame_handles_missing_temperature():
     text = _render_text(_metrics(temp_c=None))
-    assert 'TEMP' in text
+    assert 'TEMPERATURE' in text
     assert '--' in text

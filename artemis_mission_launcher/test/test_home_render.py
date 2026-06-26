@@ -12,9 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for artemis_cli.home.render."""
-from artemis_cli.home.render import line_graph, seven_seg
+from artemis_cli.home.render import big_text, line_graph, seven_seg
 
 _BLANK_BRAILLE = chr(0x2800)
+
+
+def test_big_text_is_five_rows_and_nonblank():
+    plain = big_text('HI').plain
+    assert plain.count('\n') == 4  # exactly five rows
+    assert plain.strip() != ''
+
+
+def test_big_text_empty_is_blank():
+    assert big_text('').plain == ''
+
+
+def test_big_text_unknown_char_does_not_raise():
+    # Unknown glyphs degrade to blank; lowercase is upcased.
+    assert big_text('ab!').plain.count('\n') == 4
 
 
 def test_seven_seg_is_three_rows_and_nonblank():
