@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Mission Overview panel: site metadata + a polar south-pole moon plot."""
+"""Mission Overview panel: site metadata + a simple ASCII spacecraft."""
 from __future__ import annotations
-
-import math
 
 from rich.align import Align
 from rich.console import RenderableType
@@ -30,51 +28,53 @@ _STARS = ((2, 1), (7, 9), (23, 2), (25, 10), (19, 1), (5, 11), (21, 7),
           (12, 0), (1, 5), (16, 12))
 _BRIGHT_STARS = ((25, 4), (3, 10), (14, 1))
 
+# Simple ASCII spacecraft. Spaces are transparent (stars show through);
+# '#' marks the window, flame rows are styled separately below.
+_CRAFT = (
+    '    /\\',
+    '   /  \\',
+    '   |  |',
+    '   |##|',
+    '   |  |',
+    '  /|  |\\',
+    ' / |  | \\',
+    '/__|__|__\\',
+    '   |||',
+    '  \\|||/',
+    '   \\|/',
+    '    v',
+)
 
-def _orbit(width: int, height: int) -> Text:
-    """A mission-control orbital scope: planet, elliptical orbit, spacecraft."""
-    cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
+
+def _spacecraft(width: int, height: int) -> Text:
+    """Draw a centered ASCII spacecraft over a faint starfield."""
     grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
 
-    def put(x: float, y: float, ch: str, st: str) -> None:
-        xi, yi = int(round(x)), int(round(y))
-        if 0 <= xi < width and 0 <= yi < height:
-            grid[yi][xi] = (ch, st)
+    def put(x: int, y: int, ch: str, st: str) -> None:
+        if 0 <= x < width and 0 <= y < height:
+            grid[y][x] = (ch, st)
 
     for sx, sy in _STARS:
         put(sx, sy, '·', theme.FAINT)
     for sx, sy in _BRIGHT_STARS:
         put(sx, sy, '✦', theme.MUTED)
 
-    # elliptical orbit path (dotted)
-    a, b = (width - 1) / 2.0 * 0.94, (height - 1) / 2.0 * 0.80
-    for i in range(180):
-        t = 2.0 * math.pi * i / 180.0
-        put(cx + a * math.cos(t), cy + b * math.sin(t), '·', theme.PRIMARY)
-
-    # central body — a small lit planet at the focus
-    for y in range(height):
-        for x in range(width):
-            dx, dy = (x - cx) / 2.6, (y - cy) / 1.4
-            if dx * dx + dy * dy <= 1.0:
-                lit = 0.6 - 0.55 * dx
-                if lit > 0.62:
-                    grid[y][x] = ('●', f'bold {theme.ACCENT}')
-                elif lit > 0.4:
-                    grid[y][x] = ('●', theme.PRIMARY)
-                else:
-                    grid[y][x] = ('◗', theme.FAINT)
-
-    # spacecraft marker on the orbit, with a short fading trail
-    t0 = -0.7
-    for k, (ch, st) in enumerate(
-            ((' ', ''), ('·', theme.MUTED), ('·', theme.FAINT))):
-        if k == 0:
-            put(cx + a * math.cos(t0), cy + b * math.sin(t0),
-                '◆', f'bold {theme.ACCENT}')
-        else:
-            tt = t0 - 0.13 * k
-            put(cx + a * math.cos(tt), cy + b * math.sin(tt), ch, st)
+    art_w = max(len(line) for line in _CRAFT)
+    left = (width - art_w) // 2
+    top = (height - len(_CRAFT)) // 2
+    for r, line in enumerate(_CRAFT):
+        for c, ch in enumerate(line):
+            if ch == ' ':
+                continue
+            if ch == '#':
+                style = f'bold {theme.ACCENT}'
+            elif r == len(_CRAFT) - 1:           # flame tip
+                style = f'bold {theme.ACCENT}'
+            elif r >= len(_CRAFT) - 3:            # exhaust flame
+                style = theme.WARN
+            else:                                 # hull / fins
+                style = theme.PRIMARY
+            put(left + c, top + r, ch, style)
 
     text = Text()
     for r, row in enumerate(grid):
