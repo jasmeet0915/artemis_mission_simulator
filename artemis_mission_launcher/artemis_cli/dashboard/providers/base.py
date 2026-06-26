@@ -11,16 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Shared provider base: drives the mission clock / overview fields.
-
-Subclasses only need to fill the system-monitor scalars in
-:meth:`_sample_system`; the base handles the mission clock, uptime and the
-(mock, replaceable-by-ROS) mission-overview metadata.
-"""
+"""Shared provider base that drives the mission clock and overview fields."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import time
-from datetime import datetime, timedelta, timezone
 
 from ..state import DashboardState
 

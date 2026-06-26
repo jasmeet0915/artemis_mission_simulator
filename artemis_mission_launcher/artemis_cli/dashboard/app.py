@@ -11,13 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Textual application hosting the Artemis mission-control dashboard.
-
-The data layer (``providers`` + ``DashboardState``) is unchanged; this module
-owns only the Textual layout, the refresh tick, and the fan-out of ``state`` to
-each panel widget. Colours live in :mod:`theme`; the CSS below is built from
-those constants so the palette stays in one place.
-"""
+"""Textual application hosting the Artemis mission-control dashboard."""
 from __future__ import annotations
 
 from textual.app import App, ComposeResult
@@ -85,8 +79,9 @@ class ArtemisDashboardApp(App):
             yield FooterPanel(id='footer', classes='panel')
 
     def on_mount(self) -> None:
-        self.provider.update(self.state)
-        self._refresh_panels()
+        # Defer the first paint until the whole widget tree (including nested
+        # panel children) has mounted, then refresh on every tick.
+        self.call_after_refresh(self._tick)
         self.set_interval(1.0 / self.fps, self._tick)
 
     def _tick(self) -> None:

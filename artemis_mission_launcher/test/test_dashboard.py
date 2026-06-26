@@ -16,7 +16,7 @@ import asyncio
 
 from artemis_cli.dashboard.app import ArtemisDashboardApp
 from artemis_cli.dashboard.providers import MockProvider, SystemProvider
-from artemis_cli.dashboard.state import HISTORY, DashboardState
+from artemis_cli.dashboard.state import DashboardState, HISTORY
 
 
 def test_app_boots_and_has_panels():

@@ -17,8 +17,8 @@ from __future__ import annotations
 import random
 import time
 
-from ..state import DashboardState
 from .base import Provider
+from ..state import DashboardState
 
 
 def _walk(value: float, lo: float, hi: float, step: float) -> float:

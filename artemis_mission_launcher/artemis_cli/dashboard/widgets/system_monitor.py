@@ -18,6 +18,7 @@ from rich.table import Table
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.css.query import NoMatches
 from textual.widgets import Label, ProgressBar, Sparkline, Static
 
 from .. import theme
@@ -51,6 +52,7 @@ class SystemMonitorPanel(Horizontal):
 
     def on_mount(self) -> None:
         self.border_title = 'SYSTEM MONITOR'
+        self.update_state(self.app.state)   # initial paint; children now mounted
 
     def compose(self) -> ComposeResult:
         with Vertical(classes='mon-col'):
@@ -76,7 +78,11 @@ class SystemMonitorPanel(Horizontal):
             yield Sparkline([0.0], id='net-down-spark')
 
     def update_state(self, state: DashboardState) -> None:
-        self.query_one('#cpu-head', Static).update(
+        try:
+            cpu_head = self.query_one('#cpu-head', Static)
+        except NoMatches:
+            return   # children not mounted yet; on_mount/next tick will paint
+        cpu_head.update(
             _head('CPU USAGE', f'{state.cpu_percent:.1f} %', theme.OK))
         self.query_one('#cpu-spark', Sparkline).data = list(state.cpu_history)
 

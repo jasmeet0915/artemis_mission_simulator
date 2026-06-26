@@ -11,11 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Immutable-ish snapshot of everything the dashboard renders.
-
-Widgets receive a :class:`DashboardState` and never query psutil/ROS directly;
-providers own the data collection and mutate the state each tick.
-"""
+"""Immutable-ish snapshot of everything the dashboard renders each frame."""
 from __future__ import annotations
 
 from collections import deque

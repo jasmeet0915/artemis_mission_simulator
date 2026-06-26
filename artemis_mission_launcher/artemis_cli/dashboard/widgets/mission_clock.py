@@ -18,6 +18,7 @@ from rich.table import Table
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical
+from textual.css.query import NoMatches
 from textual.widgets import Digits, Label, ProgressBar, Static
 
 from .. import theme
@@ -51,6 +52,7 @@ class MissionClockPanel(Vertical):
 
     def on_mount(self) -> None:
         self.border_title = 'MISSION CLOCK'
+        self.update_state(self.app.state)   # initial paint; children now mounted
 
     def compose(self) -> ComposeResult:
         yield Label('', id='clock-date')
@@ -61,7 +63,11 @@ class MissionClockPanel(Vertical):
         yield ProgressBar(total=100, show_eta=False, id='solar-bar')
 
     def update_state(self, state: DashboardState) -> None:
-        self.query_one('#clock-date', Label).update(state.mission_date)
+        try:
+            date = self.query_one('#clock-date', Label)
+        except NoMatches:
+            return   # children not mounted yet; on_mount/next tick will paint
+        date.update(state.mission_date)
         self.query_one('#clock-digits', Digits).update(state.mission_clock)
         self.query_one('#clock-stats', Static).update(_stats(state))
         self.query_one('#solar-bar', ProgressBar).update(

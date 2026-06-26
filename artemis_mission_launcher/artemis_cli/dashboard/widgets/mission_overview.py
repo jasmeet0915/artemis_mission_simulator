@@ -29,12 +29,10 @@ _STARS = ((2, 1), (24, 2), (5, 11), (21, 9), (12, 0), (1, 6), (25, 6))
 
 
 def _radar(width: int, height: int) -> Text:
-    """A polar radar scope: range rings, crosshair, and a contact blip.
-
-    Cells are ~twice as tall as wide, so the horizontal radius is taken at the
-    full half-width while the vertical radius uses the half-height; this keeps
-    the rings looking round rather than squashed.
-    """
+    """Render a polar radar scope: range rings, crosshair and a contact blip."""
+    # Cells are ~twice as tall as wide, so the horizontal radius spans the full
+    # half-width while the vertical radius uses the half-height; this keeps the
+    # rings looking round rather than squashed.
     cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
     grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
 

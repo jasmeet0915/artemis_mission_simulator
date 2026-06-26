@@ -11,12 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Central colour palette and panel styling for the dashboard.
-
-Minimal cyan-on-black mission-control palette. Only the colours below are used
-anywhere in the UI; widgets must reference these names rather than hard-coding
-styles.
-"""
+"""Central neon-blue colour palette and panel styling for the dashboard."""
 from rich import box
 
 # --- palette (neon blue on a deep-blue black) ------------------------------

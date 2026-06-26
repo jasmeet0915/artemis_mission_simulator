@@ -11,12 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Self-contained block-letter banner font (no external font dependency).
-
-5x5 bitmaps drawn as three half-block (▀ ▄ █) rows, which keeps a near-square
-aspect in terminal cells. Covers A-Z, 0-9 and a few punctuation marks — enough
-for the ARTEMIS wordmark and the mission clock.
-"""
+"""Self-contained 5x5 block-letter banner font (no external font dependency)."""
 from __future__ import annotations
 
 from rich.text import Text

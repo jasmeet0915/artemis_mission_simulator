@@ -19,8 +19,8 @@ import time
 
 import psutil
 
-from ..state import DashboardState
 from .base import Provider
+from ..state import DashboardState
 
 _GIB = 1024 ** 3
 
