@@ -49,12 +49,11 @@ def _right(state: DashboardState) -> RenderableType:
     grid.add_row('⊙ UPTIME', Text(state.uptime, style=theme.PRIMARY))
     grid.add_row('◆ HOST', Text(state.hostname, style=theme.OK))
     return Panel(grid, box=theme.BOX, border_style=theme.BORDER,
-                 padding=(0, 1), style=theme.ON_BG)
+                 padding=(0, 1))
 
 
 def render(state: DashboardState) -> RenderableType:
     grid = Table.grid(expand=True)
-    grid.style = theme.ON_BG
     grid.add_column(justify='left', ratio=5)
     grid.add_column(justify='center', ratio=6)
     grid.add_column(justify='right', ratio=4)

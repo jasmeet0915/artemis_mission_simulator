@@ -29,10 +29,6 @@ MUTED = '#8aa6c8'         # labels and secondary text (blue-grey)
 FAINT = '#2b4a6f'         # borders, axes, grid, separators (dim blue)
 WHITE = '#e6f0ff'
 
-# --- background hue --------------------------------------------------------
-BG = '#060c18'            # deep blue-black panel/background tint
-ON_BG = f'on {BG}'
-
 # --- chrome ----------------------------------------------------------------
 BOX = box.ROUNDED
 BORDER = FAINT

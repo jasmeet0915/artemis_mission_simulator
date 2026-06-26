@@ -111,4 +111,4 @@ def render(state: DashboardState) -> RenderableType:
     grid.add_row(*renderables)
     return Panel(grid, title=Text('SYSTEM MONITOR', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 1), style=theme.ON_BG)
+                 border_style=theme.BORDER, padding=(1, 1))

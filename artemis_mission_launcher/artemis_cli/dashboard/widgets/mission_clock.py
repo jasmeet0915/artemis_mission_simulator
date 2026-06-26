@@ -49,7 +49,7 @@ def _solar(state: DashboardState) -> RenderableType:
 
 def render(state: DashboardState) -> RenderableType:
     body = Group(
-        big_text(state.mission_date, style=f'bold {theme.ACCENT}'),
+        Text(state.mission_date, style=f'bold {theme.PRIMARY}'),
         big_text(state.mission_clock, style=f'bold {theme.ACCENT}'),
         Text('UTC', style=theme.MUTED),
         Rule(style=theme.FAINT),
@@ -59,4 +59,4 @@ def render(state: DashboardState) -> RenderableType:
     )
     return Panel(body, title=Text('MISSION CLOCK', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 2), style=theme.ON_BG)
+                 border_style=theme.BORDER, padding=(1, 2))

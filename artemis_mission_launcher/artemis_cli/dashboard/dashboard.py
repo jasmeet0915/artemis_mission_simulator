@@ -22,14 +22,13 @@ from rich.layout import Layout
 from rich.live import Live
 from rich.text import Text
 
-from . import theme
 from .providers import Provider
 from .state import DashboardState
 from .widgets import footer, header, mission_clock, mission_overview, system_monitor
 
 
 def _spacer() -> Text:
-    return Text(' ', style=theme.ON_BG)
+    return Text(' ')
 
 
 def build_layout(state: DashboardState) -> Layout:

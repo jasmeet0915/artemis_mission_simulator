@@ -25,51 +25,56 @@ from rich.text import Text
 from .. import theme
 from ..state import DashboardState
 
-# (x, y, radius) craters in normalised disc coordinates.
-_CRATERS = ((-0.30, -0.18, 0.17), (-0.04, 0.30, 0.13), (0.20, -0.30, 0.11),
-            (-0.44, 0.22, 0.10), (0.30, 0.20, 0.12), (0.06, -0.02, 0.07))
-_SURF = ' ·:∘oO'          # moon-surface brightness ramp
-_RINGS = (0.34, 0.67, 1.0)
-_SPOKES = tuple(range(0, 360, 30))
+# Fixed background starfield (x, y) positions.
+_STARS = ((2, 1), (7, 9), (23, 2), (25, 10), (19, 1), (5, 11), (21, 7),
+          (12, 0), (1, 5), (16, 12))
+_BRIGHT_STARS = ((25, 4), (3, 10), (14, 1))
 
 
-def _moon_plot(width: int, height: int) -> Text:
-    """Shaded lunar disc (lit on the left) under a polar graticule + compass."""
+def _orbit(width: int, height: int) -> Text:
+    """A mission-control orbital scope: planet, elliptical orbit, spacecraft."""
     cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
-    rx, ry = (width - 1) / 2.0, (height - 1) / 2.0
     grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
 
+    def put(x: float, y: float, ch: str, st: str) -> None:
+        xi, yi = int(round(x)), int(round(y))
+        if 0 <= xi < width and 0 <= yi < height:
+            grid[yi][xi] = (ch, st)
+
+    for sx, sy in _STARS:
+        put(sx, sy, '·', theme.FAINT)
+    for sx, sy in _BRIGHT_STARS:
+        put(sx, sy, '✦', theme.MUTED)
+
+    # elliptical orbit path (dotted)
+    a, b = (width - 1) / 2.0 * 0.94, (height - 1) / 2.0 * 0.80
+    for i in range(180):
+        t = 2.0 * math.pi * i / 180.0
+        put(cx + a * math.cos(t), cy + b * math.sin(t), '·', theme.PRIMARY)
+
+    # central body — a small lit planet at the focus
     for y in range(height):
         for x in range(width):
-            nx = (x - cx) / rx if rx else 0.0
-            ny = (y - cy) / ry if ry else 0.0
-            dist = math.hypot(nx, ny)
-            if dist > 1.0:
-                continue
-            bright = 0.78 - 0.36 * nx                     # waxing-gibbous look
-            for ccx, ccy, cr in _CRATERS:
-                if math.hypot(nx - ccx, ny - ccy) < cr:
-                    bright -= 0.4
-            bright = min(max(bright, 0.12), 1.0)          # faint floor: full disc
-            ch = _SURF[int(bright * (len(_SURF) - 1))]
-            grid[y][x] = (ch, theme.MUTED if bright > 0.45 else theme.FAINT)
+            dx, dy = (x - cx) / 2.6, (y - cy) / 1.4
+            if dx * dx + dy * dy <= 1.0:
+                lit = 0.6 - 0.55 * dx
+                if lit > 0.62:
+                    grid[y][x] = ('●', f'bold {theme.ACCENT}')
+                elif lit > 0.4:
+                    grid[y][x] = ('●', theme.PRIMARY)
+                else:
+                    grid[y][x] = ('◗', theme.FAINT)
 
-            ang = math.degrees(math.atan2(ny, nx)) % 360
-            on_ring = any(abs(dist - r) < 0.05 for r in _RINGS)
-            on_spoke = dist > 0.12 and min(
-                (abs(ang - s) for s in _SPOKES + (360,))) < 2.2
-            if on_ring or on_spoke:
-                grid[y][x] = ('·', theme.FAINT)
-
-    def put(x: int, y: int, ch: str, st: str) -> None:
-        if 0 <= x < width and 0 <= y < height:
-            grid[y][x] = (ch, st)
-
-    put(int(round(cx)), int(round(cy)), '◉', f'bold {theme.ACCENT}')
-    put(int(round(cx)), 0, 'N', theme.PRIMARY)
-    put(int(round(cx)), height - 1, 'S', theme.PRIMARY)
-    put(width - 1, int(round(cy)), 'E', theme.PRIMARY)
-    put(0, int(round(cy)), 'W', theme.PRIMARY)
+    # spacecraft marker on the orbit, with a short fading trail
+    t0 = -0.7
+    for k, (ch, st) in enumerate(
+            ((' ', ''), ('·', theme.MUTED), ('·', theme.FAINT))):
+        if k == 0:
+            put(cx + a * math.cos(t0), cy + b * math.sin(t0),
+                '◆', f'bold {theme.ACCENT}')
+        else:
+            tt = t0 - 0.13 * k
+            put(cx + a * math.cos(tt), cy + b * math.sin(tt), ch, st)
 
     text = Text()
     for r, row in enumerate(grid):
@@ -105,8 +110,8 @@ def render(state: DashboardState) -> RenderableType:
     body.add_column(justify='center', ratio=2)
     body.add_row(
         Align(_fields(state), vertical='middle'),
-        Align(_moon_plot(27, 13), vertical='middle'),
+        Align(_orbit(27, 13), vertical='middle'),
     )
     return Panel(body, title=Text('MISSION OVERVIEW', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 1), style=theme.ON_BG)
+                 border_style=theme.BORDER, padding=(1, 1))
