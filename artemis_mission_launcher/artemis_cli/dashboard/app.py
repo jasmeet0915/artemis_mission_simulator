@@ -22,11 +22,11 @@ from __future__ import annotations
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Static
 
 from . import theme
 from .providers import Provider
 from .state import DashboardState
+from .widgets.footer import FooterPanel
 from .widgets.header import StatusPanel, WelcomeCard, WordmarkPanel
 from .widgets.mission_clock import MissionClockPanel
 from .widgets.mission_overview import MissionOverviewPanel
@@ -82,7 +82,7 @@ class ArtemisDashboardApp(App):
                 yield MissionOverviewPanel(id='overview', classes='panel')
                 yield MissionClockPanel(id='clock', classes='panel')
             yield SystemMonitorPanel(id='monitor', classes='panel')
-            yield Static('', id='footer', classes='panel')
+            yield FooterPanel(id='footer', classes='panel')
 
     def on_mount(self) -> None:
         self.provider.update(self.state)

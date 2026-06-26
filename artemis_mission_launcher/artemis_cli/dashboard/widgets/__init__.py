@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Stateless rendering widgets. Each module exposes ``render(state)``."""
+"""Textual panel widgets. Each panel exposes ``update_state(state)``."""
 from . import footer, header, mission_clock, mission_overview, system_monitor
 
 __all__ = ['header', 'mission_overview', 'mission_clock', 'system_monitor',

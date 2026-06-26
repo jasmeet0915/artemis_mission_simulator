@@ -11,25 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Footer widget: one centred status line."""
+"""Footer widget: one centred framework status line."""
 from __future__ import annotations
 
-from rich.console import RenderableType
-from rich.table import Table
 from rich.text import Text
+from textual.widgets import Static
 
 from .. import theme
 from ..state import DashboardState
 
 
-def render(state: DashboardState) -> RenderableType:
-    framework = Text.assemble(
-        ('ARTEMIS DIGITAL TWIN FRAMEWORK', f'bold {theme.PRIMARY}'),
-        ('    ·    ', theme.FAINT),
-        ('ROS 2 | Gazebo | SPICE | Lunar Robotics', theme.MUTED))
-    grid = Table.grid(expand=True)
-    grid.add_column(justify='left', ratio=1)
-    grid.add_column(justify='center')
-    grid.add_column(justify='right', ratio=1)
-    grid.add_row('', framework, Text('Press Ctrl+C to exit', style=theme.FAINT))
-    return grid
+class FooterPanel(Static):
+    """Single centred line naming the framework and the press-to-exit hint."""
+
+    def update_state(self, state: DashboardState) -> None:
+        line = Text(justify='center')
+        line.append('ARTEMIS DIGITAL TWIN FRAMEWORK', style=f'bold {theme.PRIMARY}')
+        line.append('    ·    ', style=theme.FAINT)
+        line.append('ROS 2 | Gazebo | SPICE | Lunar Robotics', style=theme.MUTED)
+        line.append('    ·    ', style=theme.FAINT)
+        line.append('press q to exit', style=theme.FAINT)
+        self.update(line)
