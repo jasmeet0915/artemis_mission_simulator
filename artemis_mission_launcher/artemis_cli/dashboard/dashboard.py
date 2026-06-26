@@ -20,20 +20,32 @@ from typing import Optional
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
+from rich.text import Text
 
+from . import theme
 from .providers import Provider
 from .state import DashboardState
 from .widgets import footer, header, mission_clock, mission_overview, system_monitor
 
 
+def _spacer() -> Text:
+    return Text(' ', style=theme.ON_BG)
+
+
 def build_layout(state: DashboardState) -> Layout:
-    """Compose the full dashboard for one frame."""
+    """Compose the full dashboard for one frame.
+
+    Top/bottom flexible spacers vertically centre the fixed-height content and
+    give the console a margin so the dashboard does not hug the top edge.
+    """
     root = Layout()
     root.split_column(
+        Layout(_spacer(), name='top', ratio=1),
         Layout(header.render(state), name='header', size=7),
-        Layout(name='main', size=13),
+        Layout(name='main', size=16),
         Layout(system_monitor.render(state), name='monitor', size=13),
         Layout(footer.render(state), name='footer', size=1),
+        Layout(_spacer(), name='bottom', ratio=1),
     )
     root['main'].split_row(
         Layout(mission_overview.render(state), name='overview', ratio=53),

@@ -22,6 +22,7 @@ from rich.text import Text
 
 from .. import theme
 from ..state import DashboardState
+from .glyphs import big_text
 from .sparklines import hbar
 
 
@@ -47,10 +48,9 @@ def _solar(state: DashboardState) -> RenderableType:
 
 
 def render(state: DashboardState) -> RenderableType:
-    clock = Text(f'{state.mission_date}  {state.mission_clock}',
-                 style=f'bold {theme.ACCENT}')
     body = Group(
-        clock,
+        big_text(state.mission_date, style=f'bold {theme.ACCENT}'),
+        big_text(state.mission_clock, style=f'bold {theme.ACCENT}'),
         Text('UTC', style=theme.MUTED),
         Rule(style=theme.FAINT),
         _stats(state),
@@ -59,4 +59,4 @@ def render(state: DashboardState) -> RenderableType:
     )
     return Panel(body, title=Text('MISSION CLOCK', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 2))
+                 border_style=theme.BORDER, padding=(1, 2), style=theme.ON_BG)

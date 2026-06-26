@@ -22,40 +22,12 @@ from rich.text import Text
 
 from .. import theme
 from ..state import DashboardState
-
-# 5-row block bitmaps; drawn as 3 half-block rows so the wordmark stays legible.
-_GLYPHS = {
-    'A': ('01110', '10001', '11111', '10001', '10001'),
-    'E': ('11111', '10000', '11110', '10000', '11111'),
-    'I': ('11111', '00100', '00100', '00100', '11111'),
-    'M': ('10001', '11011', '10101', '10001', '10001'),
-    'R': ('11110', '10001', '11110', '10010', '10001'),
-    'S': ('01111', '10000', '01110', '00001', '11110'),
-    'T': ('11111', '00100', '00100', '00100', '00100'),
-    ' ': ('00000', '00000', '00000', '00000', '00000'),
-}
-_HALF = {(0, 0): ' ', (1, 0): '▀', (0, 1): '▄', (1, 1): '█'}
-
-
-def _big(text: str) -> str:
-    glyphs = [_GLYPHS.get(c, _GLYPHS[' ']) for c in text.upper()]
-    rows = []
-    for top in range(0, 6, 2):
-        cells = []
-        for g in glyphs:
-            up = g[top] if top < len(g) else '00000'
-            lo = g[top + 1] if top + 1 < len(g) else '00000'
-            cells.append(''.join(_HALF[(int(up[c]), int(lo[c]))] for c in range(5)))
-        rows.append(' '.join(cells))
-    return '\n'.join(rows)
-
-
-_ARTEMIS = _big('ARTEMIS')
+from .glyphs import big_text
 
 
 def _left() -> RenderableType:
     return Group(
-        Text(_ARTEMIS, style=f'bold {theme.ACCENT}'),
+        big_text('ARTEMIS', style=f'bold {theme.ACCENT}'),
         Text('MISSION LAUNCHER      v1.0.0', style=theme.MUTED),
     )
 
@@ -77,11 +49,12 @@ def _right(state: DashboardState) -> RenderableType:
     grid.add_row('⊙ UPTIME', Text(state.uptime, style=theme.PRIMARY))
     grid.add_row('◆ HOST', Text(state.hostname, style=theme.OK))
     return Panel(grid, box=theme.BOX, border_style=theme.BORDER,
-                 padding=(0, 1))
+                 padding=(0, 1), style=theme.ON_BG)
 
 
 def render(state: DashboardState) -> RenderableType:
     grid = Table.grid(expand=True)
+    grid.style = theme.ON_BG
     grid.add_column(justify='left', ratio=5)
     grid.add_column(justify='center', ratio=6)
     grid.add_column(justify='right', ratio=4)

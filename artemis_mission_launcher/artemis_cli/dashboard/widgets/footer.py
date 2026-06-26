@@ -28,6 +28,7 @@ def render(state: DashboardState) -> RenderableType:
         ('    ·    ', theme.FAINT),
         ('ROS 2 | Gazebo | SPICE | Lunar Robotics', theme.MUTED))
     grid = Table.grid(expand=True)
+    grid.style = theme.ON_BG
     grid.add_column(justify='left', ratio=1)
     grid.add_column(justify='center')
     grid.add_column(justify='right', ratio=1)

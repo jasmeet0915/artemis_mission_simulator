@@ -14,6 +14,8 @@
 """Mission Overview panel: site metadata + a polar south-pole moon plot."""
 from __future__ import annotations
 
+import math
+
 from rich.align import Align
 from rich.console import RenderableType
 from rich.panel import Panel
@@ -23,38 +25,51 @@ from rich.text import Text
 from .. import theme
 from ..state import DashboardState
 
-_CRATERS = ((0.34, -0.28), (-0.42, 0.18), (0.12, 0.46),
-            (-0.22, -0.44), (0.46, 0.22), (-0.05, -0.12))
+# (x, y, radius) craters in normalised disc coordinates.
+_CRATERS = ((-0.30, -0.18, 0.17), (-0.04, 0.30, 0.13), (0.20, -0.30, 0.11),
+            (-0.44, 0.22, 0.10), (0.30, 0.20, 0.12), (0.06, -0.02, 0.07))
+_SURF = ' ·:∘oO'          # moon-surface brightness ramp
+_RINGS = (0.34, 0.67, 1.0)
+_SPOKES = tuple(range(0, 360, 30))
 
 
-def _polar(width: int, height: int) -> Text:
-    """A compass/polar disc: ring, crosshair, craters, centred site marker."""
+def _moon_plot(width: int, height: int) -> Text:
+    """Shaded lunar disc (lit on the left) under a polar graticule + compass."""
     cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
     rx, ry = (width - 1) / 2.0, (height - 1) / 2.0
     grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
+
     for y in range(height):
         for x in range(width):
-            dx = (x - cx) / rx if rx else 0.0
-            dy = (y - cy) / ry if ry else 0.0
-            dist = (dx * dx + dy * dy) ** 0.5
-            if 0.86 <= dist <= 1.04:
-                grid[y][x] = ('◦', theme.PRIMARY)        # outer ring
-            elif 0.44 <= dist <= 0.56:
-                grid[y][x] = ('·', theme.FAINT)          # inner ring
-            elif dist < 0.86 and (abs(x - cx) < 0.55 or abs(y - cy) < 0.55):
-                grid[y][x] = ('·', theme.FAINT)          # crosshair
+            nx = (x - cx) / rx if rx else 0.0
+            ny = (y - cy) / ry if ry else 0.0
+            dist = math.hypot(nx, ny)
+            if dist > 1.0:
+                continue
+            bright = 0.78 - 0.36 * nx                     # waxing-gibbous look
+            for ccx, ccy, cr in _CRATERS:
+                if math.hypot(nx - ccx, ny - ccy) < cr:
+                    bright -= 0.4
+            bright = min(max(bright, 0.12), 1.0)          # faint floor: full disc
+            ch = _SURF[int(bright * (len(_SURF) - 1))]
+            grid[y][x] = (ch, theme.MUTED if bright > 0.45 else theme.FAINT)
+
+            ang = math.degrees(math.atan2(ny, nx)) % 360
+            on_ring = any(abs(dist - r) < 0.05 for r in _RINGS)
+            on_spoke = dist > 0.12 and min(
+                (abs(ang - s) for s in _SPOKES + (360,))) < 2.2
+            if on_ring or on_spoke:
+                grid[y][x] = ('·', theme.FAINT)
 
     def put(x: int, y: int, ch: str, st: str) -> None:
         if 0 <= x < width and 0 <= y < height:
             grid[y][x] = (ch, st)
 
-    for fx, fy in _CRATERS:
-        put(int(round(cx + fx * rx)), int(round(cy + fy * ry)), '∘', theme.MUTED)
-    put(int(round(cx)), int(round(cy)), '◉', theme.ACCENT)
-    put(int(round(cx)), 0, 'N', theme.MUTED)
-    put(int(round(cx)), height - 1, 'S', theme.MUTED)
-    put(width - 1, int(round(cy)), 'E', theme.MUTED)
-    put(0, int(round(cy)), 'W', theme.MUTED)
+    put(int(round(cx)), int(round(cy)), '◉', f'bold {theme.ACCENT}')
+    put(int(round(cx)), 0, 'N', theme.PRIMARY)
+    put(int(round(cx)), height - 1, 'S', theme.PRIMARY)
+    put(width - 1, int(round(cy)), 'E', theme.PRIMARY)
+    put(0, int(round(cy)), 'W', theme.PRIMARY)
 
     text = Text()
     for r, row in enumerate(grid):
@@ -90,8 +105,8 @@ def render(state: DashboardState) -> RenderableType:
     body.add_column(justify='center', ratio=2)
     body.add_row(
         Align(_fields(state), vertical='middle'),
-        Align(_polar(21, 11), vertical='middle'),
+        Align(_moon_plot(27, 13), vertical='middle'),
     )
     return Panel(body, title=Text('MISSION OVERVIEW', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
-                 border_style=theme.BORDER, padding=(1, 1))
+                 border_style=theme.BORDER, padding=(1, 1), style=theme.ON_BG)

@@ -19,15 +19,19 @@ styles.
 """
 from rich import box
 
-# --- palette ---------------------------------------------------------------
-PRIMARY = 'cyan'          # default content / values / clock
-ACCENT = 'bright_cyan'    # emphasis (titles, big text, live highlights)
-OK = 'green'              # nominal / good values
-WARN = 'yellow'          # warnings / acceleration
-ERR = 'red'               # errors
-MUTED = 'grey70'          # labels and secondary text
-FAINT = 'grey37'          # borders, axes, separators
-WHITE = 'white'
+# --- palette (neon blue on a deep-blue black) ------------------------------
+PRIMARY = '#2e9bff'       # default content / values / clock (neon blue)
+ACCENT = '#6cc4ff'        # emphasis (titles, big text, live highlights)
+OK = '#4ade80'            # nominal / good values
+WARN = '#facc15'         # warnings / acceleration
+ERR = '#f87171'           # errors
+MUTED = '#8aa6c8'         # labels and secondary text (blue-grey)
+FAINT = '#2b4a6f'         # borders, axes, grid, separators (dim blue)
+WHITE = '#e6f0ff'
+
+# --- background hue --------------------------------------------------------
+BG = '#060c18'            # deep blue-black panel/background tint
+ON_BG = f'on {BG}'
 
 # --- chrome ----------------------------------------------------------------
 BOX = box.ROUNDED
