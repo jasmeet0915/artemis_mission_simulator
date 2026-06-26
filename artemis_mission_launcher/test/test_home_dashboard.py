@@ -40,7 +40,7 @@ def _render_text(metrics):
         metrics=metrics,
         history=history,
     )
-    console = Console(width=130, height=42, record=True)
+    console = Console(width=170, height=48, record=True)
     console.print(frame)
     return console.export_text()
 
@@ -57,12 +57,13 @@ def test_sparkline_empty_is_blank_width():
     assert sparkline([], width=5) == ' ' * 5
 
 
-def test_frame_shows_welcome_site_clock_and_labels():
+def test_frame_shows_titles_and_metric_labels():
     text = _render_text(_metrics())
-    assert 'WELCOME, COMMANDER' in text
-    assert 'lunar_empty' in text
-    assert '2026-06-23T12:00:09Z' in text
-    for label in ('CPU', 'MEM', 'TEMP', 'DISK', 'NET', 'UPTIME'):
+    assert 'MISSION STATUS' in text
+    assert 'SYSTEM OVERVIEW' in text
+    assert 'CURRENT SITE' in text
+    assert 'T+ ELAPSED' in text
+    for label in ('CPU', 'MEMORY', 'TEMP', 'DISK', 'NETWORK', 'UPTIME'):
         assert label in text
 
 

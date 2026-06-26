@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Render the mission-control dashboard frame (pure, no I/O)."""
+from artemis_cli.home.render import block_text, line_graph
 from artemis_cli.utils.epoch import format_iso
+from rich import box
 from rich.align import Align
 from rich.layout import Layout
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -27,15 +30,8 @@ _WARN = 'yellow'
 _VERSION = '0.1.0'
 
 _BLOCKS = '▁▂▃▄▅▆▇█'
-
-_BANNER_LINES = (
-    '  _    ____ _____ _____ __  __ ___ ____',
-    ' / \\  |  _ \\_   _| ____|  \\/  |_ _/ ___|',
-    '/ _ \\ | |_) || | |  _| | |\\/| || |\\___ \\',
-    '/ ___ \\|  _ < | | | |___| |  | || | ___) |',
-    '/_/   \\_\\_| \\_\\|_| |_____|_|  |_|___|____/',
-)
-_BANNER = '\n'.join(_BANNER_LINES)
+_GRAPH_W = 18
+_GRAPH_H = 2
 
 
 def sparkline(values, width, vmax=None):
@@ -72,70 +68,100 @@ def _status(metrics):
     return ('NOMINAL', _OK)
 
 
-def _header(status_text, status_style):
+def _header():
     grid = Table.grid(expand=True)
     grid.add_column(justify='left')
-    grid.add_column(justify='center')
     grid.add_column(justify='right')
     grid.add_row(
         Text('ARTEMIS // MISSION CONTROL', style=f'bold {_CYAN}'),
-        Text('WELCOME, COMMANDER', style=f'bold {_ACCENT}'),
-        Text.assemble((f'● {status_text}', status_style),
-                      (f'  ·  v{_VERSION}', _DIM)),
+        Text(f'v{_VERSION}', style=_DIM),
     )
     return grid
 
 
-def _mission_panel(site, clock_iso, tplus):
-    grid = Table.grid(padding=(0, 3))
-    grid.add_column(style=_DIM, justify='left')
-    grid.add_column(style=_ACCENT, justify='left')
-    grid.add_row('MISSION CLOCK', f'{clock_iso} ⟳')
-    grid.add_row('T+ ELAPSED', tplus)
-    grid.add_row('SITE', site)
-    return Panel(grid, title='MISSION', title_align='left',
-                 border_style=_CYAN, padding=(1, 2))
+def _mission_panel(site, date_str, time_str, epoch_total, tplus,
+                   status_text, status_style):
+    body = Table.grid(padding=(0, 0))
+    body.add_column()
+    body.add_row(Text(date_str, style=_DIM))
+    body.add_row(block_text(time_str, style=f'bold {_CYAN}'))
+    body.add_row(Text(''))
+    body.add_row(Text(f'{epoch_total:,} s', style=_DIM))
+    body.add_row(Text.assemble(('T+ ELAPSED  ', _DIM), (tplus, _ACCENT)))
+    body.add_row(Rule(style=_DIM))
+    body.add_row(Text('CURRENT SITE', style=_DIM))
+    body.add_row(block_text(site.upper(), style=f'bold {_ACCENT}', gap=0))
+    title = Text.assemble(('MISSION STATUS  ', f'bold {_CYAN}'),
+                          (f'● {status_text}', status_style))
+    return Panel(body, title=title, title_align='left',
+                 border_style=_DIM, box=box.SQUARE, padding=(1, 2))
+
+
+def _welcome():
+    inner = Table.grid()
+    inner.add_column(justify='center')
+    inner.add_row(Text(''))
+    inner.add_row(block_text('WELCOME', style=f'bold {_ACCENT}'))
+    inner.add_row(Text(''))
+    inner.add_row(block_text('COMMANDER', style=f'bold {_ACCENT}'))
+    return Align.center(inner, vertical='top')
 
 
 def _systems_panel(metrics, history):
-    grid = Table.grid(padding=(0, 2))
-    grid.add_column(style=_DIM, justify='left', min_width=6)
-    grid.add_column(style=_CYAN, justify='left')
-    grid.add_column(style=_ACCENT, justify='left')
+    grid = Table.grid(padding=(1, 2))
+    grid.add_column(style=_DIM, justify='left', min_width=8)
+    grid.add_column(justify='left')
+    grid.add_column(style=_ACCENT, justify='right')
     temp_val = '--' if metrics.temp_c is None else f'{metrics.temp_c:.0f} °C'
-    grid.add_row('CPU', sparkline(history.get('cpu', []), 12, vmax=100),
-                 f'{metrics.cpu_pct:.0f}%')
-    grid.add_row('MEM', sparkline(history.get('mem', []), 12, vmax=100),
-                 f'{metrics.mem_used_gb:.1f}/{metrics.mem_total_gb:.1f} GB '
-                 f'({metrics.mem_pct:.0f}%)')
-    grid.add_row('TEMP', sparkline(history.get('temp', []), 12, vmax=100),
-                 temp_val)
-    grid.add_row('DISK', _bar(metrics.disk_pct, 12), f'{metrics.disk_pct:.0f}%')
-    grid.add_row('NET', sparkline(history.get('net', []), 12),
-                 f'↑{metrics.net_up_kbs:.1f}  ↓{metrics.net_down_kbs:.1f} KB/s')
-    grid.add_row('UPTIME', '', f'{metrics.uptime_s / 3600.0:.1f} h')
-    return Panel(grid, title='SYSTEMS', title_align='left',
-                 border_style=_CYAN, padding=(1, 2))
+    grid.add_row(
+        'CPU',
+        line_graph(history.get('cpu', []), _GRAPH_W, _GRAPH_H,
+                   vmax=100, style=_CYAN),
+        f'{metrics.cpu_pct:.0f}%')
+    grid.add_row(
+        'MEMORY',
+        Text(_bar(metrics.mem_pct, _GRAPH_W), style=_CYAN),
+        f'{metrics.mem_used_gb:.1f}/{metrics.mem_total_gb:.1f} GB')
+    grid.add_row(
+        'TEMP',
+        line_graph(history.get('temp', []), _GRAPH_W, _GRAPH_H,
+                   vmax=100, style=_CYAN),
+        temp_val)
+    grid.add_row(
+        'DISK',
+        Text(_bar(metrics.disk_pct, _GRAPH_W), style=_CYAN),
+        f'{metrics.disk_pct:.0f}%')
+    grid.add_row(
+        'NETWORK',
+        line_graph(history.get('net', []), _GRAPH_W, _GRAPH_H, style=_CYAN),
+        f'↑{metrics.net_up_kbs:.1f} ↓{metrics.net_down_kbs:.1f}')
+    grid.add_row('UPTIME', Text(''), f'{metrics.uptime_s / 3600.0:.1f} h')
+    return Panel(grid, title='SYSTEM OVERVIEW', title_align='left',
+                 border_style=_DIM, box=box.SQUARE, padding=(1, 2))
 
 
 def render_frame(*, site, epoch_sec, elapsed_s, metrics, history):
     """Assemble the full dashboard as a rich Layout for the given sample."""
-    clock_iso = format_iso(epoch_sec + int(elapsed_s))
+    epoch_total = epoch_sec + int(elapsed_s)
+    clock_iso = format_iso(epoch_total)
+    date_str, time_part = clock_iso.split('T')
+    time_str = time_part.rstrip('Z')
     status_text, status_style = _status(metrics)
 
-    banner = Align.center(Text(_BANNER, style=f'bold {_CYAN}'))
     footer = Align.center(Text(
         'Ctrl-b 1 → simulation     ·     Ctrl-C → abort mission', style=_DIM))
 
     layout = Layout()
     layout.split_column(
-        Layout(_header(status_text, status_style), name='header', size=1),
-        Layout(banner, name='banner', size=6),
+        Layout(_header(), name='header', size=1),
         Layout(name='body'),
         Layout(footer, name='footer', size=1),
     )
     layout['body'].split_row(
-        Layout(_mission_panel(site, clock_iso, _hms(elapsed_s)), name='mission'),
+        Layout(_mission_panel(site, date_str, time_str, epoch_total,
+                              _hms(elapsed_s), status_text, status_style),
+               name='mission'),
+        Layout(_welcome(), name='welcome'),
         Layout(_systems_panel(metrics, history), name='systems'),
     )
     return layout
