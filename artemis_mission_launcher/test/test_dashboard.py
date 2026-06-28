@@ -30,11 +30,90 @@ def test_layout_contains_all_panels_and_labels():
     MockProvider().update(state)
     text = _render(state)
     for token in ('ARTEMIS', 'Welcome, Commander', 'UTC TIME', 'HOST',
-                  'MISSION OVERVIEW', 'SITE', 'COORDINATES', 'SUN ELEVATION',
+                  'MISSION OVERVIEW', 'SITE', 'COORDINATES', 'ELEVATION',
                   'MISSION CLOCK', 'SIM TIME ELAPSED', 'TIME ACCELERATION',
-                  'SOLAR DAY', 'SYSTEM MONITOR', 'CPU USAGE', 'MEMORY USAGE',
+                  'SYSTEM MONITOR', 'CPU USAGE', 'MEMORY USAGE',
                   'GPU USAGE', 'DISK USAGE', 'NETWORK', 'Press Ctrl+C to exit'):
         assert token in text, token
+    for absent in ('SUN ELEVATION', 'EARTH VISIBILITY', 'CURRENT PHASE',
+                   'SOLAR DAY'):
+        assert absent not in text, absent
+
+
+def test_satellite_glyph_is_aligned():
+    from rich.cells import cell_len
+    from artemis_cli.dashboard.widgets.mission_overview import _satellite
+    lines = _satellite().plain.split('\n')
+    # left wing top cap sits directly above the wing body
+    assert lines[0].index('┌') == lines[1].index('│')
+    # bus joint, mast, and antenna share one column
+    bus = lines[4].index('┬')
+    assert lines[7].index('│') == bus
+    assert lines[8].index('°') == bus
+    # every row has identical cell width so per-line centring cannot skew it
+    widths = {cell_len(line) for line in lines}
+    assert len(widths) == 1, widths
+
+
+def test_satellite_stays_aligned_when_rendered():
+    """Rendered glyph must stay aligned (centring inside the panel)."""
+    import re
+    from artemis_cli.dashboard.widgets import mission_overview
+    state = DashboardState()
+    MockProvider().update(state)
+    for width in (76, 79, 80, 83):
+        console = Console(width=width, height=20, record=True)
+        console.print(mission_overview.render(state))
+        rows = console.export_text().split('\n')
+        cap = body = bus = ant = None
+        for line in rows:
+            if '┌───┐' in line and '▦' not in line:
+                cap = line.index('┌')
+            if line.count('▦') >= 6 and '┬' not in line and '┌' not in line \
+                    and '└' not in line:
+                body = [m.start() for m in re.finditer('│', line)][1]
+            if '┬' in line:
+                bus = line.index('┬')
+            if '((' in line:
+                ant = line.index('°')
+        assert cap == body, (width, 'cap', cap, 'body', body)
+        assert bus == ant, (width, 'bus', bus, 'antenna', ant)
+
+
+def _render_fixed(renderable, width, height):
+    from rich.layout import Layout
+    console = Console(width=width, height=height, record=True)
+    console.print(Layout(renderable))
+    return console.export_text(clear=False).split('\n')[:height]
+
+
+def test_starfield_fills_region_dimensions():
+    from artemis_cli.dashboard.widgets.starfield import Starfield
+    lines = _render_fixed(Starfield(seed=1), width=24, height=6)
+    assert len(lines) == 6
+    assert all(len(line) == 24 for line in lines)
+
+
+def test_starfield_is_deterministic_for_a_region():
+    from artemis_cli.dashboard.widgets.starfield import Starfield
+    a = _render_fixed(Starfield(seed=1), 30, 8)
+    b = _render_fixed(Starfield(seed=1), 30, 8)
+    assert a == b                      # identical => no per-frame flicker
+
+
+def test_starfield_is_sparse_but_present():
+    from artemis_cli.dashboard.widgets.starfield import Starfield
+    lines = _render_fixed(Starfield(seed=1, density=0.05), 40, 20)
+    cells = ''.join(lines)
+    stars = sum(1 for c in cells if c != ' ')
+    fraction = stars / len(cells)
+    assert 0.0 < fraction < 0.15       # some stars, not dense
+
+
+def test_starfield_seeds_differ_between_regions():
+    from artemis_cli.dashboard.widgets.starfield import Starfield
+    assert _render_fixed(Starfield(seed=1), 30, 8) \
+        != _render_fixed(Starfield(seed=2), 30, 8)
 
 
 def test_mock_provider_fills_sane_values():

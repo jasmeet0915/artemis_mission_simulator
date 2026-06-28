@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Mission Overview panel: site metadata + a mission-control radar scope."""
+"""Mission Overview panel: site metadata + a satellite over a starfield."""
 from __future__ import annotations
-
-import math
 
 from rich.align import Align
 from rich.console import RenderableType
@@ -25,63 +23,62 @@ from rich.text import Text
 from .. import theme
 from ..state import DashboardState
 
-# Faint background starfield (x, y) positions for the radar scope.
-_STARS = ((2, 1), (24, 2), (5, 11), (21, 9), (12, 0), (1, 6), (25, 6))
+_PANEL = theme.PRIMARY            # solar-array cells
+_FRAME = theme.MUTED              # panel / bus framing
+_BUS = f'bold {theme.ACCENT}'     # central body + sensor
+_BOOM = theme.FAINT               # booms, mast, stars
+_SIGNAL = f'bold {theme.WARN}'    # transmitting antenna
+
+# Satellite drawn as styled segments per row: two solar-array wings on booms
+# flanking a central bus with a sensor eye, and a downlink antenna below.
+_SAT = (
+    (('  ', ''), ('┌───┐', _FRAME), ('       ', ''), ('┌───┐', _FRAME),
+     ('  ✦', _BOOM)),
+    (('  ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME),
+     ('       ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME)),
+    (('  ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME),
+     ('  ', ''), ('┌─┐', _BUS), ('  ', ''),
+     ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME)),
+    (('  ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME),
+     ('══', _BOOM), ('┤', _BUS), ('◉', _BUS), ('├', _BUS), ('══', _BOOM),
+     ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME)),
+    (('  ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME),
+     ('  ', ''), ('└┬┘', _BUS), ('  ', ''),
+     ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME)),
+    (('  ', ''), ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME),
+     ('   ', ''), ('│', _BOOM), ('   ', ''),
+     ('│', _FRAME), ('▦▦▦', _PANEL), ('│', _FRAME)),
+    (('  ', ''), ('└───┘', _FRAME), ('   ', ''), ('│', _BOOM),
+     ('   ', ''), ('└───┘', _FRAME)),
+    (('          ', ''), ('│', _BOOM)),
+    (('        ', ''), ('((', _SIGNAL), ('°', _SIGNAL), ('))', _SIGNAL),
+     ('  ✦', _BOOM)),
+)
 
 
-def _radar(width: int, height: int) -> Text:
-    """Render a polar radar scope: range rings, crosshair and a contact blip."""
-    # Cells are ~twice as tall as wide, so the horizontal radius spans the full
-    # half-width while the vertical radius uses the half-height; this keeps the
-    # rings looking round rather than squashed.
-    cx, cy = (width - 1) / 2.0, (height - 1) / 2.0
-    grid = [[(' ', '') for _ in range(width)] for _ in range(height)]
-
-    def put(x: float, y: float, ch: str, st: str) -> None:
-        xi, yi = int(round(x)), int(round(y))
-        if 0 <= xi < width and 0 <= yi < height:
-            grid[yi][xi] = (ch, st)
-
-    for sx, sy in _STARS:
-        put(sx, sy, '·', theme.FAINT)
-
-    # crosshair (drawn first so the rings sit on top at the axes)
-    for x in range(width):
-        put(x, cy, '─', theme.FAINT)
-    for y in range(height):
-        put(cx, y, '│', theme.FAINT)
-    put(cx, cy, '┼', theme.FAINT)
-
-    # concentric range rings
-    for frac in (1.0, 0.66, 0.33):
-        rx, ry = cx * frac, cy * frac
-        for i in range(160):
-            t = 2.0 * math.pi * i / 160.0
-            put(cx + rx * math.cos(t), cy + ry * math.sin(t), '·', theme.PRIMARY)
-
-    # a single contact blip riding the middle ring
-    bt = -0.9
-    put(cx + cx * 0.66 * math.cos(bt), cy + cy * 0.66 * math.sin(bt),
-        '◉', f'bold {theme.ACCENT}')
-
+def _satellite() -> Text:
+    """Render a recognizable satellite: solar-array wings, bus, and antenna."""
+    # Right-pad every row to a common width so the glyph stays a rigid
+    # rectangle: Align.center centres each line by its own width, so unequal
+    # rows would otherwise drift apart horizontally.
+    width = max(sum(len(seg) for seg, _ in row) for row in _SAT)
     text = Text()
-    for r, row in enumerate(grid):
-        for ch, st in row:
-            text.append(ch, style=st)
-        if r < height - 1:
+    for r, row in enumerate(_SAT):
+        row_width = 0
+        for seg, style in row:
+            text.append(seg, style=style)
+            row_width += len(seg)
+        text.append(' ' * (width - row_width))
+        if r < len(_SAT) - 1:
             text.append('\n')
     return text
 
 
 def _fields(state: DashboardState) -> RenderableType:
-    visible = ('YES', theme.OK) if state.earth_visible else ('NO', theme.ERR)
     rows = (
         ('◆', 'SITE', state.site_name.upper(), theme.PRIMARY),
         ('✧', 'COORDINATES', state.coordinates, theme.PRIMARY),
         ('▲', 'ELEVATION', state.elevation, theme.PRIMARY),
-        ('☀', 'SUN ELEVATION', state.sun_elevation, theme.WARN),
-        ('⊕', 'EARTH VISIBILITY', visible[0], visible[1]),
-        ('☾', 'CURRENT PHASE', state.mission_phase.upper(), theme.ACCENT),
     )
     grid = Table.grid(padding=(0, 1))
     grid.add_column(style=theme.FAINT, justify='center', width=1)
@@ -95,10 +92,13 @@ def _fields(state: DashboardState) -> RenderableType:
 def render(state: DashboardState) -> RenderableType:
     body = Table.grid(expand=True, padding=(0, 1))
     body.add_column(justify='left', ratio=3)
-    body.add_column(justify='center', ratio=2)
+    # NOTE: keep this column left-justified. A 'center' column re-centres each
+    # line of the satellite by its own width, skewing the glyph; Align.center
+    # below does the block centring instead.
+    body.add_column(justify='left', ratio=2)
     body.add_row(
         Align(_fields(state), vertical='middle'),
-        Align(_radar(27, 13), vertical='middle'),
+        Align.center(_satellite(), vertical='middle'),
     )
     return Panel(body, title=Text('MISSION OVERVIEW', style=theme.TITLE),
                  title_align='left', box=theme.BOX,

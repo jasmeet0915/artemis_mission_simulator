@@ -20,35 +20,33 @@ from typing import Optional
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
-from rich.text import Text
 
 from .providers import Provider
 from .state import DashboardState
 from .widgets import footer, header, mission_clock, mission_overview, system_monitor
-
-
-def _spacer() -> Text:
-    return Text(' ')
+from .widgets.starfield import Starfield
 
 
 def build_layout(state: DashboardState) -> Layout:
     """Compose the full dashboard for one frame, centred with edge margins."""
     # Outer row: fixed side margins flank the centred content column. Flexible
-    # top/bottom spacers inside vertically centre the fixed-height content.
+    # top/bottom spacers inside vertically centre the fixed-height content. The
+    # margins and spacers carry a starfield so the content floats in space; each
+    # region gets its own seed so the fields differ.
     root = Layout()
     root.split_row(
-        Layout(_spacer(), name='left', size=4),
+        Layout(Starfield(seed=1), name='left', size=4),
         Layout(name='center', ratio=1),
-        Layout(_spacer(), name='right', size=4),
+        Layout(Starfield(seed=2), name='right', size=4),
     )
     center = root['center']
     center.split_column(
-        Layout(_spacer(), name='top', ratio=1),
+        Layout(Starfield(seed=3), name='top', ratio=1),
         Layout(header.render(state), name='header', size=7),
-        Layout(name='main', size=16),
+        Layout(name='main', size=13),
         Layout(system_monitor.render(state), name='monitor', size=13),
         Layout(footer.render(state), name='footer', size=1),
-        Layout(_spacer(), name='bottom', ratio=1),
+        Layout(Starfield(seed=4), name='bottom', ratio=1),
     )
     center['main'].split_row(
         Layout(mission_overview.render(state), name='overview', ratio=53),

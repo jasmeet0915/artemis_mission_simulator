@@ -21,7 +21,6 @@ from rich.table import Table
 from rich.text import Text
 
 from .glyphs import big_text
-from .sparklines import hbar
 from .. import theme
 from ..state import DashboardState
 
@@ -37,25 +36,14 @@ def _stats(state: DashboardState) -> RenderableType:
     return grid
 
 
-def _solar(state: DashboardState) -> RenderableType:
-    pct = state.solar_day_progress * 100.0
-    bar = Table.grid(expand=True)
-    bar.add_column(ratio=1)
-    bar.add_column(justify='right', width=6)
-    bar.add_row(hbar(state.solar_day_progress, 28, theme.PRIMARY, theme.FAINT),
-                Text(f'{pct:.0f}%', style=theme.MUTED))
-    return Group(Text('SOLAR DAY @ SOUTH POLE', style=theme.MUTED), bar)
-
-
 def render(state: DashboardState) -> RenderableType:
     body = Group(
         Text(state.mission_date, style=f'bold {theme.PRIMARY}'),
+        Text(''),
         big_text(state.mission_clock, style=f'bold {theme.ACCENT}'),
         Text('UTC', style=theme.MUTED),
         Rule(style=theme.FAINT),
         _stats(state),
-        Text(''),
-        _solar(state),
     )
     return Panel(body, title=Text('MISSION CLOCK', style=theme.TITLE),
                  title_align='left', box=theme.BOX,
