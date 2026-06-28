@@ -103,6 +103,12 @@ Once the workspace is built and sourced, a single command launches a full missio
 artemis liftoff --site shackleton_rim
 ```
 
+<p align="center">
+  <img src="media/launcher_home.png" alt="Artemis mission-control dashboard"/>
+  <br/>
+  <em>The <code>mission-control</code> window — mission clock, site overview, and host telemetry over a starfield</em>
+</p>
+
 `artemis liftoff` creates a tmux session named `artemis` with one window per stack and **attaches you to it**:
 
 | Window | What it runs |
