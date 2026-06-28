@@ -1,16 +1,5 @@
 FROM ros:jazzy
 
-# Swap the ROS apt mirror: packages.ros.org (OSU Oregon) measures ~6 KB/s from
-# here; the Tsinghua mirror serves the same GPG-signed repo at ~750 KB/s (~125x).
-# Signatures are verified end-to-end against the Open Robotics key in the
-# Signed-By: field, so the mirror cannot inject packages — only serve them faster.
-# Also drop the deb-src type: Tsinghua mirrors only binaries (the source index
-# 404s), and this build installs binary .debs only.
-RUN sed -i \
-    -e 's|http://packages.ros.org/ros2/ubuntu|https://mirror.tuna.tsinghua.edu.cn/ros2/ubuntu|' \
-    -e 's|^Types: deb deb-src|Types: deb|' \
-    /etc/apt/sources.list.d/ros2.sources
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV USERNAME=commander
@@ -22,13 +11,8 @@ RUN groupmod -n ${USERNAME} ubuntu && \
     echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Make apt resilient to transient mirror failures: retry instead of aborting the
-# whole build, and allow a longer connect timeout.
-RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "60";\n' \
-    > /etc/apt/apt.conf.d/80-artemis-retries
-
 # Heavy layer on its own: Gazebo Harmonic + ROS<->Gazebo integration (hundreds
-# of MB). Isolated so a later timeout does not force re-downloading it on retry.
+# of MB). Kept isolated so it stays cached across rebuilds of later layers.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ros-gz \
     && rm -rf /var/lib/apt/lists/*
