@@ -28,7 +28,7 @@ from artemis_cli.utils.epoch import EpochParseError, parse_epoch
 DEFAULT_SITE = 'empty_lunar'
 
 
-def main(argv=None):
+def build_parser():
     parser = argparse.ArgumentParser(
         prog='artemis', description='Artemis mission control CLI'
     )
@@ -47,12 +47,19 @@ def main(argv=None):
         help=f'Mission site to launch (default: {DEFAULT_SITE})',
     )
     liftoff.add_argument(
-        '-i', '--interactive', action='store_true',
-        help='Attach to the tmux session after launching',
+        '-d', '--detached', action='store_true',
+        help='Launch in the background instead of attaching to the tmux session',
     )
-    liftoff.set_defaults(func=_run_liftoff)
+    liftoff.add_argument(
+        '--no-home', dest='home', action='store_false',
+        help='Do not launch the home mission-control dashboard',
+    )
+    liftoff.set_defaults(func=_run_liftoff, home=True)
+    return parser
 
-    args = parser.parse_args(argv)
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
     return args.func(args)
 
 
@@ -69,12 +76,13 @@ def _run_liftoff(args):
         print(f'artemis liftoff: {exc}', file=sys.stderr)
         return 3
 
-    launcher.launch_home()
+    if args.home:
+        launcher.launch_home()
     launcher.launch_simulation()
     launcher.launch_mission_manager()
     print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), site {args.site}')
 
-    if args.interactive:
+    if not args.detached:
         launcher.attach()  # replaces this process; does not return
         return 0
 
