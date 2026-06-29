@@ -11,7 +11,8 @@ RUN groupmod -n ${USERNAME} ubuntu && \
     echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} && \
     chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Install Gazebo
+# Heavy layer on its own: Gazebo Harmonic + ROS<->Gazebo integration (hundreds
+# of MB). Kept isolated so it stays cached across rebuilds of later layers.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ros-gz \
     && rm -rf /var/lib/apt/lists/*
@@ -24,7 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ament-cmake-pytest \
     && rm -rf /var/lib/apt/lists/*
 
-# Python + system dependencies
+# Python + system dependencies, including the mission stack runtime
+# (tmux/libtmux for the launcher, psutil/rich for the mission-control home).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     gdal-bin \
@@ -39,6 +41,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-tqdm \
     tmux \
     python3-libtmux \
+    python3-psutil \
+    python3-rich \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 

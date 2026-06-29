@@ -17,6 +17,8 @@
   <exec_depend>lunar_base_models</exec_depend>
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>python3-libtmux</exec_depend>
+  <exec_depend>python3-psutil</exec_depend>
+  <exec_depend>python3-rich</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

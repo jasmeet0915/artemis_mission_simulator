@@ -61,6 +61,13 @@ def parse_epoch(value, now):
     )
 
 
+def format_iso(epoch_sec):
+    """Format whole Unix seconds (UTC) as 'YYYY-MM-DDTHH:MM:SSZ'."""
+    return datetime.fromtimestamp(epoch_sec, tz=timezone.utc).strftime(
+        '%Y-%m-%dT%H:%M:%SZ'
+    )
+
+
 def _strict_utc(text, fmt):
     try:
         parsed = datetime.strptime(text, fmt)
