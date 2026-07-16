@@ -91,3 +91,21 @@ class TestDEMProcessor:
         assert bounds['size_km'] == pytest.approx(0.5, abs=0.01)
         assert 'crs' in dem_profile
         assert 'transform' in dem_profile
+
+    def test_rejects_nonsquare_grid(self, tmp_path):
+        """A non-square pixel grid must be rejected (would trigger filler)."""
+        import rasterio
+        from rasterio.transform import from_bounds
+
+        dem_path = tmp_path / 'rect.tif'
+        width, height = 64, 32          # deliberately non-square
+        data = np.zeros((height, width), dtype=np.float32)
+        transform = from_bounds(-500, -500, 500, 500, width, height)
+        with rasterio.open(
+            dem_path, 'w', driver='GTiff', height=height, width=width,
+            count=1, dtype='float32', crs='EPSG:3031', transform=transform,
+        ) as dst:
+            dst.write(data, 1)
+
+        with pytest.raises(ValueError, match='square'):
+            DEMProcessor.extract_from_raw(dem_path, ROI(use_full=True))

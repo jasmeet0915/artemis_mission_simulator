@@ -27,6 +27,22 @@ from rasterio.windows import from_bounds
 from ..utils.types import ROI
 
 
+def _require_square(raw: np.ndarray) -> None:
+    """Reject a non-square pixel grid.
+
+    Gazebo squares the heightmap to ``2^n + 1`` per side; a non-square input is
+    corner-padded with ``minElevation`` filler (false terrain data) and its
+    center is shifted off the world origin. Guarding here keeps that from ever
+    reaching a generated model, regardless of ROI path (crop rounding or a
+    non-square full raster).
+    """
+    if raw.shape[0] != raw.shape[1]:
+        raise ValueError(
+            'cropped grid must be square to avoid heightmap filler; '
+            f'got {raw.shape[1]}x{raw.shape[0]} px'
+        )
+
+
 class DEMProcessor:
     """
     Extracts elevation data from PGDA Product 78 polar DEM GeoTIFFs.
@@ -93,6 +109,7 @@ class DEMProcessor:
             if roi.use_full:
                 # ---- read entire raster --------------------------------
                 raw = src.read(1)
+                _require_square(raw)
                 out_transform = src.transform
 
                 rb = src.bounds
@@ -113,6 +130,7 @@ class DEMProcessor:
                     x_min, y_min, x_max, y_max, src.transform,
                 )
                 raw = src.read(1, window=window)
+                _require_square(raw)
                 out_transform = src.window_transform(window)
 
             nodata = src.nodata

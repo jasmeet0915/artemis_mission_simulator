@@ -65,11 +65,13 @@ lunar_terrain_exporter site connecting_ridge --output-dir ./models
 
 ### Single site — custom ROI bounding-box crop
 
-Crop a specific region by specifying center coordinates and dimensions:
+Crop a square region by specifying center coordinates and side length. ROIs are
+square by construction: a non-square DEM makes Gazebo pad the heightmap with
+`minElevation` filler and shift the world origin off the tile center.
 
 ```bash
 lunar_terrain_exporter site shackleton_rim \
-  --lat -86.5 --lon -4.0 --width 5 --height 5 \
+  --lat -86.5 --lon -4.0 --size 5 \
   --output-dir ./models
 ```
 
@@ -95,8 +97,7 @@ sites:
       bounding_box:
         lat: -86.5
         lon: -4.0
-        width_km: 5.0
-        height_km: 5.0
+        size_km: 5.0
 ```
 
 ## Output Structure
