@@ -71,7 +71,7 @@ class TestIntegrationPipeline:
             roi=ROI(
                 use_full=False,
                 bounding_box=BoundingBox(
-                    lat=-86.5, lon=-4.0, width_km=2.0, height_km=2.0),
+                    lat=-86.5, lon=-4.0, size_km=2.0),
             ),
         )
 
@@ -81,7 +81,7 @@ class TestIntegrationPipeline:
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
         fake_bounds = {'center_lat': -86.5, 'center_lon': -4.0,
-                       'width_km': 2.0, 'height_km': 2.0}
+                       'size_km': 2.0}
         fake_profile = {'crs': 'EPSG:3031',
                         'transform': None}
 
@@ -129,7 +129,7 @@ class TestIntegrationPipeline:
 
         fake_heightmap = np.random.rand(513, 513).astype(np.float64)
         fake_bounds = {'center_lat': -89.5, 'center_lon': -130.0,
-                       'width_km': 20.0, 'height_km': 15.0}
+                       'size_km': 20.0}
         fake_profile = {'crs': 'EPSG:3031', 'transform': None}
 
         with (

@@ -72,12 +72,8 @@ def build_parser() -> argparse.ArgumentParser:
         help='Center longitude for custom crop',
     )
     site_parser.add_argument(
-        '--width', type=float, default=10.0,
-        help='Region width in km (default: 10)',
-    )
-    site_parser.add_argument(
-        '--height', type=float, default=10.0,
-        help='Region height in km (default: 10)',
+        '--size', type=float, default=10.0,
+        help='Region side length in km, square (default: 10)',
     )
     site_parser.add_argument(
         '--output-dir', type=str, default='.',
@@ -130,8 +126,7 @@ def load_sites_from_yaml(config_path: Path) -> list[LunarSite]:
             bounding_box = BoundingBox(
                 lat=float(bb_raw['lat']),
                 lon=float(bb_raw['lon']),
-                width_km=float(bb_raw.get('width_km', 10.0)),
-                height_km=float(bb_raw.get('height_km', 10.0)),
+                size_km=float(bb_raw.get('size_km', 10.0)),
             )
 
         roi = ROI(use_full=use_full, bounding_box=bounding_box)
@@ -164,8 +159,7 @@ def main(argv: list[str] | None = None) -> None:
                 bounding_box=BoundingBox(
                     lat=args.lat,
                     lon=args.lon,
-                    width_km=args.width,
-                    height_km=args.height,
+                    size_km=args.size,
                 ),
             )
         else:
