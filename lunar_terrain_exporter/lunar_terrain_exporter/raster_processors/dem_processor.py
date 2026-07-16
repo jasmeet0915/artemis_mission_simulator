@@ -76,8 +76,7 @@ class DEMProcessor:
         (elevations, elev_min, elev_max, bounds, dem_profile)
 
             *elevations*: float64 array of elevation values in meters.
-            *bounds*: dict with ``center_lat``, ``center_lon``,
-            ``width_km``, ``height_km``.
+            *bounds*: dict with ``center_lat``, ``center_lon``, ``size_km``.
             *dem_profile*: dict with ``crs`` and ``transform`` suitable
             for writing a GeoTIFF of the output array.
 
@@ -104,12 +103,11 @@ class DEMProcessor:
                 bb = roi.bounding_box
                 # lon first because always_xy=True
                 x_center, y_center = to_projected.transform(bb.lon, bb.lat)
-                half_w = bb.width_km * 1000.0 / 2.0
-                half_h = bb.height_km * 1000.0 / 2.0
-                x_min = x_center - half_w
-                x_max = x_center + half_w
-                y_min = y_center - half_h
-                y_max = y_center + half_h
+                half = bb.size_km * 1000.0 / 2.0
+                x_min = x_center - half
+                x_max = x_center + half
+                y_min = y_center - half
+                y_max = y_center + half
 
                 window = from_bounds(
                     x_min, y_min, x_max, y_max, src.transform,
@@ -137,8 +135,7 @@ class DEMProcessor:
         bounds = {
             'center_lat': center_lat,
             'center_lon': center_lon,
-            'width_km': (x_max - x_min) / 1000.0,
-            'height_km': (y_max - y_min) / 1000.0,
+            'size_km': (x_max - x_min) / 1000.0,
         }
 
         dem_profile = {

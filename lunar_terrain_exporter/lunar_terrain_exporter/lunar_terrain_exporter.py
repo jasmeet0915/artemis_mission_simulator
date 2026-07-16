@@ -45,13 +45,11 @@ class LunarTerrainExporter:
         )
         lat = bounds['center_lat']
         lon = bounds['center_lon']
-        width_km = bounds['width_km']
-        height_km = bounds['height_km']
-        print(f'    ROI: center=({lat:.4f}, {lon:.4f}), '
-              f'{width_km:.1f}x{height_km:.1f}km')
+        size_km = bounds['size_km']
+        print(f'    ROI: center=({lat:.4f}, {lon:.4f}), {size_km:.1f}km sq')
 
-        size_x_m = int(width_km * 1000)
-        size_y_m = int(height_km * 1000)
+        size_m = int(size_km * 1000)
+        size_x_m = size_y_m = size_m
         self._model_writer.write(
             site_id=site.name,
             display_name=site.name.replace('_', ' ').title(),
