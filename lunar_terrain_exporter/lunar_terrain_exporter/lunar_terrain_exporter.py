@@ -15,12 +15,14 @@
 
 """Terrain generation pipeline."""
 
+import math
 import os
 from pathlib import Path
 
 from .model_writers.sdf_model_writer import SDFModelWriter
 from .raster_processors.dem_processor import DEMProcessor
 from .utils.file_downloader import FileDownloader
+from .utils.frames import terrain_enu_rotation_rpy
 from .utils.types import LunarSite
 
 
@@ -50,6 +52,13 @@ class LunarTerrainExporter:
 
         size_m = int(size_km * 1000)
         size_x_m = size_y_m = size_m
+
+        h, w = elevations.shape
+        center_elevation = float(elevations[h // 2, w // 2])
+        if not math.isfinite(center_elevation):
+            center_elevation = (elev_min + elev_max) / 2.0
+        roll, pitch, yaw = terrain_enu_rotation_rpy(lat, lon)
+
         self._model_writer.write(
             site_id=site.name,
             display_name=site.name.replace('_', ' ').title(),
@@ -63,5 +72,9 @@ class LunarTerrainExporter:
             lat=lat,
             lon=lon,
             source='nasa_pgda_78',
+            roll=roll,
+            pitch=pitch,
+            yaw=yaw,
+            center_elevation=center_elevation,
         )
         return self._output_dir / site.name
