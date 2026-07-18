@@ -129,6 +129,33 @@ The pipeline has three stages:
    - An **SDF model** with `<heightmap>` geometry sized to match the real-world dimensions
    - A **metadata YAML** recording coordinates, dimensions, elevation range, and data source
 
+### ENU Alignment
+
+We treat the **observer** as a static point at the center of the terrain, placed
+at the world origin. The DEMs are in polar stereographic projection, so we orient
+the terrain in the world so that the **world axes align with the local ENU
+(East-North-Up) axes at the observer** — that way our astronomy calculations (sun
+direction, illumination), which are done in the local ENU frame, map directly
+onto the world frame.
+
+The `terrain_link` gets a `<pose>` rotation (roll/pitch/yaw from
+`utils/frames.py`) to achieve this. It has two effects:
+
+- **Heading:** aligns world +X to East and +Y to North at the observer.
+- **Tilt:** aligns world +Z with the radial Up at the observer.
+
+The heightmap `<pos>` z is `-center_elevation` so the observer sits at world Z=0,
+the point the rotation pivots about. See `sdf_model_writer.py` for the vertical
+math.
+
+> **Interesting Note:** The local tangent plane on a spherical body is different at every point.
+This means, the local E-N-U axes would be oriented different w.r.t to each other on different points on the terrain.
+For instance, the local up at any point is radially outward from the center and the -ve of this direction is where gravity acts.
+For each point the local up is different which means, realisticall the gravity direction should also change. However, that is
+not supported in out simulation world and the difference would anyways be negligible for the celestial body we are dealing with.
+So, we just ignore this difference as the effects would be negligible on our scale and consider the ENU at the center of
+terrain to be the global one.
+
 ### Package Structure
 
 ```

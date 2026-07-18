@@ -53,10 +53,15 @@ class LunarTerrainExporter:
         size_m = int(size_km * 1000)
         size_x_m = size_y_m = size_m
 
+        # Elevation of the center pixel (the observer point).
+        # Used to place observer at origin in the world
         h, w = elevations.shape
         center_elevation = float(elevations[h // 2, w // 2])
         if not math.isfinite(center_elevation):
             center_elevation = (elev_min + elev_max) / 2.0
+
+        # Rotation required such that the world axes align with the
+        # local ENU frame at the observer (center of the terrain)
         roll, pitch, yaw = terrain_enu_rotation_rpy(lat, lon)
 
         self._model_writer.write(
