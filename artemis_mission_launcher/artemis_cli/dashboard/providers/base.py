@@ -28,10 +28,12 @@ class Provider:
 
     def __init__(self, *, site: str = 'shackleton_rim',
                  epoch_sec: int = _DEFAULT_EPOCH,
-                 acceleration: float = 100.0) -> None:
+                 acceleration: float = 100.0,
+                 sky_source=None) -> None:
         self._epoch_sec = epoch_sec
         self._accel = acceleration
         self._start = time.monotonic()
+        self._sky = sky_source
         self.site_name = site.replace('_', ' ').title()
 
     # -- to be implemented by subclasses --
@@ -63,6 +65,14 @@ class Provider:
             (self._epoch_sec + sim_elapsed) % _SOLAR_DAY_S) / _SOLAR_DAY_S
 
         state.site_name = self.site_name
+
+        if self._sky is not None:
+            sample = self._sky.latest
+            # Never write None back: a tracker that goes quiet leaves the last
+            # angles on screen rather than blanking the row.
+            if sample is not None:
+                state.sun_azimuth_deg, state.sun_elevation_deg = sample
+
         state.push_histories()
 
 

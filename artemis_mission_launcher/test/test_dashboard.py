@@ -198,3 +198,41 @@ def test_column_chart_dimensions():
 def test_hbar_is_full_width():
     bar = hbar(0.5, 10, 'cyan', 'grey37')
     assert len(bar.plain) == 10
+
+
+class _StubSky:
+    """Minimal stand-in for SkySource: just the `latest` seam."""
+
+    def __init__(self, latest=None):
+        self.latest = latest
+
+
+def test_provider_without_sky_source_leaves_sun_fields_unset():
+    state = DashboardState()
+    MockProvider().update(state)
+    assert state.sun_azimuth_deg is None
+    assert state.sun_elevation_deg is None
+
+
+def test_provider_copies_sun_angles_from_sky_source():
+    state = DashboardState()
+    MockProvider(sky_source=_StubSky((127.4, 1.2))).update(state)
+    assert state.sun_azimuth_deg == 127.4
+    assert state.sun_elevation_deg == 1.2
+
+
+def test_provider_leaves_fields_unset_while_source_has_no_data():
+    state = DashboardState()
+    MockProvider(sky_source=_StubSky(None)).update(state)
+    assert state.sun_azimuth_deg is None
+
+
+def test_provider_keeps_last_sun_angles_when_source_goes_quiet():
+    state = DashboardState()
+    source = _StubSky((10.0, 2.0))
+    provider = MockProvider(sky_source=source)
+    provider.update(state)
+    source.latest = None
+    provider.update(state)
+    assert state.sun_azimuth_deg == 10.0
+    assert state.sun_elevation_deg == 2.0
