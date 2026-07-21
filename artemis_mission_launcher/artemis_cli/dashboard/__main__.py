@@ -18,7 +18,7 @@ import argparse
 import sys
 
 from .dashboard import run
-from .providers import MockProvider, SystemProvider
+from .providers import MockProvider, SkySource, SystemProvider
 
 
 def main(argv=None) -> int:
@@ -35,12 +35,20 @@ def main(argv=None) -> int:
     kwargs = {'site': args.site, 'acceleration': args.accel}
     if args.epoch_sec is not None:
         kwargs['epoch_sec'] = args.epoch_sec
+    sky = None
+    if not args.mock:
+        sky = SkySource()
+        sky.start()
+        kwargs['sky_source'] = sky
     provider = MockProvider(**kwargs) if args.mock else SystemProvider(**kwargs)
 
     try:
         run(provider)
     except KeyboardInterrupt:
         pass
+    finally:
+        if sky is not None:
+            sky.stop()
     return 0
 
 
