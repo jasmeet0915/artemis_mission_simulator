@@ -236,3 +236,51 @@ def test_provider_keeps_last_sun_angles_when_source_goes_quiet():
     provider.update(state)
     assert state.sun_azimuth_deg == 10.0
     assert state.sun_elevation_deg == 2.0
+
+
+def test_sky_source_has_no_angles_before_any_message():
+    from artemis_cli.dashboard.providers import SkySource
+    assert SkySource().latest is None
+
+
+def test_sky_source_callback_records_the_angles():
+    from types import SimpleNamespace
+    from artemis_cli.dashboard.providers import SkySource
+    source = SkySource()
+    source._on_sky_object(SimpleNamespace(azimuth_deg=91.5, elevation_deg=-2.5))
+    assert source.latest == (91.5, -2.5)
+
+
+def test_sky_source_start_survives_a_missing_rclpy(monkeypatch):
+    import sys
+    from artemis_cli.dashboard.providers import SkySource
+    # Binding a module name to None makes `import rclpy` raise ImportError.
+    monkeypatch.setitem(sys.modules, 'rclpy', None)
+    source = SkySource()
+    assert source.start() is False
+    assert source.latest is None
+
+
+def test_sky_source_stop_is_safe_before_start():
+    from artemis_cli.dashboard.providers import SkySource
+    SkySource().stop()  # must not raise
+
+
+def test_dashboard_process_exits_on_sigterm():
+    """ROS signal handlers must not keep mission control alive on a kill."""
+    import pytest
+    import signal
+    import subprocess
+    import sys
+    import time
+    proc = subprocess.Popen(
+        [sys.executable, '-m', 'artemis_cli.dashboard'],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(3.0)              # let SkySource init rclpy and start spinning
+    proc.send_signal(signal.SIGTERM)
+    try:
+        proc.wait(timeout=5.0)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        pytest.fail('dashboard ignored SIGTERM and had to be killed')
