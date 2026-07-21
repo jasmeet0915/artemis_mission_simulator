@@ -25,6 +25,46 @@ def _render(state: DashboardState) -> str:
     return console.export_text()
 
 
+def _overview(state: DashboardState) -> str:
+    from artemis_cli.dashboard.widgets import mission_overview
+    console = Console(width=100, height=20, record=True)
+    console.print(mission_overview.render(state))
+    return console.export_text()
+
+
+def test_sun_row_shows_placeholder_before_any_data():
+    state = DashboardState()
+    text = _overview(state)
+    assert 'SUN (AZ/EL)' in text
+    assert '--' in text
+
+
+def test_sun_row_shows_azimuth_and_elevation_when_set():
+    state = DashboardState()
+    state.sun_azimuth_deg = 127.42
+    state.sun_elevation_deg = 1.23
+    assert '127.4° / +1.2°' in _overview(state)
+
+
+def test_sun_elevation_below_horizon_renders_negative():
+    state = DashboardState()
+    state.sun_azimuth_deg = 12.0
+    state.sun_elevation_deg = -0.44
+    assert '12.0° / -0.4°' in _overview(state)
+
+
+def test_sun_row_follows_the_elevation_row():
+    state = DashboardState()
+    state.sun_azimuth_deg = 5.0
+    state.sun_elevation_deg = 5.0
+    lines = _overview(state).splitlines()
+    elevation_line = next(
+        i for i, line in enumerate(lines) if 'ELEVATION' in line
+        and 'SUN' not in line)
+    sun_line = next(i for i, line in enumerate(lines) if 'SUN (AZ/EL)' in line)
+    assert sun_line > elevation_line
+
+
 def test_layout_contains_all_panels_and_labels():
     state = DashboardState()
     MockProvider().update(state)
