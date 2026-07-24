@@ -3,12 +3,13 @@
   <model name="shackleton_rim">
     <static>true</static>
     <link name="terrain_link">
+      <pose>0 0 0 -0.004029 0.000576 -2.999697</pose>
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
             <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 4652.9</size>
-            <pos>0 0 -2847.9</pos>
+            <pos>0 0 -768.0</pos>
           </heightmap>
         </geometry>
       </collision>
@@ -17,7 +18,7 @@
           <heightmap>
             <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 4652.9</size>
-            <pos>0 0 -2847.9</pos>
+            <pos>0 0 -768.0</pos>
             <texture>
               <diffuse>model://materials/moon_diffuse.png</diffuse>
               <normal>model://materials/moon_normal.png</normal>
