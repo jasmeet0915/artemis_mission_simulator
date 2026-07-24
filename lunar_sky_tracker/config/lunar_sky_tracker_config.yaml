@@ -1,0 +1,12 @@
+# Parameters for the lunar_sky_tracker node.
+/**:
+  ros__parameters:
+    site_metadata_topic: /mission/site_metadata
+    # Where this node publishes the Sun's SkyObject.
+    sun_topic: /lunar_sky_tracker/sun
+    # frame_id stamped on the published SkyObject; the observer's local ENU.
+    observer_frame: site_origin
+    # Hz.
+    update_rate: 1.0
+    # Directory holding the SPICE kernels, baked in at image build.
+    kernel_dir: /opt/spice_kernels
