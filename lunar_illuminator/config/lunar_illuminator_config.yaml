@@ -1,0 +1,26 @@
+# Parameters for the lunar_illuminator node.
+#
+# Appearance defaults mirror <light name="sun"> in the world SDFs so that the
+# scene's lighting does not visibly change the moment this node starts
+# publishing. The full spec is sent on every update because Gazebo may replace
+# rather than merge the light component -- a direction-only message risks
+# blacking the sun out.
+/**:
+  ros__parameters:
+    # Names the world: <site_id>_world.
+    site_metadata_topic: /mission/site_metadata
+    # Sun az/el from lunar_sky_tracker.
+    sun_topic: /lunar_sky_tracker/sun
+
+    # Must match the light's name in the world SDF.
+    light_name: sun
+
+    diffuse: [0.8, 0.8, 0.8, 1.0]
+    specular: [0.2, 0.2, 0.2, 1.0]
+
+    attenuation_range: 1000.0
+    attenuation_constant: 0.9
+    attenuation_linear: 0.01
+    attenuation_quadratic: 0.001
+
+    cast_shadows: true
