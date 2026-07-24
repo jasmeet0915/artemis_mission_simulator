@@ -3,12 +3,13 @@
   <model name="de_gerlache_rim">
     <static>true</static>
     <link name="terrain_link">
+      <pose>0 0 0 0.008635 0.021295 -1.185547</pose>
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
             <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 2621.2</size>
-            <pos>0 0 -805.2</pos>
+            <pos>0 0 -1793.7</pos>
           </heightmap>
         </geometry>
       </collision>
@@ -17,7 +18,7 @@
           <heightmap>
             <uri>materials/textures/heightmap.tif</uri>
             <size>16000 16000 2621.2</size>
-            <pos>0 0 -805.2</pos>
+            <pos>0 0 -1793.7</pos>
             <texture>
               <diffuse>model://materials/moon_diffuse.png</diffuse>
               <normal>model://materials/moon_normal.png</normal>
