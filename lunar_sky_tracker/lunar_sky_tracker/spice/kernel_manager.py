@@ -63,7 +63,18 @@ class KernelManager:
             spiceypy.unload(self._furnished)
             self._furnished = []
 
-    def loaded_count(self) -> int:
+    @staticmethod
+    def kernels_furnished() -> bool:
+        """Return whether every manifest kernel is in the SPICE pool."""
+        # Name match: a count breaks on extras; a flag goes stale on kclear().
+        furnished = {
+            Path(spiceypy.kdata(index, 'ALL')[0]).name
+            for index in range(spiceypy.ktotal('ALL'))
+        }
+        return all(filename in furnished for filename in KERNELS)
+
+    @staticmethod
+    def loaded_count() -> int:
         """Return the number of kernels currently in the SPICE pool."""
         return spiceypy.ktotal('ALL')
 

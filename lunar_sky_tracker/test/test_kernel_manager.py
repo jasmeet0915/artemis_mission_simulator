@@ -67,10 +67,13 @@ class TestKernelManager:
     def test_furnish_then_unload_roundtrip(self, clear_spice_pool):
         manager = KernelManager(KERNEL_DIR)
         assert manager.loaded_count() == 0
+        assert KernelManager.kernels_furnished() is False
         manager.furnish()
         assert manager.loaded_count() == len(KERNELS)
+        assert KernelManager.kernels_furnished() is True
         manager.unload()
         assert manager.loaded_count() == 0
+        assert KernelManager.kernels_furnished() is False
 
     def test_kernel_info_reports_type_for_furnished_kernel(self, clear_spice_pool):
         manager = KernelManager(KERNEL_DIR)
