@@ -13,8 +13,9 @@
 # limitations under the License.
 
 """
-Compute where a celestial body sits over an observer's local lunar horizon
-using ephemeris data from SPICE kernels
+Compute a celestial body's place over an observer's local lunar horizon.
+
+Uses ephemeris data from SPICE kernels.
 
 Note: The caller is responsible for furnishing the SPICE kernels (see
 :class:`~lunar_sky_tracker.spice.kernel_manager.KernelManager`); an unfurnished
@@ -34,9 +35,7 @@ MOON = 'MOON'
 
 @dataclass
 class SkyObjectObservation:
-    """
-    A named sky object's direction over an observer's local lunar horizon.
-    """
+    """A named sky object's direction over an observer's local lunar horizon."""
 
     name: str
     azimuth_deg: float
@@ -86,8 +85,7 @@ def get_solar_system_body_position(
         observer_lon_deg: float,
         aberration_correction: str = 'LT+S') -> SkyObjectObservation:
     """
-    Return a solar-system body's azimuth and elevation over the
-    local horizon at the observer.
+    Return a solar-system body's az/el over the local horizon at the observer.
 
     :param body: SPICE body name or id for the target, e.g. ``'SUN'``,
         ``'EARTH'``, ``'MARS BARYCENTER'``.

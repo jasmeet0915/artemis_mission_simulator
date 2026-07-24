@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-End-to-end launch test for the lunar_sky_tracker node.
-"""
+"""End-to-end launch test for the lunar_sky_tracker node."""
 
 import math
 import unittest
@@ -41,7 +39,6 @@ SITE_LON = 12.5
 @pytest.mark.launch_test
 def generate_test_description():
     """Launch the node via its packaged launch file, on wall-clock time."""
-
     launch_under_test = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             get_package_share_directory('lunar_sky_tracker')
