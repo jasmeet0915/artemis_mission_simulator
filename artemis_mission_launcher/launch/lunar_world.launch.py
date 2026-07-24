@@ -21,7 +21,7 @@ mapping is intentionally simple and will be refined as real sites land.
 
 Usage:
     ros2 launch artemis_mission_launcher lunar_world.launch.py
-    ros2 launch artemis_mission_launcher lunar_world.launch.py site:=lunar_empty
+    ros2 launch artemis_mission_launcher lunar_world.launch.py site:=empty_lunar
     ros2 launch artemis_mission_launcher lunar_world.launch.py initial_sim_time:=1782216000
 """
 import os
@@ -31,6 +31,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def build_gz_args(gui_config, world_file, initial_sim_time):
@@ -64,13 +65,25 @@ def launch_setup(context, *args, **kwargs):
         ),
         launch_arguments={'gz_args': gz_args}.items(),
     )
-    return [gz_sim]
+
+    # Bridges Gazebo's /clock into ROS. Every other stack node runs with
+    # use_sim_time:=true, so without this their timers never tick.
+    bridge_config = os.path.join(pkg, 'config', 'gz', 'ros_gz_bridge.yaml')
+    ros_gz_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='ros_gz_bridge',
+        output='screen',
+        parameters=[{'config_file': bridge_config}],
+    )
+
+    return [gz_sim, ros_gz_bridge]
 
 
 def generate_launch_description():
     declare_site_arg = DeclareLaunchArgument(
         'site',
-        default_value='lunar_empty',
+        default_value='empty_lunar',
         description='Mission site name; the world file is <site>_world.sdf',
     )
 
