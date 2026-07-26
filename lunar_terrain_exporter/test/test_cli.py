@@ -48,13 +48,12 @@ class TestSiteSubcommand:
             'site', 'shackleton_rim',
             '--lat', '-86.5',
             '--lon', '-4.0',
-            '--width', '5.0',
-            '--height', '5.0',
+            '--size', '5.0',
             '--output-dir', '/tmp/out',
         ])
         assert args.site_name == 'shackleton_rim'
         assert args.lat == -86.5
-        assert args.width == 5.0
+        assert args.size == 5.0
 
     def test_site_default_output_dir(self):
         parser = build_parser()
@@ -64,8 +63,7 @@ class TestSiteSubcommand:
     def test_site_default_dimensions(self):
         parser = build_parser()
         args = parser.parse_args(['site', 'connecting_ridge'])
-        assert args.width == 10.0
-        assert args.height == 10.0
+        assert args.size == 10.0
 
 
 class TestBatchSubcommand:
@@ -115,7 +113,7 @@ class TestLoadSitesFromYaml:
             assert len(sites) == 1
             assert sites[0].name == 'connecting_ridge'
             assert sites[0].site_code == 'Site01'
-            assert sites[0].roi.bounding_box.width_km == 10.0
+            assert sites[0].roi.bounding_box.size_km == 10.0
 
     def test_load_single_site_with_full_roi(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -149,7 +147,7 @@ class TestLoadSitesFromYaml:
                             'use_full': False,
                             'bounding_box': {
                                 'lat': -87.0, 'lon': 10.0,
-                                'width_km': 5.0, 'height_km': 5.0,
+                                'size_km': 5.0,
                             },
                         },
                     },
@@ -158,7 +156,7 @@ class TestLoadSitesFromYaml:
             sites = load_sites_from_yaml(config_file)
             assert len(sites) == 2
             assert sites[0].name == 'connecting_ridge'
-            assert sites[1].roi.bounding_box.width_km == 5.0
+            assert sites[1].roi.bounding_box.size_km == 5.0
 
     def test_missing_required_field_raises(self):
         """An entry without a 'site' key is skipped (warning printed)."""
@@ -176,10 +174,10 @@ class TestLoadSitesFromYaml:
                     'site': 'shackleton_rim',
                     'roi': {
                         'use_full': False,
-                        'bounding_box': {'lat': -86.5, 'lon': -4.0, 'width_km': 5.0},
+                        'bounding_box': {'lat': -86.5, 'lon': -4.0, 'size_km': 5.0},
                     },
                 }]
             }, Path(tmpdir))
             sites = load_sites_from_yaml(config_file)
-            assert sites[0].roi.bounding_box.width_km == 5.0
+            assert sites[0].roi.bounding_box.size_km == 5.0
             assert 'Site04' in sites[0].dem_url

@@ -67,10 +67,8 @@ class TestDEMProcessor:
 
         assert 'center_lat' in bounds
         assert 'center_lon' in bounds
-        assert 'width_km' in bounds
-        assert 'height_km' in bounds
-        assert bounds['width_km'] == pytest.approx(1.0, abs=0.1)
-        assert bounds['height_km'] == pytest.approx(1.0, abs=0.1)
+        assert 'size_km' in bounds
+        assert bounds['size_km'] == pytest.approx(1.0, abs=0.1)
 
         assert 'crs' in dem_profile
         assert 'transform' in dem_profile
@@ -80,8 +78,7 @@ class TestDEMProcessor:
         dem_path = self._make_test_geotiff(tmp_path, size=128)
         roi = ROI(
             use_full=False,
-            bounding_box=BoundingBox(lat=-90.0, lon=0.0,
-                                     width_km=0.5, height_km=0.5),
+            bounding_box=BoundingBox(lat=-90.0, lon=0.0, size_km=0.5),
         )
         elevations, elev_min, elev_max, bounds, dem_profile = (
             DEMProcessor.extract_from_raw(dem_path, roi)
@@ -91,7 +88,24 @@ class TestDEMProcessor:
         assert elev_min <= elev_max
         assert elevations.min() == pytest.approx(elev_min, abs=1.0)
         assert elevations.max() == pytest.approx(elev_max, abs=1.0)
-        assert bounds['width_km'] == pytest.approx(0.5, abs=0.01)
-        assert bounds['height_km'] == pytest.approx(0.5, abs=0.01)
+        assert bounds['size_km'] == pytest.approx(0.5, abs=0.01)
         assert 'crs' in dem_profile
         assert 'transform' in dem_profile
+
+    def test_rejects_nonsquare_grid(self, tmp_path):
+        """A non-square pixel grid must be rejected (would trigger filler)."""
+        import rasterio
+        from rasterio.transform import from_bounds
+
+        dem_path = tmp_path / 'rect.tif'
+        width, height = 64, 32          # deliberately non-square
+        data = np.zeros((height, width), dtype=np.float32)
+        transform = from_bounds(-500, -500, 500, 500, width, height)
+        with rasterio.open(
+            dem_path, 'w', driver='GTiff', height=height, width=width,
+            count=1, dtype='float32', crs='EPSG:3031', transform=transform,
+        ) as dst:
+            dst.write(data, 1)
+
+        with pytest.raises(ValueError, match='square'):
+            DEMProcessor.extract_from_raw(dem_path, ROI(use_full=True))

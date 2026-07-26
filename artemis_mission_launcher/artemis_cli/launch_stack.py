@@ -73,6 +73,8 @@ class StackLauncher:
             window_name='simulation', attach=False)
         self.mission_manager_window = self.session.new_window(
             window_name='mission_manager', attach=False)
+        self.sky_tracker_window = self.session.new_window(
+            window_name='sky_tracker', attach=False)
         self.mission_window.select()  # land here on attach
         print(f"[artemis] created tmux session '{self.session_name}'")
 
@@ -106,7 +108,19 @@ class StackLauncher:
         self._source_workspace(pane)
         pane.send_keys(
             'ros2 launch artemis_mission_manager mission_manager.launch.py '
-            f'site:={self.site}',
+            f'site:={self.site} use_sim_time:=true',
+            enter=True,
+        )
+
+    def launch_sky_tracker(self):
+        print('[artemis] launching sky tracker stack...')
+        pane = self.sky_tracker_window.panes[0]
+        self._source_workspace(pane)
+        # No site argument: the tracker picks the site up from the mission
+        # manager's site metadata topic.
+        pane.send_keys(
+            'ros2 launch lunar_sky_tracker lunar_sky_tracker.launch.py '
+            'use_sim_time:=true',
             enter=True,
         )
 

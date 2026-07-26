@@ -14,6 +14,8 @@
 """Data providers for the dashboard."""
 from .base import Provider
 from .mock_provider import MockProvider
+from .sky_source import SkySource, SUN_TOPIC
 from .system_provider import SystemProvider
 
-__all__ = ['Provider', 'MockProvider', 'SystemProvider']
+__all__ = ['Provider', 'MockProvider', 'SkySource', 'SUN_TOPIC',
+           'SystemProvider']

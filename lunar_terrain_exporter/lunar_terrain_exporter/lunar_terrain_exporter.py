@@ -15,12 +15,14 @@
 
 """Terrain generation pipeline."""
 
+import math
 import os
 from pathlib import Path
 
 from .model_writers.sdf_model_writer import SDFModelWriter
 from .raster_processors.dem_processor import DEMProcessor
 from .utils.file_downloader import FileDownloader
+from .utils.frames import terrain_enu_rotation_rpy
 from .utils.types import LunarSite
 
 
@@ -45,13 +47,23 @@ class LunarTerrainExporter:
         )
         lat = bounds['center_lat']
         lon = bounds['center_lon']
-        width_km = bounds['width_km']
-        height_km = bounds['height_km']
-        print(f'    ROI: center=({lat:.4f}, {lon:.4f}), '
-              f'{width_km:.1f}x{height_km:.1f}km')
+        size_km = bounds['size_km']
+        print(f'    ROI: center=({lat:.4f}, {lon:.4f}), {size_km:.1f}km sq')
 
-        size_x_m = int(width_km * 1000)
-        size_y_m = int(height_km * 1000)
+        size_m = int(size_km * 1000)
+        size_x_m = size_y_m = size_m
+
+        # Elevation of the center pixel (the observer point).
+        # Used to place observer at origin in the world
+        h, w = elevations.shape
+        center_elevation = float(elevations[h // 2, w // 2])
+        if not math.isfinite(center_elevation):
+            center_elevation = (elev_min + elev_max) / 2.0
+
+        # Rotation required such that the world axes align with the
+        # local ENU frame at the observer (center of the terrain)
+        roll, pitch, yaw = terrain_enu_rotation_rpy(lat, lon)
+
         self._model_writer.write(
             site_id=site.name,
             display_name=site.name.replace('_', ' ').title(),
@@ -65,5 +77,9 @@ class LunarTerrainExporter:
             lat=lat,
             lon=lon,
             source='nasa_pgda_78',
+            roll=roll,
+            pitch=pitch,
+            yaw=yaw,
+            center_elevation=center_elevation,
         )
         return self._output_dir / site.name

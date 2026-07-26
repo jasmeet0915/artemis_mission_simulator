@@ -71,7 +71,7 @@ class TestIntegrationPipeline:
             roi=ROI(
                 use_full=False,
                 bounding_box=BoundingBox(
-                    lat=-86.5, lon=-4.0, width_km=2.0, height_km=2.0),
+                    lat=-86.5, lon=-4.0, size_km=2.0),
             ),
         )
 
@@ -81,7 +81,7 @@ class TestIntegrationPipeline:
         size = 513
         fake_heightmap = np.random.rand(size, size).astype(np.float64)
         fake_bounds = {'center_lat': -86.5, 'center_lon': -4.0,
-                       'width_km': 2.0, 'height_km': 2.0}
+                       'size_km': 2.0}
         fake_profile = {'crs': 'EPSG:3031',
                         'transform': None}
 
@@ -115,6 +115,12 @@ class TestIntegrationPipeline:
 
         sdf_content = (model_dir / 'model.sdf').read_text()
         assert 'test_site' in sdf_content
+        # export_model must compute and stamp the real ENU-alignment rotation
+        # (non-trivial for this site), not leave the pose at zeros.
+        from lunar_terrain_exporter.utils.frames import terrain_enu_rotation_rpy
+        roll, pitch, yaw = terrain_enu_rotation_rpy(-86.5, -4.0)
+        assert f'<pose>0 0 0 {roll:.6f} {pitch:.6f} {yaw:.6f}</pose>' in sdf_content
+        assert '<pose>0 0 0 0.000000 0.000000 0.000000</pose>' not in sdf_content
 
     def test_export_model_with_full_roi(self, tmp_path):
         """Verify export_model works end-to-end with a use_full=True ROI."""
@@ -129,7 +135,7 @@ class TestIntegrationPipeline:
 
         fake_heightmap = np.random.rand(513, 513).astype(np.float64)
         fake_bounds = {'center_lat': -89.5, 'center_lon': -130.0,
-                       'width_km': 20.0, 'height_km': 15.0}
+                       'size_km': 20.0}
         fake_profile = {'crs': 'EPSG:3031', 'transform': None}
 
         with (

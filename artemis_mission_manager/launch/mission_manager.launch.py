@@ -19,6 +19,7 @@ Launch the mission manager node for orchestration of mission activities.
 Usage:
     ros2 launch artemis_mission_manager mission_manager.launch.py
     ros2 launch artemis_mission_manager mission_manager.launch.py site:=shackleton_rim
+    ros2 launch artemis_mission_manager mission_manager.launch.py use_sim_time:=false
 """
 
 from launch import LaunchDescription
@@ -34,6 +35,12 @@ def generate_launch_description():
         description='Mission site name; used for retrieving site metadata',
     )
 
+    declare_use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='true',
+        description='Use simulation (Gazebo) clock if true',
+    )
+
     # Mission manager node
     mission_manager_node = Node(
         package='artemis_mission_manager',
@@ -41,10 +48,12 @@ def generate_launch_description():
         name='mission_manager',
         parameters=[{
             'site': LaunchConfiguration('site'),
+            'use_sim_time': LaunchConfiguration('use_sim_time'),
         }]
     )
 
     return LaunchDescription([
         declare_site_arg,
+        declare_use_sim_time_arg,
         mission_manager_node
     ])
