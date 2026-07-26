@@ -16,11 +16,10 @@
 
 import math
 
+from lunar_terrain_exporter.utils.frames import terrain_enu_rotation_rpy
 import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation
-
-from lunar_terrain_exporter.utils.frames import terrain_enu_rotation_rpy
 
 _STEREO = np.array([[0.0, 1.0, 0.0],
                     [1.0, 0.0, 0.0],

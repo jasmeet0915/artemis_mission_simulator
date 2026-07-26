@@ -24,7 +24,8 @@ _BASE_URL = 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp'
 
 @dataclass
 class BoundingBox:
-    """Geographic bounding box defined by center and a square side length.
+    """
+    Geographic bounding box defined by center and a square side length.
 
     ROIs are square by construction: a non-square DEM makes Gazebo pad the
     heightmap with minElevation filler (false terrain data) and shift the

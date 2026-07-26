@@ -28,7 +28,8 @@ from ..utils.types import ROI
 
 
 def _require_square(raw: np.ndarray) -> None:
-    """Reject a non-square pixel grid.
+    """
+    Reject a non-square pixel grid.
 
     Gazebo squares the heightmap to ``2^n + 1`` per side; a non-square input is
     corner-padded with ``minElevation`` filler (false terrain data) and its

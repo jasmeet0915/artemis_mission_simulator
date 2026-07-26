@@ -25,7 +25,10 @@ from scipy.spatial.transform import Rotation
 def terrain_enu_rotation_rpy(
     lat_deg: float, lon_deg: float,
 ) -> tuple[float, float, float]:
-    """Roll/pitch/yaw (radians, SDF ``xyz`` convention) rotating a south-polar-
+    """
+    Compute roll/pitch/yaw aligning a polar-stereo terrain to local ENU.
+
+    Returns SDF ``xyz`` Euler angles (radians) that rotate a south-polar-
     stereographic terrain so local ENU at ``(lat_deg, lon_deg)`` aligns with
     Gazebo world axes (X=East, Y=North, Z=Up).
 
