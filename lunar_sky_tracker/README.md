@@ -80,8 +80,29 @@ lunar_sky_tracker/
 │       └── kernel_manager.py           # Kernel manifest: verify, furnish, unload
 ├── launch/
 │   └── lunar_sky_tracker.launch.py
-└── config/
-    └── lunar_sky_tracker_config.yaml
+├── config/
+│   └── lunar_sky_tracker_config.yaml
+└── scripts/
+    └── plot_sun_path.py               # Sun az/el/orbit plots over a lunar day
 ```
 
 The node layer and the SPICE layer are kept apart on purpose: `celestial_ephemeris.py` imports nothing from ROS, so the astronomy can be tested without spinning a node.
+
+## Analyses from the celestial_ephemeris module
+
+### Sun path over a lunar solar day
+
+`scripts/plot_sun_path.py` plots the Sun over a site for one lunar solar day, straight from the `celestial_ephemeris` core. Run it in the container after building and sourcing the workspace:
+
+```bash
+python3 scripts/plot_sun_path.py --site shackleton_rim --figure briefing
+```
+
+![Sun over Shackleton Rim](media/sun_briefing_shackleton_rim.png)
+![Sun over Tranquility Base](media/sun_briefing_tranquility_base.png)
+
+- Near the **south pole** (Shackleton) the Sun barely leaves the horizon: it circles at ~1 deg elevation for the whole lunar solar day instead of rising and setting. Near the equator (Tranquility) it arcs overhead and sets, Earth-like.
+- Because the Sun stays so low, **terrain decides illumination**. Crater floors sit in permanent shadow (cold traps that hold **water ice**), while nearby rim peaks stay almost always lit (**near-continuous solar power**). Having both side by side is why the pole is a top contender for a **lunar base**.
+- Being far from the lunar equator also keeps **temperatures** in a narrower, milder band, without the extreme equatorial day/night swing.
+
+(These plots are the ideal-horizon geometry; the actual dark/lit split needs terrain horizon masking, noted as future work.)
