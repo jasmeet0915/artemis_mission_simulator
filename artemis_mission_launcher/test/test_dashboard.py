@@ -25,6 +25,46 @@ def _render(state: DashboardState) -> str:
     return console.export_text()
 
 
+def _overview(state: DashboardState) -> str:
+    from artemis_cli.dashboard.widgets import mission_overview
+    console = Console(width=100, height=20, record=True)
+    console.print(mission_overview.render(state))
+    return console.export_text()
+
+
+def test_sun_row_shows_placeholder_before_any_data():
+    state = DashboardState()
+    text = _overview(state)
+    assert 'SUN (AZ/EL)' in text
+    assert '--' in text
+
+
+def test_sun_row_shows_azimuth_and_elevation_when_set():
+    state = DashboardState()
+    state.sun_azimuth_deg = 127.42
+    state.sun_elevation_deg = 1.23
+    assert '127.4° / +1.2°' in _overview(state)
+
+
+def test_sun_elevation_below_horizon_renders_negative():
+    state = DashboardState()
+    state.sun_azimuth_deg = 12.0
+    state.sun_elevation_deg = -0.44
+    assert '12.0° / -0.4°' in _overview(state)
+
+
+def test_sun_row_follows_the_elevation_row():
+    state = DashboardState()
+    state.sun_azimuth_deg = 5.0
+    state.sun_elevation_deg = 5.0
+    lines = _overview(state).splitlines()
+    elevation_line = next(
+        i for i, line in enumerate(lines) if 'ELEVATION' in line
+        and 'SUN' not in line)
+    sun_line = next(i for i, line in enumerate(lines) if 'SUN (AZ/EL)' in line)
+    assert sun_line > elevation_line
+
+
 def test_layout_contains_all_panels_and_labels():
     state = DashboardState()
     MockProvider().update(state)
@@ -158,3 +198,89 @@ def test_column_chart_dimensions():
 def test_hbar_is_full_width():
     bar = hbar(0.5, 10, 'cyan', 'grey37')
     assert len(bar.plain) == 10
+
+
+class _StubSky:
+    """Minimal stand-in for SkySource: just the `latest` seam."""
+
+    def __init__(self, latest=None):
+        self.latest = latest
+
+
+def test_provider_without_sky_source_leaves_sun_fields_unset():
+    state = DashboardState()
+    MockProvider().update(state)
+    assert state.sun_azimuth_deg is None
+    assert state.sun_elevation_deg is None
+
+
+def test_provider_copies_sun_angles_from_sky_source():
+    state = DashboardState()
+    MockProvider(sky_source=_StubSky((127.4, 1.2))).update(state)
+    assert state.sun_azimuth_deg == 127.4
+    assert state.sun_elevation_deg == 1.2
+
+
+def test_provider_leaves_fields_unset_while_source_has_no_data():
+    state = DashboardState()
+    MockProvider(sky_source=_StubSky(None)).update(state)
+    assert state.sun_azimuth_deg is None
+
+
+def test_provider_keeps_last_sun_angles_when_source_goes_quiet():
+    state = DashboardState()
+    source = _StubSky((10.0, 2.0))
+    provider = MockProvider(sky_source=source)
+    provider.update(state)
+    source.latest = None
+    provider.update(state)
+    assert state.sun_azimuth_deg == 10.0
+    assert state.sun_elevation_deg == 2.0
+
+
+def test_sky_source_has_no_angles_before_any_message():
+    from artemis_cli.dashboard.providers import SkySource
+    assert SkySource().latest is None
+
+
+def test_sky_source_callback_records_the_angles():
+    from types import SimpleNamespace
+    from artemis_cli.dashboard.providers import SkySource
+    source = SkySource()
+    source._on_sky_object(SimpleNamespace(azimuth_deg=91.5, elevation_deg=-2.5))
+    assert source.latest == (91.5, -2.5)
+
+
+def test_sky_source_start_survives_a_missing_rclpy(monkeypatch):
+    import sys
+    from artemis_cli.dashboard.providers import SkySource
+    # Binding a module name to None makes `import rclpy` raise ImportError.
+    monkeypatch.setitem(sys.modules, 'rclpy', None)
+    source = SkySource()
+    assert source.start() is False
+    assert source.latest is None
+
+
+def test_sky_source_stop_is_safe_before_start():
+    from artemis_cli.dashboard.providers import SkySource
+    SkySource().stop()  # must not raise
+
+
+def test_dashboard_process_exits_on_sigterm():
+    """ROS signal handlers must not keep mission control alive on a kill."""
+    import pytest
+    import signal
+    import subprocess
+    import sys
+    import time
+    proc = subprocess.Popen(
+        [sys.executable, '-m', 'artemis_cli.dashboard'],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(3.0)              # let SkySource init rclpy and start spinning
+    proc.send_signal(signal.SIGTERM)
+    try:
+        proc.wait(timeout=5.0)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        pytest.fail('dashboard ignored SIGTERM and had to be killed')

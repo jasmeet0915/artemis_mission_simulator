@@ -13,12 +13,15 @@
 
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>lunar_terrain_exporter</exec_depend>
   <exec_depend>lunar_base_models</exec_depend>
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>python3-libtmux</exec_depend>
   <exec_depend>python3-psutil</exec_depend>
   <exec_depend>python3-rich</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>artemis_mission_interfaces</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

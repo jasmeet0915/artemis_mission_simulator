@@ -90,6 +90,32 @@ class TestSDFModelWriter:
             assert '3000' in sdf
             assert '2000' in sdf
 
+    def test_sdf_contains_pose_and_observer_offset(self):
+        elev = _make_elevations()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            writer = SDFModelWriter(Path(tmpdir))
+            writer.write(
+                site_id='rot_site',
+                display_name='Rot Site',
+                description='Desc',
+                elevations=elev,
+                dem_profile=_make_dem_profile(),
+                size_x_m=3000,
+                size_y_m=3000,
+                elevation_min=-100.0,
+                elevation_max=200.0,
+                lat=-88.6,
+                lon=-67.9,
+                source='nasa_pgda_78',
+                roll=0.1,
+                pitch=0.2,
+                yaw=0.3,
+                center_elevation=50.0,
+            )
+            sdf = (Path(tmpdir) / 'rot_site' / 'model.sdf').read_text()
+            assert '<pose>0 0 0 0.100000 0.200000 0.300000</pose>' in sdf
+            assert '<pos>0 0 -50.0</pos>' in sdf
+
     def test_metadata_yaml_valid(self):
         elev = _make_elevations()
         with tempfile.TemporaryDirectory() as tmpdir:

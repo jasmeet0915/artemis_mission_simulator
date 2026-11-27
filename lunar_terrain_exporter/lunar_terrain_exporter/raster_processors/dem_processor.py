@@ -27,6 +27,23 @@ from rasterio.windows import from_bounds
 from ..utils.types import ROI
 
 
+def _require_square(raw: np.ndarray) -> None:
+    """
+    Reject a non-square pixel grid.
+
+    Gazebo squares the heightmap to ``2^n + 1`` per side; a non-square input is
+    corner-padded with ``minElevation`` filler (false terrain data) and its
+    center is shifted off the world origin. Guarding here keeps that from ever
+    reaching a generated model, regardless of ROI path (crop rounding or a
+    non-square full raster).
+    """
+    if raw.shape[0] != raw.shape[1]:
+        raise ValueError(
+            'cropped grid must be square to avoid heightmap filler; '
+            f'got {raw.shape[1]}x{raw.shape[0]} px'
+        )
+
+
 class DEMProcessor:
     """
     Extracts elevation data from PGDA Product 78 polar DEM GeoTIFFs.
@@ -76,8 +93,7 @@ class DEMProcessor:
         (elevations, elev_min, elev_max, bounds, dem_profile)
 
             *elevations*: float64 array of elevation values in meters.
-            *bounds*: dict with ``center_lat``, ``center_lon``,
-            ``width_km``, ``height_km``.
+            *bounds*: dict with ``center_lat``, ``center_lon``, ``size_km``.
             *dem_profile*: dict with ``crs`` and ``transform`` suitable
             for writing a GeoTIFF of the output array.
 
@@ -94,6 +110,7 @@ class DEMProcessor:
             if roi.use_full:
                 # ---- read entire raster --------------------------------
                 raw = src.read(1)
+                _require_square(raw)
                 out_transform = src.transform
 
                 rb = src.bounds
@@ -104,17 +121,17 @@ class DEMProcessor:
                 bb = roi.bounding_box
                 # lon first because always_xy=True
                 x_center, y_center = to_projected.transform(bb.lon, bb.lat)
-                half_w = bb.width_km * 1000.0 / 2.0
-                half_h = bb.height_km * 1000.0 / 2.0
-                x_min = x_center - half_w
-                x_max = x_center + half_w
-                y_min = y_center - half_h
-                y_max = y_center + half_h
+                half = bb.size_km * 1000.0 / 2.0
+                x_min = x_center - half
+                x_max = x_center + half
+                y_min = y_center - half
+                y_max = y_center + half
 
                 window = from_bounds(
                     x_min, y_min, x_max, y_max, src.transform,
                 )
                 raw = src.read(1, window=window)
+                _require_square(raw)
                 out_transform = src.window_transform(window)
 
             nodata = src.nodata
@@ -137,8 +154,7 @@ class DEMProcessor:
         bounds = {
             'center_lat': center_lat,
             'center_lon': center_lon,
-            'width_km': (x_max - x_min) / 1000.0,
-            'height_km': (y_max - y_min) / 1000.0,
+            'size_km': (x_max - x_min) / 1000.0,
         }
 
         dem_profile = {

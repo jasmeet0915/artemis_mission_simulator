@@ -24,12 +24,17 @@ _BASE_URL = 'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp'
 
 @dataclass
 class BoundingBox:
-    """Geographic bounding box defined by center and dimensions."""
+    """
+    Geographic bounding box defined by center and a square side length.
+
+    ROIs are square by construction: a non-square DEM makes Gazebo pad the
+    heightmap with minElevation filler (false terrain data) and shift the
+    world origin off the tile center.
+    """
 
     lat: float
     lon: float
-    width_km: float = 10.0
-    height_km: float = 10.0
+    size_km: float = 10.0
 
     def validate(self) -> None:
         """Validate bounding box values. Raises ValueError on invalid data."""
@@ -37,10 +42,8 @@ class BoundingBox:
             raise ValueError(
                 f'lat must be <= -80.0 for south pole DEMs (got: {self.lat})'
             )
-        if self.width_km <= 0:
-            raise ValueError(f'width_km must be > 0 (got: {self.width_km})')
-        if self.height_km <= 0:
-            raise ValueError(f'height_km must be > 0 (got: {self.height_km})')
+        if self.size_km <= 0:
+            raise ValueError(f'size_km must be > 0 (got: {self.size_km})')
 
 
 @dataclass

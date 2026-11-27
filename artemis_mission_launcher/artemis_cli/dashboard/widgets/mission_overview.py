@@ -74,11 +74,22 @@ def _satellite() -> Text:
     return text
 
 
+def _sun_angles(state: DashboardState) -> tuple[str, str]:
+    """Return the (text, style) pair for the Sun's az/el row."""
+    # Azimuth and elevation arrive in one message, so they are both-or-neither.
+    if state.sun_azimuth_deg is None or state.sun_elevation_deg is None:
+        return '--', theme.FAINT
+    return (f'{state.sun_azimuth_deg:.1f}° / {state.sun_elevation_deg:+.1f}°',
+            theme.PRIMARY)
+
+
 def _fields(state: DashboardState) -> RenderableType:
+    sun_text, sun_style = _sun_angles(state)
     rows = (
         ('◆', 'SITE', state.site_name.upper(), theme.PRIMARY),
         ('✧', 'COORDINATES', state.coordinates, theme.PRIMARY),
         ('▲', 'ELEVATION', state.elevation, theme.PRIMARY),
+        ('☀', 'SUN (AZ/EL)', sun_text, sun_style),
     )
     grid = Table.grid(padding=(0, 1))
     grid.add_column(style=theme.FAINT, justify='center', width=1)

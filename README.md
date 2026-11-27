@@ -51,6 +51,7 @@ The whole stack is driven by a single command-line tool, **`artemis`**: `artemis
 | [`artemis_mission_interfaces`](artemis_mission_interfaces/) | ROS 2 message definitions for mission-level information (e.g. `SiteMetadata`) |
 | [`artemis_assets`](artemis_assets/) | Pre-built Gazebo terrain models for the supported sites (and future props/robots) |
 | [`lunar_terrain_exporter`](lunar_terrain_exporter/) | CLI tool for generating Gazebo SDF terrain models from NASA PGDA-78 south-pole DEMs |
+| [`lunar_sky_tracker`](lunar_sky_tracker/) | Publishes the Sun's direction over the mission site, computed from NASA SPICE ephemeris data |
 
 ## Setup
 
@@ -113,9 +114,10 @@ artemis liftoff --site shackleton_rim
 
 | Window | What it runs |
 |--------|--------------|
-| `mission-control` | A live terminal dashboard — mission clock, site overview, and host telemetry, over a starfield |
+| `mission-control` | A live terminal dashboard — mission clock, site overview with live Sun angles, and host telemetry, over a starfield |
 | `simulation` | The Gazebo world for the selected site (`lunar_world.launch.py`) |
 | `mission_manager` | Publishes latched site metadata on `/mission/site_metadata` |
+| `sky_tracker` | Publishes the Sun's direction over the site on `/lunar_sky_tracker/sun` |
 
 **Options**
 

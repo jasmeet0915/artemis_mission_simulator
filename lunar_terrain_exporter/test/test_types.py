@@ -22,29 +22,24 @@ import pytest
 class TestBoundingBox:
     def test_create_with_defaults(self):
         bb = BoundingBox(lat=-86.5, lon=-4.0)
-        assert bb.width_km == 10.0
-        assert bb.height_km == 10.0
+        assert bb.size_km == 10.0
 
     def test_create_with_explicit_dims(self):
-        bb = BoundingBox(lat=-86.5, lon=-4.0, width_km=8.0, height_km=12.0)
-        assert bb.width_km == 8.0
-        assert bb.height_km == 12.0
+        bb = BoundingBox(lat=-86.5, lon=-4.0, size_km=8.0)
+        assert bb.size_km == 8.0
 
     def test_validate_rejects_lat_above_minus_80(self):
         with pytest.raises(ValueError, match='lat'):
             BoundingBox(lat=-70.0, lon=0.0).validate()
 
-    def test_validate_rejects_non_positive_width(self):
-        with pytest.raises(ValueError, match='width_km'):
-            BoundingBox(lat=-85.0, lon=0.0, width_km=0).validate()
-
-    def test_validate_rejects_non_positive_height(self):
-        with pytest.raises(ValueError, match='height_km'):
-            BoundingBox(lat=-85.0, lon=0.0, height_km=-1).validate()
+    def test_validate_rejects_non_positive_size(self):
+        with pytest.raises(ValueError, match='size_km'):
+            BoundingBox(lat=-85.0, lon=0.0, size_km=0).validate()
+        with pytest.raises(ValueError, match='size_km'):
+            BoundingBox(lat=-85.0, lon=0.0, size_km=-1).validate()
 
     def test_validate_accepts_valid(self):
-        BoundingBox(lat=-86.5, lon=-4.0, width_km=10.0,
-                    height_km=8.0).validate()
+        BoundingBox(lat=-86.5, lon=-4.0, size_km=10.0).validate()
 
 
 class TestROI:
@@ -64,7 +59,7 @@ class TestROI:
         ext = ROI(
             use_full=False,
             bounding_box=BoundingBox(
-                lat=-86.5, lon=-4.0, width_km=10.0, height_km=8.0),
+                lat=-86.5, lon=-4.0, size_km=10.0),
         )
         ext.validate()
 
@@ -90,8 +85,7 @@ class TestLunarSite:
         assert config.site_code == 'Site01'
         assert config.roi.bounding_box.lat == -86.5
         assert config.roi.bounding_box.lon == -4.0
-        assert config.roi.bounding_box.width_km == 10.0
-        assert config.roi.bounding_box.height_km == 10.0
+        assert config.roi.bounding_box.size_km == 10.0
         assert config.description == ''
 
     def test_create_with_full_roi(self):
@@ -185,7 +179,7 @@ class TestFromCatalog:
         roi = ROI(
             use_full=False,
             bounding_box=BoundingBox(
-                lat=-86.5, lon=-4.0, width_km=5.0, height_km=5.0),
+                lat=-86.5, lon=-4.0, size_km=5.0),
         )
         config = LunarSite.from_catalog('shackleton_rim', roi=roi)
         assert config.roi.use_full is False

@@ -80,6 +80,7 @@ def _run_liftoff(args):
         launcher.launch_home()
     launcher.launch_simulation()
     launcher.launch_mission_manager()
+    launcher.launch_sky_tracker()
     print(f'[artemis] mission epoch {epoch_sec} (Unix UTC), site {args.site}')
 
     if not args.detached:

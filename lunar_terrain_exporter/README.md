@@ -2,7 +2,7 @@
 
 A CLI tool and Python pipeline for generating simulation ready terrain models from NASA's lunar south-pole DEMs. Currently only SDF models export is supported
 
-![Lunar Terrain Exporter CLI](../media/lunar_terrain_exporter_cli.gif)
+![Lunar Terrain Exporter CLI](media/lunar_terrain_exporter_cli.gif)
 <p align="center"><em>A GIF showing the lunar_terrain_exporter cli batch mode in action</em></p>
 
 ## Overview
@@ -23,7 +23,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Description: Ridge between Shackleton and de Gerlache craters*
 
-![Connecting Ridge](../media/connecting_ridge_terrain.png)
+![Connecting Ridge](media/connecting_ridge_terrain.png)
 
 **De Gerlache Rim**
 
@@ -31,7 +31,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Rim of de Gerlache crater*
 
-![De Gerlache Rim](../media/de_gerlache_rim_terrain.png)
+![De Gerlache Rim](media/de_gerlache_rim_terrain.png)
 
 **Peak Near Shackleton**
 
@@ -39,7 +39,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Isolated peak near Shackleton crater*
 
-![Peak Near Shackleton](../media/peak_near_shackleton_terrain.png)
+![Peak Near Shackleton](media/peak_near_shackleton_terrain.png)
 
 **Shackleton Rim**
 
@@ -47,7 +47,7 @@ All 27 south-pole landing sites from PGDA Product 78 are available in the built-
 
 *Rim of Shackleton crater*
 
-![Shackleton Rim](../media/shackleton_rim_terrain.png)
+![Shackleton Rim](media/shackleton_rim_terrain.png)
 
 These sites were selected as the best landing site candidates for the Artemis Missions due to their favorable illumination conditions as reported in [this](https://www.sciencedirect.com/science/article/abs/pii/S0032063320303329) paper.
 
@@ -65,11 +65,13 @@ lunar_terrain_exporter site connecting_ridge --output-dir ./models
 
 ### Single site — custom ROI bounding-box crop
 
-Crop a specific region by specifying center coordinates and dimensions:
+Crop a square region by specifying center coordinates and side length. ROIs are
+square by construction: a non-square DEM makes Gazebo pad the heightmap with
+`minElevation` filler and shift the world origin off the tile center.
 
 ```bash
 lunar_terrain_exporter site shackleton_rim \
-  --lat -86.5 --lon -4.0 --width 5 --height 5 \
+  --lat -86.5 --lon -4.0 --size 5 \
   --output-dir ./models
 ```
 
@@ -95,8 +97,7 @@ sites:
       bounding_box:
         lat: -86.5
         lon: -4.0
-        width_km: 5.0
-        height_km: 5.0
+        size_km: 5.0
 ```
 
 ## Output Structure
@@ -127,6 +128,33 @@ The pipeline has three stages:
    - A **normal map** (RGB PNG) derived from Sobel gradients of the normalized elevation data
    - An **SDF model** with `<heightmap>` geometry sized to match the real-world dimensions
    - A **metadata YAML** recording coordinates, dimensions, elevation range, and data source
+
+### ENU Alignment
+
+We treat the **observer** as a static point at the center of the terrain, placed
+at the world origin. The DEMs are in polar stereographic projection, so we orient
+the terrain in the world so that the **world axes align with the local ENU
+(East-North-Up) axes at the observer** — that way our astronomy calculations (sun
+direction, illumination), which are done in the local ENU frame, map directly
+onto the world frame.
+
+The `terrain_link` gets a `<pose>` rotation (roll/pitch/yaw from
+`utils/frames.py`) to achieve this. It has two effects:
+
+- **Heading:** aligns world +X to East and +Y to North at the observer.
+- **Tilt:** aligns world +Z with the radial Up at the observer.
+
+The heightmap `<pos>` z is `-center_elevation` so the observer sits at world Z=0,
+the point the rotation pivots about. See `sdf_model_writer.py` for the vertical
+math.
+
+> **Interesting Note:** The local tangent plane on a spherical body is different at every point.
+This means, the local E-N-U axes would be oriented different w.r.t to each other on different points on the terrain.
+For instance, the local up at any point is radially outward from the center and the -ve of this direction is where gravity acts.
+For each point the local up is different which means, realisticall the gravity direction should also change. However, that is
+not supported in out simulation world and the difference would anyways be negligible for the celestial body we are dealing with.
+So, we just ignore this difference as the effects would be negligible on our scale and consider the ENU at the center of
+terrain to be the global one.
 
 ### Package Structure
 

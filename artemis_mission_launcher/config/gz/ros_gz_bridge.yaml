@@ -1,0 +1,14 @@
+# Topic map for ros_gz_bridge's parameter_bridge, passed via its `config_file`
+# parameter from lunar_world.launch.py.
+#
+# direction: GZ_TO_ROS | ROS_TO_GZ | BIDIRECTIONAL
+
+# Simulation clock. Every ROS node in the stack launches with
+# use_sim_time:=true, so without this entry /clock never reaches the ROS graph:
+# their timers stay frozen at t=0 and nothing that ticks ever publishes.
+# GZ_TO_ROS only -- ROS must never write back into Gazebo's clock.
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS

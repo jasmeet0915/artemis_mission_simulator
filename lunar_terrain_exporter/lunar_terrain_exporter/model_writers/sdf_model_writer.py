@@ -28,6 +28,7 @@ _MODEL_SDF_TEMPLATE = Template("""\
   <model name="${site_id}">
     <static>true</static>
     <link name="terrain_link">
+      <pose>0 0 0 ${roll} ${pitch} ${yaw}</pose>
       <collision name="terrain_collision">
         <geometry>
           <heightmap>
@@ -90,6 +91,10 @@ class SDFModelWriter:
         lat: float,
         lon: float,
         source: str,
+        roll: float = 0.0,
+        pitch: float = 0.0,
+        yaw: float = 0.0,
+        center_elevation: float = 0.0,
     ) -> Path:
         """Write all model files (SDF, config, textures, metadata)."""
         model_dir = self._output_dir / site_id
@@ -116,7 +121,10 @@ class SDFModelWriter:
             size_x=size_x_m,
             size_y=size_y_m,
             size_z=f'{elevation_range:.1f}',
-            z_offset=f'{elevation_min:.1f}',
+            z_offset=f'{-center_elevation:.1f}',
+            roll=f'{roll:.6f}',
+            pitch=f'{pitch:.6f}',
+            yaw=f'{yaw:.6f}',
         )
         (model_dir / 'model.sdf').write_text(sdf_content)
 

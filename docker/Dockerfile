@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # (tmux/libtmux for the launcher, psutil/rich for the mission-control home).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
+    wget \
     gdal-bin \
     python3-gdal \
     python3-numpy \
@@ -45,6 +46,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rich \
     gosu \
     && rm -rf /var/lib/apt/lists/*
+
+# Install spiceypy for SPICE toolkit support in Python
+RUN pip3 install --no-cache-dir --break-system-packages \
+    spiceypy
+
+# Bake the required NASA SPICE kernels into the image
+COPY fetch_spice_kernels.sh /usr/local/bin/fetch_spice_kernels.sh
+RUN chmod +x /usr/local/bin/fetch_spice_kernels.sh \
+    && /usr/local/bin/fetch_spice_kernels.sh /opt/spice_kernels
 
 # Source ROS in every interactive shell. /etc/bash.bashrc applies to any user
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /etc/bash.bashrc

@@ -38,7 +38,8 @@ class DashboardState:
     site_name: str = 'Shackleton Rim'
     coordinates: str = '89.76° S, 0.00° E'
     elevation: str = '-3923 m'
-    sun_elevation: str = '1.23°'
+    sun_azimuth_deg: Optional[float] = None
+    sun_elevation_deg: Optional[float] = None
     earth_visible: bool = True
     mission_phase: str = 'Surface Ops'
 
